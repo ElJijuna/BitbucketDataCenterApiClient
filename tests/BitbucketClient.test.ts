@@ -11,6 +11,7 @@ import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
 import type { BitbucketBranch } from '../src/domain/Branch';
+import type { BitbucketRepositorySize } from '../src/domain/RepositorySize';
 
 const API_URL = 'https://bitbucket.example.com';
 const API_PATH = 'rest/api/latest';
@@ -770,6 +771,35 @@ describe('BitbucketClient', () => {
       await expect(client.project('PROJ').users()).rejects.toThrow(
         'Bitbucket API error: 403 Forbidden',
       );
+    });
+  });
+
+  describe('project(key).repo(slug).size()', () => {
+    const mockSize: BitbucketRepositorySize = {
+      repository: 1048576,
+      attachments: 0,
+    };
+
+    it('calls GET .../sizes', async () => {
+      mockOk(mockSize);
+      await client.project('PROJ').repo('my-repo').size();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/sizes`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the repository size object', async () => {
+      mockOk(mockSize);
+      const result = await client.project('PROJ').repo('my-repo').size();
+      expect(result).toEqual(mockSize);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').size(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
 

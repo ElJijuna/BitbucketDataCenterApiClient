@@ -2,6 +2,7 @@ import type { BitbucketRepository } from '../domain/Repository';
 import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullRequest';
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
+import type { BitbucketRepositorySize } from '../domain/RepositorySize';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
@@ -91,6 +92,17 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
       params as Record<string, string | number | boolean>,
     );
     return data.values;
+  }
+
+  /**
+   * Fetches the size of this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/sizes`
+   *
+   * @returns The repository size object
+   */
+  async size(): Promise<BitbucketRepositorySize> {
+    return this.request<BitbucketRepositorySize>(`${this.basePath}/sizes`);
   }
 
   /**
