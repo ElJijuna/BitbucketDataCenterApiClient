@@ -8,5 +8,6 @@ export type { BitbucketProject, ProjectsParams } from './domain/Project';
 export type { BitbucketRepository, ReposParams } from './domain/Repository';
 export type { BitbucketPullRequest, BitbucketParticipant, BitbucketRef, PullRequestsParams } from './domain/PullRequest';
 export type { BitbucketPullRequestActivity, BitbucketPullRequestComment, BitbucketActivityUser, PullRequestActivityAction, ActivitiesParams } from './domain/PullRequestActivity';
+export type { BitbucketPullRequestTask, PullRequestTaskState, PullRequestTaskPermittedOperations, PullRequestTaskAnchor, TasksParams } from './domain/PullRequestTask';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';

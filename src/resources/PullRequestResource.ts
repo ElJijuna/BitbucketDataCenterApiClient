@@ -1,5 +1,6 @@
 import type { BitbucketPullRequest } from '../domain/PullRequest';
 import type { BitbucketPullRequestActivity, ActivitiesParams } from '../domain/PullRequestActivity';
+import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -17,12 +18,8 @@ import type { RequestFn } from './ProjectResource';
  * // Get activities
  * const activities = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).activities();
  *
- * // With filters
- * const comments = await bbClient
- *   .project('PROJ')
- *   .repo('my-repo')
- *   .pullRequest(42)
- *   .activities({ fromId: 10, fromType: 'COMMENT' });
+ * // Get tasks
+ * const tasks = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).tasks();
  * ```
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
@@ -73,6 +70,24 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   async activities(params?: ActivitiesParams): Promise<BitbucketPullRequestActivity[]> {
     const data = await this.request<PagedResponse<BitbucketPullRequestActivity>>(
       `${this.basePath}/activities`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Fetches the tasks (review to-do items) for this pull request.
+   *
+   * Tasks are created by reviewers on specific comments and can be `OPEN` or `RESOLVED`.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/tasks`
+   *
+   * @param params - Optional filters: `limit`, `start`
+   * @returns An array of pull request tasks
+   */
+  async tasks(params?: TasksParams): Promise<BitbucketPullRequestTask[]> {
+    const data = await this.request<PagedResponse<BitbucketPullRequestTask>>(
+      `${this.basePath}/tasks`,
       params as Record<string, string | number | boolean>,
     );
     return data.values;

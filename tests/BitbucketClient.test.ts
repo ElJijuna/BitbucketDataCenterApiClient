@@ -4,6 +4,7 @@ import type { BitbucketRepository } from '../src/domain/Repository';
 import type { BitbucketPullRequest, BitbucketParticipant } from '../src/domain/PullRequest';
 import type { BitbucketCommit } from '../src/domain/Commit';
 import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
+import type { BitbucketPullRequestTask } from '../src/domain/PullRequestTask';
 
 const API_URL = 'https://bitbucket.example.com/rest/api/latest';
 const BASE = API_URL;
@@ -405,6 +406,57 @@ describe('BitbucketClient', () => {
       mockError(403, 'Forbidden');
       await expect(
         client.project('PROJ').repo('my-repo').pullRequest(42).activities(),
+      ).rejects.toThrow('Bitbucket API error: 403 Forbidden');
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id).tasks()', () => {
+    const mockTask: BitbucketPullRequestTask = {
+      id: 1,
+      createdDate: 1700000000000,
+      author: {
+        name: 'john.doe',
+        emailAddress: 'john@example.com',
+        id: 1,
+        displayName: 'John Doe',
+        active: true,
+        slug: 'john.doe',
+        type: 'NORMAL',
+      },
+      text: 'Fix this before merging',
+      state: 'OPEN',
+      permittedOperations: { editable: true, deletable: true, transitionable: true },
+      anchor: { id: 10, type: { id: 'COMMENT' } },
+    };
+
+    it('calls GET .../pull-requests/{id}/tasks', async () => {
+      mockOk(pagedOf(mockTask));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).tasks();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/tasks`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of tasks', async () => {
+      mockOk(pagedOf(mockTask));
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).tasks();
+      expect(result).toEqual([mockTask]);
+    });
+
+    it('appends limit and start as query params', async () => {
+      mockOk(pagedOf(mockTask));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).tasks({ limit: 10, start: 5 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/tasks?limit=10&start=5`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).tasks(),
       ).rejects.toThrow('Bitbucket API error: 403 Forbidden');
     });
   });
