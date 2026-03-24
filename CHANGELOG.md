@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.4.0...v1.5.0) (2026-03-24)
+
+
+### Features
+
+* add webhooks method to return webhooks list from project and repository. ([c7a9867](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/c7a9867022fd0254d8ce0437ad0335258f424505))
+
 # [1.4.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.3.0...v1.4.0) (2026-03-24)
 
 
