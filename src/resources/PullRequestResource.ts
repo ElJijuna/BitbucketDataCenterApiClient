@@ -4,6 +4,7 @@ import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullReques
 import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketChange, ChangesParams } from '../domain/Change';
 import type { BitbucketReport, ReportsParams } from '../domain/Report';
+import type { BitbucketBuildSummaries } from '../domain/BuildSummary';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -32,6 +33,9 @@ import type { RequestFn } from './ProjectResource';
  *
  * // Get reports
  * const reports = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).reports();
+ *
+ * // Get build summaries
+ * const builds = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries();
  * ```
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
@@ -151,5 +155,19 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
       params as Record<string, string | number | boolean>,
     );
     return data.values;
+  }
+
+  /**
+   * Fetches the aggregated build summaries for this pull request.
+   *
+   * Returns a map of commit hash → build counts per state
+   * (`successful`, `failed`, `inProgress`, `cancelled`, `unknown`).
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/build-summaries`
+   *
+   * @returns A record keyed by commit SHA with aggregated build counts
+   */
+  async buildSummaries(): Promise<BitbucketBuildSummaries> {
+    return this.request<BitbucketBuildSummaries>(`${this.basePath}/build-summaries`);
   }
 }

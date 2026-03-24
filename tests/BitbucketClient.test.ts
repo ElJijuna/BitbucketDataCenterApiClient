@@ -7,6 +7,7 @@ import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActi
 import type { BitbucketPullRequestTask } from '../src/domain/PullRequestTask';
 import type { BitbucketChange } from '../src/domain/Change';
 import type { BitbucketReport } from '../src/domain/Report';
+import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 
 const API_URL = 'https://bitbucket.example.com/rest/api/latest';
 const BASE = API_URL;
@@ -595,6 +596,35 @@ describe('BitbucketClient', () => {
       mockError(404, 'Not Found');
       await expect(
         client.project('PROJ').repo('my-repo').pullRequest(42).reports(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id).buildSummaries()', () => {
+    const mockBuildSummaries: BitbucketBuildSummaries = {
+      abc123def456: { successful: 2, failed: 0, inProgress: 0, cancelled: 0, unknown: 0 },
+      def456abc123: { successful: 0, failed: 1, inProgress: 1, cancelled: 0, unknown: 0 },
+    };
+
+    it('calls GET .../pull-requests/{id}/build-summaries', async () => {
+      mockOk(mockBuildSummaries);
+      await client.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/build-summaries`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the build summaries map', async () => {
+      mockOk(mockBuildSummaries);
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries();
+      expect(result).toEqual(mockBuildSummaries);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
