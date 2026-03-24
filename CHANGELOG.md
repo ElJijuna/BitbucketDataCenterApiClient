@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.2.1...v1.3.0) (2026-03-24)
+
+
+### Features
+
+* add mehtos to return tags in repository. ([0f047f1](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/0f047f1ea14ffb8648f37fa33143a7aaf13e6a28))
+
 # [1.2.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.1.0...v1.2.0) (2026-03-24)
 
 
