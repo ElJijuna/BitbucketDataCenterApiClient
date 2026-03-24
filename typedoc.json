@@ -7,7 +7,7 @@
   "excludePrivate": true,
   "excludeProtected": true,
   "navigationLinks": {
-    "GitHub": "https://github.com/pilmee/BitbucketDataCenterApiClient",
+    "GitHub": "https://github.com/ElJijuna/BitbucketDataCenterApiClient",
     "npm": "https://www.npmjs.com/package/bitbucket-datacenter-api-client"
   }
 }
