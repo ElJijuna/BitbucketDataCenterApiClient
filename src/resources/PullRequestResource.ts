@@ -3,6 +3,7 @@ import type { BitbucketPullRequestActivity, ActivitiesParams } from '../domain/P
 import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
 import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketChange, ChangesParams } from '../domain/Change';
+import type { BitbucketReport, ReportsParams } from '../domain/Report';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -28,6 +29,9 @@ import type { RequestFn } from './ProjectResource';
  *
  * // Get changes
  * const changes = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).changes();
+ *
+ * // Get reports
+ * const reports = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).reports();
  * ```
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
@@ -128,6 +132,22 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   async changes(params?: ChangesParams): Promise<BitbucketChange[]> {
     const data = await this.request<PagedResponse<BitbucketChange>>(
       `${this.basePath}/changes`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Fetches the Code Insights reports for this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/reports`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns An array of Code Insights reports
+   */
+  async reports(params?: ReportsParams): Promise<BitbucketReport[]> {
+    const data = await this.request<PagedResponse<BitbucketReport>>(
+      `${this.basePath}/reports`,
       params as Record<string, string | number | boolean>,
     );
     return data.values;

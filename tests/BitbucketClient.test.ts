@@ -6,6 +6,7 @@ import type { BitbucketCommit } from '../src/domain/Commit';
 import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
 import type { BitbucketPullRequestTask } from '../src/domain/PullRequestTask';
 import type { BitbucketChange } from '../src/domain/Change';
+import type { BitbucketReport } from '../src/domain/Report';
 
 const API_URL = 'https://bitbucket.example.com/rest/api/latest';
 const BASE = API_URL;
@@ -551,6 +552,49 @@ describe('BitbucketClient', () => {
       mockError(404, 'Not Found');
       await expect(
         client.project('PROJ').repo('my-repo').pullRequest(42).changes(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id).reports()', () => {
+    const mockReport: BitbucketReport = {
+      key: 'my-coverage-tool',
+      title: 'Code Coverage',
+      details: '85% coverage',
+      result: 'PASS',
+      reporter: 'Coverage Bot',
+      createdDate: 1700000000000,
+      updatedDate: 1700000000000,
+    };
+
+    it('calls GET .../pull-requests/{id}/reports', async () => {
+      mockOk(pagedOf(mockReport));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).reports();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/reports`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of reports', async () => {
+      mockOk(pagedOf(mockReport));
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).reports();
+      expect(result).toEqual([mockReport]);
+    });
+
+    it('appends limit and start as query params', async () => {
+      mockOk(pagedOf(mockReport));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).reports({ limit: 10, start: 0 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/reports?limit=10&start=0`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).reports(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
