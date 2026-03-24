@@ -1,4 +1,5 @@
 export { BitbucketClient } from './BitbucketClient';
+export { BitbucketApiError } from './errors/BitbucketApiError';
 export type { BitbucketClientOptions } from './BitbucketClient';
 export { Security } from './security/Security';
 export { ProjectResource } from './resources/ProjectResource';

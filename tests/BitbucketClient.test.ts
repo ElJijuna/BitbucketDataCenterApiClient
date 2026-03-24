@@ -1,4 +1,5 @@
 import { BitbucketClient } from '../src/BitbucketClient';
+import { BitbucketApiError } from '../src/errors/BitbucketApiError';
 import type { BitbucketProject } from '../src/domain/Project';
 import type { BitbucketRepository } from '../src/domain/Repository';
 import type { BitbucketPullRequest, BitbucketParticipant } from '../src/domain/PullRequest';
@@ -1010,6 +1011,43 @@ describe('BitbucketClient', () => {
       await expect(
         client.project('PROJ').repo('my-repo').branches(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('BitbucketApiError', () => {
+    it('throws a BitbucketApiError instance on non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.project('PROJ')).rejects.toBeInstanceOf(BitbucketApiError);
+    });
+
+    it('exposes the HTTP status code', async () => {
+      mockError(403, 'Forbidden');
+      try {
+        await client.project('PROJ');
+      } catch (err) {
+        expect((err as BitbucketApiError).status).toBe(403);
+      }
+    });
+
+    it('exposes the HTTP status text', async () => {
+      mockError(401, 'Unauthorized');
+      try {
+        await client.project('PROJ');
+      } catch (err) {
+        expect((err as BitbucketApiError).statusText).toBe('Unauthorized');
+      }
+    });
+
+    it('has a descriptive message', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.project('PROJ')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+
+    it('also applies to text requests', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').raw('src/index.ts'),
+      ).rejects.toBeInstanceOf(BitbucketApiError);
     });
   });
 

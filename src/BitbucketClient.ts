@@ -1,5 +1,6 @@
 import { Security } from './security/Security';
 import { ProjectResource, type RequestFn, type RequestTextFn } from './resources/ProjectResource';
+import { BitbucketApiError } from './errors/BitbucketApiError';
 import { UserResource } from './resources/UserResource';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
 import type { BitbucketUser, UsersParams } from './domain/User';
@@ -70,7 +71,7 @@ export class BitbucketClient {
     const url = buildUrl(base, params);
     const response = await fetch(url, { headers: this.security.getHeaders() });
     if (!response.ok) {
-      throw new Error(`Bitbucket API error: ${response.status} ${response.statusText}`);
+      throw new BitbucketApiError(response.status, response.statusText);
     }
     return response.json() as Promise<T>;
   }
@@ -83,7 +84,7 @@ export class BitbucketClient {
     const url = buildUrl(base, params);
     const response = await fetch(url, { headers: this.security.getHeaders() });
     if (!response.ok) {
-      throw new Error(`Bitbucket API error: ${response.status} ${response.statusText}`);
+      throw new BitbucketApiError(response.status, response.statusText);
     }
     return response.text();
   }
