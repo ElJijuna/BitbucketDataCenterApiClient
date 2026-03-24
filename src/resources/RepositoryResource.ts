@@ -25,11 +25,7 @@ import type { RequestFn } from './ProjectResource';
 export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   private readonly basePath: string;
 
-  /**
-   * @param request - Bound HTTP request function from {@link BitbucketClient}
-   * @param projectKey - The project key (e.g., `'PROJ'`)
-   * @param repoSlug - The repository slug (e.g., `'my-repo'`)
-   */
+  /** @internal */
   constructor(
     private readonly request: RequestFn,
     projectKey: string,

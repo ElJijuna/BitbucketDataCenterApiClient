@@ -1,6 +1,8 @@
 export { BitbucketClient } from './BitbucketClient';
 export type { BitbucketClientOptions } from './BitbucketClient';
 export { Security } from './security/Security';
+export { ProjectResource } from './resources/ProjectResource';
+export { RepositoryResource } from './resources/RepositoryResource';
 export type { BitbucketProject, ProjectsParams } from './domain/Project';
 export type { BitbucketRepository, ReposParams } from './domain/Repository';
 export type { BitbucketPullRequest, BitbucketParticipant, BitbucketRef, PullRequestsParams } from './domain/PullRequest';

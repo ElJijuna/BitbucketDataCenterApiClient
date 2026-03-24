@@ -28,10 +28,7 @@ export type RequestFn = <T>(
  * ```
  */
 export class ProjectResource implements PromiseLike<BitbucketProject> {
-  /**
-   * @param request - Bound HTTP request function from {@link BitbucketClient}
-   * @param key - The project key (e.g., `'PROJ'`)
-   */
+  /** @internal */
   constructor(
     private readonly request: RequestFn,
     private readonly key: string,
