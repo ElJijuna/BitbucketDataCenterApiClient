@@ -1,3 +1,11 @@
+# [1.7.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.6.0...v1.7.0) (2026-03-24)
+
+
+### Features
+
+* add commit methos and diff and changes per commit. ([7f81e89](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/7f81e89aea5f9353a884d4585ed098953093c61c))
+* update .tagsByCommits to enable override apiPath. ([201cdaf](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/201cdaf0c113af0b417cd6d5e8884d5f9f871dff))
+
 # [1.6.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.5.0...v1.6.0) (2026-03-24)
 
 
