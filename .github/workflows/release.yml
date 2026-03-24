@@ -14,12 +14,14 @@ jobs:
       issues: write         # comment on issues when released
       pull-requests: write  # comment on PRs when released
       id-token: write       # provenance for npm
+    outputs:
+      new_release_published: ${{ steps.release.outputs.new_release_published }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # semantic-release needs full git history
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node.js
@@ -37,9 +39,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Analyzes commits, bumps version, publishes to npm, creates GitHub Release,
-      # and commits CHANGELOG.md + package.json back to main.
-      # Requires secrets: NPM_TOKEN (npmjs.com token), GITHUB_TOKEN (auto-provided).
       - name: Semantic Release
         id: release
         uses: cycjimmy/semantic-release-action@v4
@@ -52,15 +51,29 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Generate TypeDoc and deploy to GitHub Pages.
-      # Enable Pages in repo Settings → Pages → Source: Deploy from branch → gh-pages.
       - name: Generate documentation
         if: steps.release.outputs.new_release_published == 'true'
         run: npm run docs
 
-      - name: Deploy documentation to GitHub Pages
+      - name: Upload documentation artifact
         if: steps.release.outputs.new_release_published == 'true'
-        uses: peaceiris/actions-gh-pages@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          path: ./docs
+
+  docs:
+    name: Deploy documentation
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
