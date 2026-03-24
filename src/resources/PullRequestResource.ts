@@ -2,6 +2,7 @@ import type { BitbucketPullRequest } from '../domain/PullRequest';
 import type { BitbucketPullRequestActivity, ActivitiesParams } from '../domain/PullRequestActivity';
 import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
 import type { BitbucketCommit } from '../domain/Commit';
+import type { BitbucketChange, ChangesParams } from '../domain/Change';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -24,6 +25,9 @@ import type { RequestFn } from './ProjectResource';
  *
  * // Get commits
  * const commits = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).commits();
+ *
+ * // Get changes
+ * const changes = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).changes();
  * ```
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
@@ -108,6 +112,22 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   async commits(params?: PaginationParams): Promise<BitbucketCommit[]> {
     const data = await this.request<PagedResponse<BitbucketCommit>>(
       `${this.basePath}/commits`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Fetches the file changes included in this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/changes`
+   *
+   * @param params - Optional filters: `limit`, `start`, `withComments`
+   * @returns An array of file changes
+   */
+  async changes(params?: ChangesParams): Promise<BitbucketChange[]> {
+    const data = await this.request<PagedResponse<BitbucketChange>>(
+      `${this.basePath}/changes`,
       params as Record<string, string | number | boolean>,
     );
     return data.values;

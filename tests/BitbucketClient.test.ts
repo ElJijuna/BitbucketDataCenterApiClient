@@ -5,6 +5,7 @@ import type { BitbucketPullRequest, BitbucketParticipant } from '../src/domain/P
 import type { BitbucketCommit } from '../src/domain/Commit';
 import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
 import type { BitbucketPullRequestTask } from '../src/domain/PullRequestTask';
+import type { BitbucketChange } from '../src/domain/Change';
 
 const API_URL = 'https://bitbucket.example.com/rest/api/latest';
 const BASE = API_URL;
@@ -490,6 +491,66 @@ describe('BitbucketClient', () => {
       mockError(404, 'Not Found');
       await expect(
         client.project('PROJ').repo('my-repo').pullRequest(42).commits(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id).changes()', () => {
+    const mockChange: BitbucketChange = {
+      contentId: 'abc123',
+      fromContentId: 'def456',
+      path: {
+        components: ['src', 'index.ts'],
+        parent: 'src',
+        name: 'index.ts',
+        extension: 'ts',
+        toString: 'src/index.ts',
+      },
+      executable: false,
+      srcExecutable: false,
+      percentUnchanged: -1,
+      type: 'MODIFY',
+      nodeType: 'FILE',
+      links: {},
+    };
+
+    it('calls GET .../pull-requests/{id}/changes', async () => {
+      mockOk(pagedOf(mockChange));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).changes();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of changes', async () => {
+      mockOk(pagedOf(mockChange));
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).changes();
+      expect(result).toEqual([mockChange]);
+    });
+
+    it('appends limit and start as query params', async () => {
+      mockOk(pagedOf(mockChange));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).changes({ limit: 50, start: 0 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes?limit=50&start=0`,
+      );
+    });
+
+    it('appends withComments as query param', async () => {
+      mockOk(pagedOf(mockChange));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).changes({ withComments: true });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes?withComments=true`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).changes(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
