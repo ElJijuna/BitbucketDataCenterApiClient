@@ -11,6 +11,7 @@ import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
 import type { BitbucketBranch } from '../src/domain/Branch';
+import type { BitbucketTag } from '../src/domain/Tag';
 import type { BitbucketRepositorySize } from '../src/domain/RepositorySize';
 import type { BitbucketLastModifiedEntry } from '../src/domain/LastModified';
 
@@ -858,6 +859,76 @@ describe('BitbucketClient', () => {
       mockError(404, 'Not Found');
       await expect(
         client.project('PROJ').repo('my-repo').lastModified(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).forks()', () => {
+    it('calls GET .../forks', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.project('PROJ').repo('my-repo').forks();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/forks`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the paged response with forked repositories', async () => {
+      mockOk(pagedOf(mockRepo));
+      const result = await client.project('PROJ').repo('my-repo').forks();
+      expect(result).toEqual(pagedOf(mockRepo));
+    });
+
+    it('appends limit and start as query params', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.project('PROJ').repo('my-repo').forks({ limit: 10, start: 0 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/forks?limit=10&start=0`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').forks(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).tags()', () => {
+    const mockTag: BitbucketTag = {
+      id: 'refs/tags/v1.0.0',
+      displayId: 'v1.0.0',
+      type: 'TAG',
+      latestCommit: 'abc123def456',
+      latestChangeset: 'abc123def456',
+    };
+
+    it('calls GET .../tags', async () => {
+      mockOk(pagedOf(mockTag));
+      await client.project('PROJ').repo('my-repo').tags();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/tags`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the paged response with tags', async () => {
+      mockOk(pagedOf(mockTag));
+      const result = await client.project('PROJ').repo('my-repo').tags();
+      expect(result).toEqual(pagedOf(mockTag));
+    });
+
+    it('appends filterText and orderBy as query params', async () => {
+      mockOk(pagedOf(mockTag));
+      await client.project('PROJ').repo('my-repo').tags({ filterText: 'v1', orderBy: 'ALPHABETICAL' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/tags?filterText=v1&orderBy=ALPHABETICAL`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').tags(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });

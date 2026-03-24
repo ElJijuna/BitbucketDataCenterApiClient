@@ -2,10 +2,11 @@ import type { BitbucketRepository } from '../domain/Repository';
 import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullRequest';
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
+import type { BitbucketTag, TagsParams } from '../domain/Tag';
 import type { BitbucketRepositorySize } from '../domain/RepositorySize';
 import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
 import type { RawFileParams } from '../domain/RawFile';
-import type { PagedResponse } from '../domain/Pagination';
+import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
 
@@ -132,6 +133,36 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   async branches(params?: BranchesParams): Promise<PagedResponse<BitbucketBranch>> {
     return this.request<PagedResponse<BitbucketBranch>>(
       `${this.basePath}/branches`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches the forks of this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/forks`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns A paged response of forked repositories
+   */
+  async forks(params?: PaginationParams): Promise<PagedResponse<BitbucketRepository>> {
+    return this.request<PagedResponse<BitbucketRepository>>(
+      `${this.basePath}/forks`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches tags for this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/tags`
+   *
+   * @param params - Optional filters: `limit`, `start`, `filterText`, `orderBy`
+   * @returns A paged response of tags
+   */
+  async tags(params?: TagsParams): Promise<PagedResponse<BitbucketTag>> {
+    return this.request<PagedResponse<BitbucketTag>>(
+      `${this.basePath}/tags`,
       params as Record<string, string | number | boolean>,
     );
   }
