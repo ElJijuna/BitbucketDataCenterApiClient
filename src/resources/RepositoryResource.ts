@@ -3,6 +3,7 @@ import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullReq
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
+import { PullRequestResource } from './PullRequestResource';
 
 /**
  * Represents a Bitbucket repository resource with chainable async methods.
@@ -18,6 +19,9 @@ import type { RequestFn } from './ProjectResource';
  * // Get pull requests
  * const prs = await bbClient.project('PROJ').repo('my-repo').pullRequests({ state: 'OPEN' });
  *
+ * // Navigate into a specific pull request
+ * const activities = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).activities();
+ *
  * // Get commits
  * const commits = await bbClient.project('PROJ').repo('my-repo').commits({ limit: 10 });
  * ```
@@ -28,8 +32,8 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   /** @internal */
   constructor(
     private readonly request: RequestFn,
-    projectKey: string,
-    repoSlug: string,
+    private readonly projectKey: string,
+    private readonly repoSlug: string,
   ) {
     this.basePath = `/projects/${projectKey}/repos/${repoSlug}`;
   }
@@ -86,5 +90,25 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
       params as Record<string, string | number | boolean>,
     );
     return data.values;
+  }
+
+  /**
+   * Returns a {@link PullRequestResource} for a given pull request ID, providing
+   * access to pull request data and sub-resources (activities, etc.).
+   *
+   * The returned resource can be awaited directly to fetch pull request info,
+   * or chained to access nested resources.
+   *
+   * @param pullRequestId - The numeric pull request ID
+   * @returns A chainable pull request resource
+   *
+   * @example
+   * ```typescript
+   * const pr         = await bbClient.project('PROJ').repo('my-repo').pullRequest(42);
+   * const activities = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).activities();
+   * ```
+   */
+  pullRequest(pullRequestId: number): PullRequestResource {
+    return new PullRequestResource(this.request, this.projectKey, this.repoSlug, pullRequestId);
   }
 }

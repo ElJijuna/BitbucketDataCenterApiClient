@@ -3,6 +3,7 @@ import type { BitbucketProject } from '../src/domain/Project';
 import type { BitbucketRepository } from '../src/domain/Repository';
 import type { BitbucketPullRequest, BitbucketParticipant } from '../src/domain/PullRequest';
 import type { BitbucketCommit } from '../src/domain/Commit';
+import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
 
 const API_URL = 'https://bitbucket.example.com';
 const BASE = `${API_URL}/rest/api/latest`;
@@ -325,6 +326,86 @@ describe('BitbucketClient', () => {
       await expect(client.project('PROJ').repo('my-repo').commits()).rejects.toThrow(
         'Bitbucket API error: 404 Not Found',
       );
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id)', () => {
+    it('resolves to pull request info when awaited', async () => {
+      mockOk(mockPullRequest);
+      expect(await client.project('PROJ').repo('my-repo').pullRequest(42)).toEqual(mockPullRequest);
+    });
+
+    it('calls GET .../pull-requests/{id} when awaited', async () => {
+      mockOk(mockPullRequest);
+      await client.project('PROJ').repo('my-repo').pullRequest(42);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42`,
+        expect.any(Object),
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.project('PROJ').repo('my-repo').pullRequest(42)).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id).activities()', () => {
+    const mockActivity: BitbucketPullRequestActivity = {
+      id: 1,
+      createdDate: 1700000000000,
+      user: {
+        name: 'john.doe',
+        emailAddress: 'john@example.com',
+        id: 1,
+        displayName: 'John Doe',
+        active: true,
+        slug: 'john.doe',
+        type: 'NORMAL',
+      },
+      action: 'APPROVED',
+    };
+
+    it('calls GET .../pull-requests/{id}/activities', async () => {
+      mockOk(pagedOf(mockActivity));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).activities();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of activities', async () => {
+      mockOk(pagedOf(mockActivity));
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).activities();
+      expect(result).toEqual([mockActivity]);
+    });
+
+    it('appends limit and start as query params', async () => {
+      mockOk(pagedOf(mockActivity));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).activities({ limit: 10, start: 5 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities?limit=10&start=5`,
+      );
+    });
+
+    it('appends fromId and fromType as query params', async () => {
+      mockOk(pagedOf(mockActivity));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).activities({ fromId: 7, fromType: 'COMMENT' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities?fromId=7&fromType=COMMENT`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).activities(),
+      ).rejects.toThrow('Bitbucket API error: 403 Forbidden');
     });
   });
 
