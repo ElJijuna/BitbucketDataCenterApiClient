@@ -11,8 +11,9 @@ import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
 
-const API_URL = 'https://bitbucket.example.com/rest/api/latest';
-const BASE = API_URL;
+const API_URL = 'https://bitbucket.example.com';
+const API_PATH = 'rest/api/latest';
+const BASE = `${API_URL}/${API_PATH}`;
 const USER = 'john.doe';
 const TOKEN = 'my-token';
 
@@ -98,7 +99,7 @@ describe('BitbucketClient', () => {
   let fetchMock: jest.MockedFunction<typeof fetch>;
 
   beforeEach(() => {
-    client = new BitbucketClient({ apiUrl: API_URL, user: USER, token: TOKEN });
+    client = new BitbucketClient({ apiUrl: API_URL, apiPath: API_PATH, user: USER, token: TOKEN });
     fetchMock = jest.fn();
     global.fetch = fetchMock;
   });
@@ -128,7 +129,7 @@ describe('BitbucketClient', () => {
   describe('constructor', () => {
     it('throws TypeError when apiUrl is invalid', () => {
       expect(
-        () => new BitbucketClient({ apiUrl: 'not-a-url/rest/api/latest', user: USER, token: TOKEN }),
+        () => new BitbucketClient({ apiUrl: 'not-a-url', apiPath: API_PATH, user: USER, token: TOKEN }),
       ).toThrow(TypeError);
     });
   });

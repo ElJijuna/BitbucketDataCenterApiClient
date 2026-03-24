@@ -9,8 +9,10 @@ import type { PagedResponse } from './domain/Pagination';
  * Constructor options for {@link BitbucketClient}.
  */
 export interface BitbucketClientOptions {
-  /** The base URL of the Bitbucket Data Center instance (e.g., `https://bitbucket.example.com`) */
+  /** The host URL of the Bitbucket Data Center instance (e.g., `https://bitbucket.example.com`) */
   apiUrl: string;
+  /** The API path to prepend to every request (e.g., `'rest/api/latest'`) */
+  apiPath: string;
   /** The username to authenticate with */
   user: string;
   /** The personal access token or password to authenticate with */
@@ -23,7 +25,8 @@ export interface BitbucketClientOptions {
  * @example
  * ```typescript
  * const bbClient = new BitbucketClient({
- *   apiUrl: 'https://bitbucket.example.com/rest/api/latest',
+ *   apiUrl: 'https://bitbucket.example.com',
+ *   apiPath: 'rest/api/latest',
  *   user: 'john.doe',
  *   token: 'my-token',
  * });
@@ -40,13 +43,15 @@ export interface BitbucketClientOptions {
  */
 export class BitbucketClient {
   private readonly security: Security;
+  private readonly apiPath: string;
 
   /**
    * @param options - Connection and authentication options
    * @throws {TypeError} If `apiUrl` is not a valid URL
    */
-  constructor({ apiUrl, user, token }: BitbucketClientOptions) {
+  constructor({ apiUrl, apiPath, user, token }: BitbucketClientOptions) {
     this.security = new Security(apiUrl, user, token);
+    this.apiPath = apiPath.replace(/^\/|\/$/g, '');
   }
 
   /**
@@ -61,7 +66,7 @@ export class BitbucketClient {
     path: string,
     params?: Record<string, string | number | boolean>,
   ): Promise<T> {
-    const base = `${this.security.getApiUrl()}${path}`;
+    const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
     const url = buildUrl(base, params);
     const response = await fetch(url, { headers: this.security.getHeaders() });
     if (!response.ok) {
