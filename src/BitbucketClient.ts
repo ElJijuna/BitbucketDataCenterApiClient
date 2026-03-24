@@ -1,5 +1,5 @@
 import { Security } from './security/Security';
-import { ProjectResource, type RequestFn, type RequestTextFn } from './resources/ProjectResource';
+import { ProjectResource, type RequestFn, type RequestTextFn, type RequestBodyFn } from './resources/ProjectResource';
 import { BitbucketApiError } from './errors/BitbucketApiError';
 import { UserResource } from './resources/UserResource';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
@@ -76,6 +76,19 @@ export class BitbucketClient {
     return response.json() as Promise<T>;
   }
 
+  private async requestPost<T>(path: string, body: unknown): Promise<T> {
+    const url = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: this.security.getHeaders(),
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      throw new BitbucketApiError(response.status, response.statusText);
+    }
+    return response.json() as Promise<T>;
+  }
+
   private async requestText(
     path: string,
     params?: Record<string, string | number | boolean>,
@@ -127,7 +140,8 @@ export class BitbucketClient {
       params?: Record<string, string | number | boolean>,
     ) => this.request<T>(path, params);
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
-    return new ProjectResource(request, requestText, projectKey);
+    const requestBody: RequestBodyFn = <T>(path: string, body: unknown) => this.requestPost<T>(path, body);
+    return new ProjectResource(request, requestText, requestBody, projectKey);
   }
 
   /**

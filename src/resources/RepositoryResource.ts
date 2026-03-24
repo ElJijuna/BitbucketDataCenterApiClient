@@ -8,7 +8,7 @@ import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/L
 import type { RawFileParams } from '../domain/RawFile';
 import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
-import type { RequestFn, RequestTextFn } from './ProjectResource';
+import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
 
 /**
@@ -39,6 +39,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   constructor(
     private readonly request: RequestFn,
     private readonly requestText: RequestTextFn,
+    private readonly requestBody: RequestBodyFn,
     private readonly projectKey: string,
     private readonly repoSlug: string,
   ) {
@@ -151,6 +152,18 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
       `${this.basePath}/forks`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Fetches tags associated with a list of commits.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/tags`
+   *
+   * @param commits - Array of commit SHAs to look up tags for
+   * @returns A paged response of tags
+   */
+  async tagsByCommits(commits: string[]): Promise<PagedResponse<BitbucketTag>> {
+    return this.requestBody<PagedResponse<BitbucketTag>>(`${this.basePath}/tags`, commits);
   }
 
   /**

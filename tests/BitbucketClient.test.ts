@@ -896,6 +896,42 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('project(key).repo(slug).tagsByCommits()', () => {
+    const mockTag: BitbucketTag = {
+      id: 'refs/tags/v1.0.0',
+      displayId: 'v1.0.0',
+      type: 'TAG',
+      latestCommit: 'abc123def456',
+      latestChangeset: 'abc123def456',
+    };
+    const commits = ['abc123def456', 'def456abc123'];
+
+    it('calls POST .../tags with the commit array as body', async () => {
+      mockOk(pagedOf(mockTag));
+      await client.project('PROJ').repo('my-repo').tagsByCommits(commits);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/tags`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(commits),
+        }),
+      );
+    });
+
+    it('returns the paged response with tags', async () => {
+      mockOk(pagedOf(mockTag));
+      const result = await client.project('PROJ').repo('my-repo').tagsByCommits(commits);
+      expect(result).toEqual(pagedOf(mockTag));
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').tagsByCommits(commits),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
   describe('project(key).repo(slug).tags()', () => {
     const mockTag: BitbucketTag = {
       id: 'refs/tags/v1.0.0',
