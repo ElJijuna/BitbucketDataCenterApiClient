@@ -29,6 +29,7 @@
     "rest"
   ],
   "license": "MIT",
+  "homepage": "https://eljijuna.github.io/BitbucketDataCenterApiClient",
   "repository": {
     "type": "git",
     "url": "https://github.com/ElJijuna/BitbucketDataCenterApiClient.git"
