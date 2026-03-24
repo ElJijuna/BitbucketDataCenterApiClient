@@ -4,6 +4,7 @@ export { Security } from './security/Security';
 export { ProjectResource } from './resources/ProjectResource';
 export { RepositoryResource } from './resources/RepositoryResource';
 export { PullRequestResource } from './resources/PullRequestResource';
+export { UserResource } from './resources/UserResource';
 export type { BitbucketProject, ProjectsParams } from './domain/Project';
 export type { BitbucketRepository, ReposParams } from './domain/Repository';
 export type { BitbucketPullRequest, BitbucketParticipant, BitbucketRef, PullRequestsParams } from './domain/PullRequest';
@@ -13,5 +14,6 @@ export type { BitbucketChange, BitbucketChangePath, ChangeType, ChangeNodeType, 
 export type { BitbucketReport, BitbucketReportData, ReportResult, ReportDataType, ReportsParams } from './domain/Report';
 export type { BitbucketBuildSummaries, BitbucketBuildCount } from './domain/BuildSummary';
 export type { BitbucketIssue } from './domain/Issue';
+export type { BitbucketUser, BitbucketUserPermission, UsersParams, ProjectUsersParams } from './domain/User';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';

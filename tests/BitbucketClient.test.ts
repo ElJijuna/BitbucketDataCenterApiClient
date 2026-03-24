@@ -9,6 +9,7 @@ import type { BitbucketChange } from '../src/domain/Change';
 import type { BitbucketReport } from '../src/domain/Report';
 import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 import type { BitbucketIssue } from '../src/domain/Issue';
+import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
 
 const API_URL = 'https://bitbucket.example.com/rest/api/latest';
 const BASE = API_URL;
@@ -656,6 +657,117 @@ describe('BitbucketClient', () => {
       await expect(
         client.project('PROJ').repo('my-repo').pullRequest(42).issues(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('users()', () => {
+    const mockUser: BitbucketUser = {
+      name: 'john.doe',
+      emailAddress: 'john@example.com',
+      id: 1,
+      displayName: 'John Doe',
+      active: true,
+      slug: 'john.doe',
+      type: 'NORMAL',
+      links: {},
+    };
+
+    it('calls GET /users', async () => {
+      mockOk(pagedOf(mockUser));
+      await client.users();
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users`, expect.any(Object));
+    });
+
+    it('returns the list of users', async () => {
+      mockOk(pagedOf(mockUser));
+      expect(await client.users()).toEqual([mockUser]);
+    });
+
+    it('appends filter and limit as query params', async () => {
+      mockOk(pagedOf(mockUser));
+      await client.users({ filter: 'john', limit: 10 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/users?filter=john&limit=10`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.users()).rejects.toThrow('Bitbucket API error: 401 Unauthorized');
+    });
+  });
+
+  describe('user(slug)', () => {
+    const mockUser: BitbucketUser = {
+      name: 'john.doe',
+      emailAddress: 'john@example.com',
+      id: 1,
+      displayName: 'John Doe',
+      active: true,
+      slug: 'john.doe',
+      type: 'NORMAL',
+      links: {},
+    };
+
+    it('resolves to user info when awaited', async () => {
+      mockOk(mockUser);
+      expect(await client.user('john.doe')).toEqual(mockUser);
+    });
+
+    it('calls GET /users/{slug} when awaited', async () => {
+      mockOk(mockUser);
+      await client.user('john.doe');
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/john.doe`, expect.any(Object));
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.user('john.doe')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).users()', () => {
+    const mockUserPermission: BitbucketUserPermission = {
+      user: {
+        name: 'john.doe',
+        emailAddress: 'john@example.com',
+        id: 1,
+        displayName: 'John Doe',
+        active: true,
+        slug: 'john.doe',
+        type: 'NORMAL',
+        links: {},
+      },
+      permission: 'PROJECT_WRITE',
+    };
+
+    it('calls GET /projects/{key}/permissions/users', async () => {
+      mockOk(pagedOf(mockUserPermission));
+      await client.project('PROJ').users();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/permissions/users`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of user permissions', async () => {
+      mockOk(pagedOf(mockUserPermission));
+      expect(await client.project('PROJ').users()).toEqual([mockUserPermission]);
+    });
+
+    it('appends filter and permission as query params', async () => {
+      mockOk(pagedOf(mockUserPermission));
+      await client.project('PROJ').users({ filter: 'john', permission: 'PROJECT_WRITE' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/permissions/users?filter=john&permission=PROJECT_WRITE`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(client.project('PROJ').users()).rejects.toThrow(
+        'Bitbucket API error: 403 Forbidden',
+      );
     });
   });
 

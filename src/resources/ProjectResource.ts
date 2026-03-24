@@ -1,5 +1,6 @@
 import type { BitbucketProject } from '../domain/Project';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
+import type { BitbucketUserPermission, ProjectUsersParams } from '../domain/User';
 import type { PagedResponse } from '../domain/Pagination';
 import { RepositoryResource } from './RepositoryResource';
 
@@ -25,6 +26,9 @@ export type RequestFn = <T>(
  *
  * // Navigate into a specific repository
  * const prs = await bbClient.project('PROJ').repo('my-repo').pullRequests();
+ *
+ * // Get users with access to the project
+ * const users = await bbClient.project('PROJ').users({ permission: 'PROJECT_WRITE' });
  * ```
  */
 export class ProjectResource implements PromiseLike<BitbucketProject> {
@@ -91,5 +95,21 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    */
   repo(repoSlug: string): RepositoryResource {
     return new RepositoryResource(this.request, this.key, repoSlug);
+  }
+
+  /**
+   * Fetches users with explicit permissions on this project.
+   *
+   * `GET /rest/api/latest/projects/{key}/permissions/users`
+   *
+   * @param params - Optional filters: `limit`, `start`, `filter`, `permission`
+   * @returns An array of user–permission pairs
+   */
+  async users(params?: ProjectUsersParams): Promise<BitbucketUserPermission[]> {
+    const data = await this.request<PagedResponse<BitbucketUserPermission>>(
+      `/projects/${this.key}/permissions/users`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
   }
 }

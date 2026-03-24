@@ -1,6 +1,8 @@
 import { Security } from './security/Security';
 import { ProjectResource, type RequestFn } from './resources/ProjectResource';
+import { UserResource } from './resources/UserResource';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
+import type { BitbucketUser, UsersParams } from './domain/User';
 import type { PagedResponse } from './domain/Pagination';
 
 /**
@@ -32,6 +34,8 @@ export interface BitbucketClientOptions {
  * const repo     = await bbClient.project('PROJ').repo('my-repo');
  * const prs      = await bbClient.project('PROJ').repo('my-repo').pullRequests({ state: 'OPEN' });
  * const commits  = await bbClient.project('PROJ').repo('my-repo').commits({ limit: 10 });
+ * const users    = await bbClient.users({ filter: 'john' });
+ * const user     = await bbClient.user('john.doe');
  * ```
  */
 export class BitbucketClient {
@@ -105,6 +109,44 @@ export class BitbucketClient {
       params?: Record<string, string | number | boolean>,
     ) => this.request<T>(path, params);
     return new ProjectResource(request, projectKey);
+  }
+
+  /**
+   * Fetches all users accessible to the authenticated user.
+   *
+   * `GET /rest/api/latest/users`
+   *
+   * @param params - Optional filters: `limit`, `start`, `filter`
+   * @returns An array of users
+   */
+  async users(params?: UsersParams): Promise<BitbucketUser[]> {
+    const data = await this.request<PagedResponse<BitbucketUser>>(
+      '/users',
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Returns a {@link UserResource} for a given user slug, providing access
+   * to user data.
+   *
+   * The returned resource can be awaited directly to fetch user info.
+   *
+   * @param slug - The user slug (e.g., `'john.doe'`)
+   * @returns A chainable user resource
+   *
+   * @example
+   * ```typescript
+   * const user = await bbClient.user('john.doe');
+   * ```
+   */
+  user(slug: string): UserResource {
+    const request: RequestFn = <T>(
+      path: string,
+      params?: Record<string, string | number | boolean>,
+    ) => this.request<T>(path, params);
+    return new UserResource(request, slug);
   }
 }
 
