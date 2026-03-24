@@ -3,6 +3,7 @@ import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullReq
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
 import type { BitbucketRepositorySize } from '../domain/RepositorySize';
+import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
@@ -89,6 +90,22 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   async commits(params?: CommitsParams): Promise<BitbucketCommit[]> {
     const data = await this.request<PagedResponse<BitbucketCommit>>(
       `${this.basePath}/commits`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Fetches the files last modified in this repository along with the commit that last touched each.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/last-modified`
+   *
+   * @param params - Optional filters: `limit`, `start`, `at`
+   * @returns An array of last-modified entries
+   */
+  async lastModified(params?: LastModifiedParams): Promise<BitbucketLastModifiedEntry[]> {
+    const data = await this.request<PagedResponse<BitbucketLastModifiedEntry>>(
+      `${this.basePath}/last-modified`,
       params as Record<string, string | number | boolean>,
     );
     return data.values;

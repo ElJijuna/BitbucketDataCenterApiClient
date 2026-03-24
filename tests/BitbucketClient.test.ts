@@ -12,6 +12,7 @@ import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
 import type { BitbucketBranch } from '../src/domain/Branch';
 import type { BitbucketRepositorySize } from '../src/domain/RepositorySize';
+import type { BitbucketLastModifiedEntry } from '../src/domain/LastModified';
 
 const API_URL = 'https://bitbucket.example.com';
 const API_PATH = 'rest/api/latest';
@@ -771,6 +772,48 @@ describe('BitbucketClient', () => {
       await expect(client.project('PROJ').users()).rejects.toThrow(
         'Bitbucket API error: 403 Forbidden',
       );
+    });
+  });
+
+  describe('project(key).repo(slug).lastModified()', () => {
+    const mockEntry: BitbucketLastModifiedEntry = {
+      path: {
+        components: ['src', 'index.ts'],
+        parent: 'src',
+        name: 'index.ts',
+        extension: 'ts',
+        toString: 'src/index.ts',
+      },
+      latestCommit: mockCommit,
+    };
+
+    it('calls GET .../last-modified', async () => {
+      mockOk(pagedOf(mockEntry));
+      await client.project('PROJ').repo('my-repo').lastModified();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/last-modified`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of last-modified entries', async () => {
+      mockOk(pagedOf(mockEntry));
+      const result = await client.project('PROJ').repo('my-repo').lastModified();
+      expect(result).toEqual([mockEntry]);
+    });
+
+    it('appends at as a query param', async () => {
+      mockOk(pagedOf(mockEntry));
+      await client.project('PROJ').repo('my-repo').lastModified({ at: 'main' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/last-modified?at=main`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').lastModified(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
 

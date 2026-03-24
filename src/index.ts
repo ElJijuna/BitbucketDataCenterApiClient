@@ -18,4 +18,5 @@ export type { BitbucketUser, BitbucketUserPermission, UsersParams, ProjectUsersP
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
+export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';
