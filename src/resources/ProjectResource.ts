@@ -1,6 +1,7 @@
 import type { BitbucketProject } from '../domain/Project';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { BitbucketUserPermission, ProjectUsersParams } from '../domain/User';
+import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import type { PagedResponse } from '../domain/Pagination';
 import { RepositoryResource } from './RepositoryResource';
 
@@ -114,6 +115,21 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
   async users(params?: ProjectUsersParams): Promise<PagedResponse<BitbucketUserPermission>> {
     return this.request<PagedResponse<BitbucketUserPermission>>(
       `/projects/${this.key}/permissions/users`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches webhooks configured on this project.
+   *
+   * `GET /rest/api/latest/projects/{key}/webhooks`
+   *
+   * @param params - Optional filters: `limit`, `start`, `event`
+   * @returns A paged response of webhooks
+   */
+  async webhooks(params?: WebhooksParams): Promise<PagedResponse<BitbucketWebhook>> {
+    return this.request<PagedResponse<BitbucketWebhook>>(
+      `/projects/${this.key}/webhooks`,
       params as Record<string, string | number | boolean>,
     );
   }

@@ -6,6 +6,7 @@ import type { BitbucketTag, TagsParams } from '../domain/Tag';
 import type { BitbucketRepositorySize } from '../domain/RepositorySize';
 import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
 import type { RawFileParams } from '../domain/RawFile';
+import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
@@ -183,6 +184,21 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * const activities = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).activities();
    * ```
    */
+  /**
+   * Fetches webhooks configured on this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/webhooks/search`
+   *
+   * @param params - Optional filters: `limit`, `start`, `event`
+   * @returns A paged response of webhooks
+   */
+  async webhooks(params?: WebhooksParams): Promise<PagedResponse<BitbucketWebhook>> {
+    return this.request<PagedResponse<BitbucketWebhook>>(
+      `${this.basePath}/webhooks/search`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
   /**
    * Fetches the raw content of a file in this repository.
    *

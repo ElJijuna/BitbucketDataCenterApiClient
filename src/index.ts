@@ -18,6 +18,18 @@ export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketUser, BitbucketUserPermission, UsersParams, ProjectUsersParams } from './domain/User';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
+export type {
+  BitbucketWebhook,
+  BitbucketWebhookStatistics,
+  BitbucketWebhookDelivery,
+  BitbucketWebhookRequest,
+  BitbucketWebhookResult,
+  BitbucketWebhookEventScope,
+  BitbucketWebhookCounts,
+  WebhooksParams,
+  WebhookEvent,
+  WebhookScopeType,
+} from './domain/Webhook';
 export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';

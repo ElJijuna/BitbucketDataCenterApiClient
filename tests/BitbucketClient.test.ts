@@ -13,6 +13,7 @@ import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
 import type { BitbucketBranch } from '../src/domain/Branch';
 import type { BitbucketTag } from '../src/domain/Tag';
+import type { BitbucketWebhook } from '../src/domain/Webhook';
 import type { BitbucketRepositorySize } from '../src/domain/RepositorySize';
 import type { BitbucketLastModifiedEntry } from '../src/domain/LastModified';
 
@@ -931,6 +932,86 @@ describe('BitbucketClient', () => {
       await expect(
         client.project('PROJ').repo('my-repo').tags(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).webhooks()', () => {
+    const mockWebhook: BitbucketWebhook = {
+      id: 1,
+      name: 'CI Notifier',
+      url: 'https://ci.example.com/hook',
+      events: ['pr:opened', 'pr:merged'],
+      active: true,
+      scopeType: 'project',
+      sslVerificationRequired: true,
+    };
+
+    it('calls GET /projects/{key}/webhooks', async () => {
+      mockOk(pagedOf(mockWebhook));
+      await client.project('PROJ').webhooks();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/webhooks`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the paged response with webhooks', async () => {
+      mockOk(pagedOf(mockWebhook));
+      expect(await client.project('PROJ').webhooks()).toEqual(pagedOf(mockWebhook));
+    });
+
+    it('appends event filter as query param', async () => {
+      mockOk(pagedOf(mockWebhook));
+      await client.project('PROJ').webhooks({ event: 'pr:opened' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/webhooks?event=pr%3Aopened`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.project('PROJ').webhooks()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
+    });
+  });
+
+  describe('project(key).repo(slug).webhooks()', () => {
+    const mockWebhook: BitbucketWebhook = {
+      id: 2,
+      name: 'Repo Hook',
+      url: 'https://ci.example.com/repo-hook',
+      events: ['repo:push'],
+      active: true,
+      scopeType: 'repository',
+      sslVerificationRequired: false,
+    };
+
+    it('calls GET .../webhooks/search', async () => {
+      mockOk(pagedOf(mockWebhook));
+      await client.project('PROJ').repo('my-repo').webhooks();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/webhooks/search`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the paged response with webhooks', async () => {
+      mockOk(pagedOf(mockWebhook));
+      expect(await client.project('PROJ').repo('my-repo').webhooks()).toEqual(pagedOf(mockWebhook));
+    });
+
+    it('appends event filter as query param', async () => {
+      mockOk(pagedOf(mockWebhook));
+      await client.project('PROJ').repo('my-repo').webhooks({ event: 'repo:push' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/webhooks/search?event=repo%3Apush`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(client.project('PROJ').repo('my-repo').webhooks()).rejects.toThrow(
+        'Bitbucket API error: 403 Forbidden',
+      );
     });
   });
 
