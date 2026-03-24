@@ -5,8 +5,8 @@ import type { BitbucketPullRequest, BitbucketParticipant } from '../src/domain/P
 import type { BitbucketCommit } from '../src/domain/Commit';
 import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
 
-const API_URL = 'https://bitbucket.example.com';
-const BASE = `${API_URL}/rest/api/latest`;
+const API_URL = 'https://bitbucket.example.com/rest/api/latest';
+const BASE = API_URL;
 const USER = 'john.doe';
 const TOKEN = 'my-token';
 
@@ -122,7 +122,7 @@ describe('BitbucketClient', () => {
   describe('constructor', () => {
     it('throws TypeError when apiUrl is invalid', () => {
       expect(
-        () => new BitbucketClient({ apiUrl: 'not-a-url', user: USER, token: TOKEN }),
+        () => new BitbucketClient({ apiUrl: 'not-a-url/rest/api/latest', user: USER, token: TOKEN }),
       ).toThrow(TypeError);
     });
   });

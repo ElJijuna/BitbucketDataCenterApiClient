@@ -21,7 +21,7 @@ export interface BitbucketClientOptions {
  * @example
  * ```typescript
  * const bbClient = new BitbucketClient({
- *   apiUrl: 'https://bitbucket.example.com',
+ *   apiUrl: 'https://bitbucket.example.com/rest/api/latest',
  *   user: 'john.doe',
  *   token: 'my-token',
  * });
@@ -48,7 +48,7 @@ export class BitbucketClient {
   /**
    * Performs an authenticated GET request to the Bitbucket REST API.
    *
-   * @param path - API path relative to `/rest/api/latest` (e.g., `'/projects'`)
+   * @param path - API path appended directly to `apiUrl` (e.g., `'/projects'`)
    * @param params - Optional query parameters to append to the URL
    * @throws {Error} If the HTTP response is not OK
    * @internal
@@ -57,7 +57,7 @@ export class BitbucketClient {
     path: string,
     params?: Record<string, string | number | boolean>,
   ): Promise<T> {
-    const base = `${this.security.getApiUrl()}/rest/api/latest${path}`;
+    const base = `${this.security.getApiUrl()}${path}`;
     const url = buildUrl(base, params);
     const response = await fetch(url, { headers: this.security.getHeaders() });
     if (!response.ok) {
