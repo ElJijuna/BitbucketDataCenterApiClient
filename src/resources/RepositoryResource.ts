@@ -161,10 +161,11 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * `POST /rest/api/latest/projects/{key}/repos/{slug}/tags`
    *
    * @param commits - Array of commit SHAs to look up tags for
+   * @param options - Optional overrides (e.g. `apiPath` to target a different API version)
    * @returns A paged response of tags
    */
-  async tagsByCommits(commits: string[]): Promise<PagedResponse<BitbucketTag>> {
-    return this.requestBody<PagedResponse<BitbucketTag>>(`${this.basePath}/tags`, commits);
+  async tagsByCommits(commits: string[], options?: { apiPath?: string }): Promise<PagedResponse<BitbucketTag>> {
+    return this.requestBody<PagedResponse<BitbucketTag>>(`${this.basePath}/tags`, commits, options);
   }
 
   /**

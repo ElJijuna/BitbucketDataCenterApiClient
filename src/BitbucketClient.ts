@@ -76,8 +76,9 @@ export class BitbucketClient {
     return response.json() as Promise<T>;
   }
 
-  private async requestPost<T>(path: string, body: unknown): Promise<T> {
-    const url = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
+  private async requestPost<T>(path: string, body: unknown, options?: { apiPath?: string }): Promise<T> {
+    const apiPath = options?.apiPath ?? this.apiPath;
+    const url = `${this.security.getApiUrl()}/${apiPath}${path}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: this.security.getHeaders(),
@@ -140,7 +141,7 @@ export class BitbucketClient {
       params?: Record<string, string | number | boolean>,
     ) => this.request<T>(path, params);
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
-    const requestBody: RequestBodyFn = <T>(path: string, body: unknown) => this.requestPost<T>(path, body);
+    const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string }) => this.requestPost<T>(path, body, options);
     return new ProjectResource(request, requestText, requestBody, projectKey);
   }
 

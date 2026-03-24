@@ -1013,6 +1013,13 @@ describe('BitbucketClient', () => {
       expect(result).toEqual(pagedOf(mockTag));
     });
 
+    it('uses a custom apiPath when provided', async () => {
+      mockOk(pagedOf(mockTag));
+      await client.project('PROJ').repo('my-repo').tagsByCommits(commits, { apiPath: 'rest/api/1.0' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${API_URL}/rest/api/1.0/projects/PROJ/repos/my-repo/tags`);
+    });
+
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
       await expect(

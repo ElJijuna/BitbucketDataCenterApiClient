@@ -18,7 +18,11 @@ export type RequestTextFn = (
 ) => Promise<string>;
 
 /** @internal */
-export type RequestBodyFn = <T>(path: string, body: unknown) => Promise<T>;
+export type RequestBodyFn = <T>(
+  path: string,
+  body: unknown,
+  options?: { apiPath?: string },
+) => Promise<T>;
 
 /**
  * Represents a Bitbucket project resource with chainable async methods.
