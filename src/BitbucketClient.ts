@@ -27,7 +27,7 @@ export interface BitbucketClientOptions {
  * const bbClient = new BitbucketClient({
  *   apiUrl: 'https://bitbucket.example.com',
  *   apiPath: 'rest/api/latest',
- *   user: 'john.doe',
+ *   user: 'pilmee',
  *   token: 'my-token',
  * });
  *
@@ -38,7 +38,7 @@ export interface BitbucketClientOptions {
  * const prs      = await bbClient.project('PROJ').repo('my-repo').pullRequests({ state: 'OPEN' });
  * const commits  = await bbClient.project('PROJ').repo('my-repo').commits({ limit: 10 });
  * const users    = await bbClient.users({ filter: 'john' });
- * const user     = await bbClient.user('john.doe');
+ * const user     = await bbClient.user('pilmee');
  * ```
  */
 export class BitbucketClient {
@@ -138,12 +138,12 @@ export class BitbucketClient {
    *
    * The returned resource can be awaited directly to fetch user info.
    *
-   * @param slug - The user slug (e.g., `'john.doe'`)
+   * @param slug - The user slug (e.g., `'pilmee'`)
    * @returns A chainable user resource
    *
    * @example
    * ```typescript
-   * const user = await bbClient.user('john.doe');
+   * const user = await bbClient.user('pilmee');
    * ```
    */
   user(slug: string): UserResource {

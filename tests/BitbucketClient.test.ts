@@ -14,7 +14,7 @@ import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User'
 const API_URL = 'https://bitbucket.example.com';
 const API_PATH = 'rest/api/latest';
 const BASE = `${API_URL}/${API_PATH}`;
-const USER = 'john.doe';
+const USER = 'pilmee';
 const TOKEN = 'my-token';
 
 const mockProject: BitbucketProject = {
@@ -40,12 +40,12 @@ const mockRepo: BitbucketRepository = {
 
 const mockAuthorParticipant: BitbucketParticipant = {
   user: {
-    name: 'john.doe',
+    name: 'pilmee',
     emailAddress: 'john@example.com',
     id: 1,
     displayName: 'John Doe',
     active: true,
-    slug: 'john.doe',
+    slug: 'pilmee',
     type: 'NORMAL',
   },
   role: 'AUTHOR',
@@ -364,12 +364,12 @@ describe('BitbucketClient', () => {
       id: 1,
       createdDate: 1700000000000,
       user: {
-        name: 'john.doe',
+        name: 'pilmee',
         emailAddress: 'john@example.com',
         id: 1,
         displayName: 'John Doe',
         active: true,
-        slug: 'john.doe',
+        slug: 'pilmee',
         type: 'NORMAL',
       },
       action: 'APPROVED',
@@ -421,12 +421,12 @@ describe('BitbucketClient', () => {
       id: 1,
       createdDate: 1700000000000,
       author: {
-        name: 'john.doe',
+        name: 'pilmee',
         emailAddress: 'john@example.com',
         id: 1,
         displayName: 'John Doe',
         active: true,
-        slug: 'john.doe',
+        slug: 'pilmee',
         type: 'NORMAL',
       },
       text: 'Fix this before merging',
@@ -663,12 +663,12 @@ describe('BitbucketClient', () => {
 
   describe('users()', () => {
     const mockUser: BitbucketUser = {
-      name: 'john.doe',
+      name: 'pilmee',
       emailAddress: 'john@example.com',
       id: 1,
       displayName: 'John Doe',
       active: true,
-      slug: 'john.doe',
+      slug: 'pilmee',
       type: 'NORMAL',
       links: {},
     };
@@ -699,42 +699,42 @@ describe('BitbucketClient', () => {
 
   describe('user(slug)', () => {
     const mockUser: BitbucketUser = {
-      name: 'john.doe',
+      name: 'pilmee',
       emailAddress: 'john@example.com',
       id: 1,
       displayName: 'John Doe',
       active: true,
-      slug: 'john.doe',
+      slug: 'pilmee',
       type: 'NORMAL',
       links: {},
     };
 
     it('resolves to user info when awaited', async () => {
       mockOk(mockUser);
-      expect(await client.user('john.doe')).toEqual(mockUser);
+      expect(await client.user('pilmee')).toEqual(mockUser);
     });
 
     it('calls GET /users/{slug} when awaited', async () => {
       mockOk(mockUser);
-      await client.user('john.doe');
-      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/john.doe`, expect.any(Object));
+      await client.user('pilmee');
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/pilmee`, expect.any(Object));
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(client.user('john.doe')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.user('pilmee')).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
 
   describe('project(key).users()', () => {
     const mockUserPermission: BitbucketUserPermission = {
       user: {
-        name: 'john.doe',
+        name: 'pilmee',
         emailAddress: 'john@example.com',
         id: 1,
         displayName: 'John Doe',
         active: true,
-        slug: 'john.doe',
+        slug: 'pilmee',
         type: 'NORMAL',
         links: {},
       },

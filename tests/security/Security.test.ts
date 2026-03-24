@@ -1,7 +1,7 @@
 import { Security } from '../../src/security/Security';
 
 const API_URL = 'https://bitbucket.example.com';
-const USER = 'john.doe';
+const USER = 'pilmee';
 const TOKEN = 'my-personal-access-token';
 
 describe('Security', () => {

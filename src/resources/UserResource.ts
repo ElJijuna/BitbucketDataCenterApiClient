@@ -10,7 +10,7 @@ import type { RequestFn } from './ProjectResource';
  * @example
  * ```typescript
  * // Await directly to get user info
- * const user = await bbClient.user('john.doe');
+ * const user = await bbClient.user('pilmee');
  * ```
  */
 export class UserResource implements PromiseLike<BitbucketUser> {
