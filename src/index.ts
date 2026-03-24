@@ -5,6 +5,7 @@ export { Security } from './security/Security';
 export { ProjectResource } from './resources/ProjectResource';
 export { RepositoryResource } from './resources/RepositoryResource';
 export { PullRequestResource } from './resources/PullRequestResource';
+export { CommitResource } from './resources/CommitResource';
 export { UserResource } from './resources/UserResource';
 export type { BitbucketProject, ProjectsParams } from './domain/Project';
 export type { BitbucketRepository, ReposParams } from './domain/Repository';
@@ -17,6 +18,16 @@ export type { BitbucketBuildSummaries, BitbucketBuildCount } from './domain/Buil
 export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketUser, BitbucketUserPermission, UsersParams, ProjectUsersParams } from './domain/User';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
+export type {
+  BitbucketDiff,
+  BitbucketDiffEntry,
+  BitbucketDiffHunk,
+  BitbucketDiffSegment,
+  BitbucketDiffLine,
+  DiffParams,
+  CommitChangesParams,
+  DiffSegmentType,
+} from './domain/Diff';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
 export type {
   BitbucketWebhook,

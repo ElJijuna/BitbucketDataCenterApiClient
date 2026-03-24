@@ -10,6 +10,7 @@ import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
+import { CommitResource } from './CommitResource';
 
 /**
  * Represents a Bitbucket repository resource with chainable async methods.
@@ -226,6 +227,27 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
       `${this.basePath}/raw/${filePath}`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Returns a {@link CommitResource} for a given commit SHA, providing access
+   * to commit data and sub-resources (changes, diff).
+   *
+   * The returned resource can be awaited directly to fetch commit info,
+   * or chained to access nested resources.
+   *
+   * @param commitId - The commit SHA (e.g., `'abc123def456'`)
+   * @returns A chainable commit resource
+   *
+   * @example
+   * ```typescript
+   * const commit  = await bbClient.project('PROJ').repo('my-repo').commit('abc123');
+   * const changes = await bbClient.project('PROJ').repo('my-repo').commit('abc123').changes();
+   * const diff    = await bbClient.project('PROJ').repo('my-repo').commit('abc123').diff();
+   * ```
+   */
+  commit(commitId: string): CommitResource {
+    return new CommitResource(this.request, this.projectKey, this.repoSlug, commitId);
   }
 
   pullRequest(pullRequestId: number): PullRequestResource {

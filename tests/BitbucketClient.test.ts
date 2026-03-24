@@ -342,6 +342,95 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('project(key).repo(slug).commit(id)', () => {
+    it('resolves to commit info when awaited', async () => {
+      mockOk(mockCommit);
+      expect(await client.project('PROJ').repo('my-repo').commit('abc123')).toEqual(mockCommit);
+    });
+
+    it('calls GET .../commits/{id} when awaited', async () => {
+      mockOk(mockCommit);
+      await client.project('PROJ').repo('my-repo').commit('abc123');
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123`,
+        expect.any(Object),
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').commit('abc123'),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).commit(id).changes()', () => {
+    it('calls GET .../commits/{id}/changes', async () => {
+      mockOk(pagedOf());
+      await client.project('PROJ').repo('my-repo').commit('abc123').changes();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/changes`,
+        expect.any(Object),
+      );
+    });
+
+    it('appends since as a query param', async () => {
+      mockOk(pagedOf());
+      await client.project('PROJ').repo('my-repo').commit('abc123').changes({ since: 'def456' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits/abc123/changes?since=def456`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').commit('abc123').changes(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).commit(id).diff()', () => {
+    const mockDiff = {
+      diffs: [],
+      truncated: false,
+      contextLines: 10,
+    };
+
+    it('calls GET .../commits/{id}/diff', async () => {
+      mockOk(mockDiff);
+      await client.project('PROJ').repo('my-repo').commit('abc123').diff();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the diff object', async () => {
+      mockOk(mockDiff);
+      expect(await client.project('PROJ').repo('my-repo').commit('abc123').diff()).toEqual(mockDiff);
+    });
+
+    it('appends contextLines and whitespace as query params', async () => {
+      mockOk(mockDiff);
+      await client.project('PROJ').repo('my-repo').commit('abc123').diff({
+        contextLines: 5,
+        whitespace: 'IGNORE_ALL',
+      });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff?contextLines=5&whitespace=IGNORE_ALL`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').commit('abc123').diff(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
   describe('project(key).repo(slug).pullRequest(id)', () => {
     it('resolves to pull request info when awaited', async () => {
       mockOk(mockPullRequest);
