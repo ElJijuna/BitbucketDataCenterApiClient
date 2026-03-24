@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.0.0...v1.1.0) (2026-03-24)
+
+
+### Features
+
+* add implementation to call activities from pull request. ([b7e955d](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/b7e955d49971c136660039de9a31d36fe26daa61))
+
 # 1.0.0 (2026-03-24)
 
 
