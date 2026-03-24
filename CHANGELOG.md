@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.3.0...v1.4.0) (2026-03-24)
+
+
+### Features
+
+* add BitbucketApiError to control all errors. ([a3a04c9](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/a3a04c96c9d88cb331167c4f44283f80708bd91a))
+
 # [1.3.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.2.1...v1.3.0) (2026-03-24)
 
 
