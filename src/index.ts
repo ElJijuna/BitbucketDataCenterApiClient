@@ -19,4 +19,5 @@ export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './do
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
+export type { RawFileParams } from './domain/RawFile';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';

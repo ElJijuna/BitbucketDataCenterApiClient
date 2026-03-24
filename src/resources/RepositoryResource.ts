@@ -4,8 +4,9 @@ import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
 import type { BitbucketRepositorySize } from '../domain/RepositorySize';
 import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
+import type { RawFileParams } from '../domain/RawFile';
 import type { PagedResponse } from '../domain/Pagination';
-import type { RequestFn } from './ProjectResource';
+import type { RequestFn, RequestTextFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
 
 /**
@@ -35,6 +36,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   /** @internal */
   constructor(
     private readonly request: RequestFn,
+    private readonly requestText: RequestTextFn,
     private readonly projectKey: string,
     private readonly repoSlug: string,
   ) {
@@ -154,6 +156,22 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * const activities = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).activities();
    * ```
    */
+  /**
+   * Fetches the raw content of a file in this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/raw/{path}`
+   *
+   * @param filePath - Path to the file (e.g., `'src/index.ts'`)
+   * @param params - Optional: `at` (branch, tag, or commit SHA)
+   * @returns The raw file content as a string
+   */
+  async raw(filePath: string, params?: RawFileParams): Promise<string> {
+    return this.requestText(
+      `${this.basePath}/raw/${filePath}`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
   pullRequest(pullRequestId: number): PullRequestResource {
     return new PullRequestResource(this.request, this.projectKey, this.repoSlug, pullRequestId);
   }

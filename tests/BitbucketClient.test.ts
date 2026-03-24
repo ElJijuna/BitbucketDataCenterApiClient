@@ -775,6 +775,51 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('project(key).repo(slug).raw()', () => {
+    function mockText(body: string): void {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve(body),
+      } as Response);
+    }
+
+    it('calls GET .../raw/{path}', async () => {
+      mockText('export const x = 1;');
+      await client.project('PROJ').repo('my-repo').raw('src/index.ts');
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/raw/src/index.ts`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the raw file content as a string', async () => {
+      mockText('export const x = 1;');
+      const result = await client.project('PROJ').repo('my-repo').raw('src/index.ts');
+      expect(result).toBe('export const x = 1;');
+    });
+
+    it('appends at as a query param', async () => {
+      mockText('export const x = 1;');
+      await client.project('PROJ').repo('my-repo').raw('src/index.ts', { at: 'main' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/raw/src/index.ts?at=main`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: () => Promise.resolve(''),
+      } as Response);
+      await expect(
+        client.project('PROJ').repo('my-repo').raw('src/index.ts'),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
   describe('project(key).repo(slug).lastModified()', () => {
     const mockEntry: BitbucketLastModifiedEntry = {
       path: {

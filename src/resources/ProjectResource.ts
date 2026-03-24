@@ -10,6 +10,12 @@ export type RequestFn = <T>(
   params?: Record<string, string | number | boolean>,
 ) => Promise<T>;
 
+/** @internal */
+export type RequestTextFn = (
+  path: string,
+  params?: Record<string, string | number | boolean>,
+) => Promise<string>;
+
 /**
  * Represents a Bitbucket project resource with chainable async methods.
  *
@@ -35,6 +41,7 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
   /** @internal */
   constructor(
     private readonly request: RequestFn,
+    private readonly requestText: RequestTextFn,
     private readonly key: string,
   ) {}
 
@@ -94,7 +101,7 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    * ```
    */
   repo(repoSlug: string): RepositoryResource {
-    return new RepositoryResource(this.request, this.key, repoSlug);
+    return new RepositoryResource(this.request, this.requestText, this.key, repoSlug);
   }
 
   /**

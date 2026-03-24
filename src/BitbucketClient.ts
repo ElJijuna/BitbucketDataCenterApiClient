@@ -1,5 +1,5 @@
 import { Security } from './security/Security';
-import { ProjectResource, type RequestFn } from './resources/ProjectResource';
+import { ProjectResource, type RequestFn, type RequestTextFn } from './resources/ProjectResource';
 import { UserResource } from './resources/UserResource';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
 import type { BitbucketUser, UsersParams } from './domain/User';
@@ -75,6 +75,19 @@ export class BitbucketClient {
     return response.json() as Promise<T>;
   }
 
+  private async requestText(
+    path: string,
+    params?: Record<string, string | number | boolean>,
+  ): Promise<string> {
+    const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
+    const url = buildUrl(base, params);
+    const response = await fetch(url, { headers: this.security.getHeaders() });
+    if (!response.ok) {
+      throw new Error(`Bitbucket API error: ${response.status} ${response.statusText}`);
+    }
+    return response.text();
+  }
+
   /**
    * Fetches all projects accessible to the authenticated user.
    *
@@ -113,7 +126,8 @@ export class BitbucketClient {
       path: string,
       params?: Record<string, string | number | boolean>,
     ) => this.request<T>(path, params);
-    return new ProjectResource(request, projectKey);
+    const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
+    return new ProjectResource(request, requestText, projectKey);
   }
 
   /**
