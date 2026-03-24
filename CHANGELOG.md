@@ -1,3 +1,21 @@
+# [1.2.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.1.0...v1.2.0) (2026-03-24)
+
+
+### Features
+
+* add apiPath to customize or override in future implementations the path in some requests. ([396e583](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/396e5833c223e623280b9fd8b4c02dcac7f7abf6))
+* add changes method to return changes of pull request. ([74f7725](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/74f7725de5ebfb18cfe0afaed85824ea908629db))
+* add lastModifid method in repository to return list of modifications by commit. ([4512d9c](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/4512d9cb874bfcef79cc53ddb67dcfe94ff4d44a))
+* add method and service to return branches from repository. ([f122f60](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/f122f60d80b2f3210eaedb14ceba31b00af5c099))
+* add method to return build summaries from pull request. ([d052096](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/d05209696caa0732cb7ce2cce88b5aee142335cf))
+* add method to return commits from pull request. ([4b954e2](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/4b954e2fa834b8dacf257862e11fedac88c65a7d))
+* add method to return users from bitbucket and project scope. ([2205f4f](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/2205f4f6eb4e40b75e1fa6e4739ae7d4cd6adff9))
+* add methos and service to return repository size. ([b337e67](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/b337e67ed645d0c7f8ae869ae8a9b411e70f99e7))
+* add pull reuests tasks. ([362cc39](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/362cc39555d161c318135ff73d4d15c960a682e2))
+* add raw method to return content file in repository. ([80bfb73](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/80bfb73285f9a9d2d91a7f6439bb2ef8f9c11555))
+* add reports from pull request. ([6c3a009](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/6c3a0096f488f0dd19ad900b83050a8dca0cf5b3))
+* add service to return issues. ([a1f2bf0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/a1f2bf0ca75a83fdeeeadb700d451dc131fc6998))
+
 # [1.1.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.0.0...v1.1.0) (2026-03-24)
 
 
