@@ -1,7 +1,8 @@
 import type { BitbucketPullRequest } from '../domain/PullRequest';
 import type { BitbucketPullRequestActivity, ActivitiesParams } from '../domain/PullRequestActivity';
 import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
-import type { PagedResponse } from '../domain/Pagination';
+import type { BitbucketCommit } from '../domain/Commit';
+import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
 /**
@@ -20,6 +21,9 @@ import type { RequestFn } from './ProjectResource';
  *
  * // Get tasks
  * const tasks = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).tasks();
+ *
+ * // Get commits
+ * const commits = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).commits();
  * ```
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
@@ -88,6 +92,22 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   async tasks(params?: TasksParams): Promise<BitbucketPullRequestTask[]> {
     const data = await this.request<PagedResponse<BitbucketPullRequestTask>>(
       `${this.basePath}/tasks`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Fetches the commits included in this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/commits`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns An array of commits
+   */
+  async commits(params?: PaginationParams): Promise<BitbucketCommit[]> {
+    const data = await this.request<PagedResponse<BitbucketCommit>>(
+      `${this.basePath}/commits`,
       params as Record<string, string | number | boolean>,
     );
     return data.values;

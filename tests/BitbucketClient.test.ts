@@ -461,6 +461,39 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('project(key).repo(slug).pullRequest(id).commits()', () => {
+    it('calls GET .../pull-requests/{id}/commits', async () => {
+      mockOk(pagedOf(mockCommit));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).commits();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/commits`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of commits', async () => {
+      mockOk(pagedOf(mockCommit));
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).commits();
+      expect(result).toEqual([mockCommit]);
+    });
+
+    it('appends limit and start as query params', async () => {
+      mockOk(pagedOf(mockCommit));
+      await client.project('PROJ').repo('my-repo').pullRequest(42).commits({ limit: 10, start: 20 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/commits?limit=10&start=20`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).commits(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
   describe('authentication', () => {
     it('sends the Authorization header on every request', async () => {
       mockOk(pagedOf(mockProject));
