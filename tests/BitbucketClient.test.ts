@@ -10,6 +10,7 @@ import type { BitbucketReport } from '../src/domain/Report';
 import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
+import type { BitbucketBranch } from '../src/domain/Branch';
 
 const API_URL = 'https://bitbucket.example.com';
 const API_PATH = 'rest/api/latest';
@@ -769,6 +770,57 @@ describe('BitbucketClient', () => {
       await expect(client.project('PROJ').users()).rejects.toThrow(
         'Bitbucket API error: 403 Forbidden',
       );
+    });
+  });
+
+  describe('project(key).repo(slug).branches()', () => {
+    const mockBranch: BitbucketBranch = {
+      id: 'refs/heads/main',
+      displayId: 'main',
+      type: 'BRANCH',
+      latestCommit: 'abc123def456',
+      latestChangeset: 'abc123def456',
+      isDefault: true,
+    };
+
+    it('calls GET .../branches', async () => {
+      mockOk(pagedOf(mockBranch));
+      await client.project('PROJ').repo('my-repo').branches();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/branches`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of branches', async () => {
+      mockOk(pagedOf(mockBranch));
+      const result = await client.project('PROJ').repo('my-repo').branches();
+      expect(result).toEqual([mockBranch]);
+    });
+
+    it('appends filterText and orderBy as query params', async () => {
+      mockOk(pagedOf(mockBranch));
+      await client.project('PROJ').repo('my-repo').branches({ filterText: 'feat', orderBy: 'MODIFICATION' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/branches?filterText=feat&orderBy=MODIFICATION`,
+      );
+    });
+
+    it('appends details and boostMatches as boolean query params', async () => {
+      mockOk(pagedOf(mockBranch));
+      await client.project('PROJ').repo('my-repo').branches({ details: true, boostMatches: true });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/branches?details=true&boostMatches=true`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').branches(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });
 

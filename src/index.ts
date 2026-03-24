@@ -16,4 +16,5 @@ export type { BitbucketBuildSummaries, BitbucketBuildCount } from './domain/Buil
 export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketUser, BitbucketUserPermission, UsersParams, ProjectUsersParams } from './domain/User';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
+export type { BitbucketBranch, BranchesParams } from './domain/Branch';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';

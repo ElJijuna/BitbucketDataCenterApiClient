@@ -1,6 +1,7 @@
 import type { BitbucketRepository } from '../domain/Repository';
 import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullRequest';
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
+import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
@@ -87,6 +88,22 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   async commits(params?: CommitsParams): Promise<BitbucketCommit[]> {
     const data = await this.request<PagedResponse<BitbucketCommit>>(
       `${this.basePath}/commits`,
+      params as Record<string, string | number | boolean>,
+    );
+    return data.values;
+  }
+
+  /**
+   * Fetches branches for this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/branches`
+   *
+   * @param params - Optional filters: `limit`, `start`, `filterText`, `orderBy`, `details`, `base`, `boostMatches`
+   * @returns An array of branches
+   */
+  async branches(params?: BranchesParams): Promise<BitbucketBranch[]> {
+    const data = await this.request<PagedResponse<BitbucketBranch>>(
+      `${this.basePath}/branches`,
       params as Record<string, string | number | boolean>,
     );
     return data.values;
