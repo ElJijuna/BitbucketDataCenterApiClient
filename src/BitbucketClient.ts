@@ -96,12 +96,11 @@ export class BitbucketClient {
    * @param params - Optional filters: `limit`, `start`, `name`, `permission`
    * @returns An array of projects
    */
-  async projects(params?: ProjectsParams): Promise<BitbucketProject[]> {
-    const data = await this.request<PagedResponse<BitbucketProject>>(
+  async projects(params?: ProjectsParams): Promise<PagedResponse<BitbucketProject>> {
+    return this.request<PagedResponse<BitbucketProject>>(
       '/projects',
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -138,12 +137,11 @@ export class BitbucketClient {
    * @param params - Optional filters: `limit`, `start`, `filter`
    * @returns An array of users
    */
-  async users(params?: UsersParams): Promise<BitbucketUser[]> {
-    const data = await this.request<PagedResponse<BitbucketUser>>(
+  async users(params?: UsersParams): Promise<PagedResponse<BitbucketUser>> {
+    return this.request<PagedResponse<BitbucketUser>>(
       '/users',
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**

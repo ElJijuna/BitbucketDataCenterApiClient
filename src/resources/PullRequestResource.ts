@@ -87,12 +87,11 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * @param params - Optional filters: `limit`, `start`, `fromId`, `fromType`
    * @returns An array of pull request activities, ordered from most recent to oldest
    */
-  async activities(params?: ActivitiesParams): Promise<BitbucketPullRequestActivity[]> {
-    const data = await this.request<PagedResponse<BitbucketPullRequestActivity>>(
+  async activities(params?: ActivitiesParams): Promise<PagedResponse<BitbucketPullRequestActivity>> {
+    return this.request<PagedResponse<BitbucketPullRequestActivity>>(
       `${this.basePath}/activities`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -105,12 +104,11 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * @param params - Optional filters: `limit`, `start`
    * @returns An array of pull request tasks
    */
-  async tasks(params?: TasksParams): Promise<BitbucketPullRequestTask[]> {
-    const data = await this.request<PagedResponse<BitbucketPullRequestTask>>(
+  async tasks(params?: TasksParams): Promise<PagedResponse<BitbucketPullRequestTask>> {
+    return this.request<PagedResponse<BitbucketPullRequestTask>>(
       `${this.basePath}/tasks`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -121,12 +119,11 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * @param params - Optional pagination: `limit`, `start`
    * @returns An array of commits
    */
-  async commits(params?: PaginationParams): Promise<BitbucketCommit[]> {
-    const data = await this.request<PagedResponse<BitbucketCommit>>(
+  async commits(params?: PaginationParams): Promise<PagedResponse<BitbucketCommit>> {
+    return this.request<PagedResponse<BitbucketCommit>>(
       `${this.basePath}/commits`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -137,12 +134,11 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * @param params - Optional filters: `limit`, `start`, `withComments`
    * @returns An array of file changes
    */
-  async changes(params?: ChangesParams): Promise<BitbucketChange[]> {
-    const data = await this.request<PagedResponse<BitbucketChange>>(
+  async changes(params?: ChangesParams): Promise<PagedResponse<BitbucketChange>> {
+    return this.request<PagedResponse<BitbucketChange>>(
       `${this.basePath}/changes`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -153,12 +149,11 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * @param params - Optional pagination: `limit`, `start`
    * @returns An array of Code Insights reports
    */
-  async reports(params?: ReportsParams): Promise<BitbucketReport[]> {
-    const data = await this.request<PagedResponse<BitbucketReport>>(
+  async reports(params?: ReportsParams): Promise<PagedResponse<BitbucketReport>> {
+    return this.request<PagedResponse<BitbucketReport>>(
       `${this.basePath}/reports`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**

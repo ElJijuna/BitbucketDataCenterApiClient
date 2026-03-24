@@ -75,12 +75,11 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    * @param params - Optional filters: `limit`, `start`, `slug`, `name`, `permission`
    * @returns An array of repositories
    */
-  async repos(params?: ReposParams): Promise<BitbucketRepository[]> {
-    const data = await this.request<PagedResponse<BitbucketRepository>>(
+  async repos(params?: ReposParams): Promise<PagedResponse<BitbucketRepository>> {
+    return this.request<PagedResponse<BitbucketRepository>>(
       `/projects/${this.key}/repos`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -112,11 +111,10 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    * @param params - Optional filters: `limit`, `start`, `filter`, `permission`
    * @returns An array of user–permission pairs
    */
-  async users(params?: ProjectUsersParams): Promise<BitbucketUserPermission[]> {
-    const data = await this.request<PagedResponse<BitbucketUserPermission>>(
+  async users(params?: ProjectUsersParams): Promise<PagedResponse<BitbucketUserPermission>> {
+    return this.request<PagedResponse<BitbucketUserPermission>>(
       `/projects/${this.key}/permissions/users`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 }

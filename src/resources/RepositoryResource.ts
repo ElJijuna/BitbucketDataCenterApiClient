@@ -73,12 +73,11 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @param params - Optional filters: `limit`, `start`, `state`, `direction`, `at`, `order`
    * @returns An array of pull requests
    */
-  async pullRequests(params?: PullRequestsParams): Promise<BitbucketPullRequest[]> {
-    const data = await this.request<PagedResponse<BitbucketPullRequest>>(
+  async pullRequests(params?: PullRequestsParams): Promise<PagedResponse<BitbucketPullRequest>> {
+    return this.request<PagedResponse<BitbucketPullRequest>>(
       `${this.basePath}/pull-requests`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -89,12 +88,11 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @param params - Optional filters: `limit`, `start`, `until`, `since`, `path`, `merges`, `followRenames`, `ignoreMissing`
    * @returns An array of commits
    */
-  async commits(params?: CommitsParams): Promise<BitbucketCommit[]> {
-    const data = await this.request<PagedResponse<BitbucketCommit>>(
+  async commits(params?: CommitsParams): Promise<PagedResponse<BitbucketCommit>> {
+    return this.request<PagedResponse<BitbucketCommit>>(
       `${this.basePath}/commits`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -105,12 +103,11 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @param params - Optional filters: `limit`, `start`, `at`
    * @returns An array of last-modified entries
    */
-  async lastModified(params?: LastModifiedParams): Promise<BitbucketLastModifiedEntry[]> {
-    const data = await this.request<PagedResponse<BitbucketLastModifiedEntry>>(
+  async lastModified(params?: LastModifiedParams): Promise<PagedResponse<BitbucketLastModifiedEntry>> {
+    return this.request<PagedResponse<BitbucketLastModifiedEntry>>(
       `${this.basePath}/last-modified`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**
@@ -132,12 +129,11 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @param params - Optional filters: `limit`, `start`, `filterText`, `orderBy`, `details`, `base`, `boostMatches`
    * @returns An array of branches
    */
-  async branches(params?: BranchesParams): Promise<BitbucketBranch[]> {
-    const data = await this.request<PagedResponse<BitbucketBranch>>(
+  async branches(params?: BranchesParams): Promise<PagedResponse<BitbucketBranch>> {
+    return this.request<PagedResponse<BitbucketBranch>>(
       `${this.basePath}/branches`,
       params as Record<string, string | number | boolean>,
     );
-    return data.values;
   }
 
   /**

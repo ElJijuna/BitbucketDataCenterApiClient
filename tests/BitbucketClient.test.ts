@@ -147,9 +147,9 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of projects', async () => {
+    it('returns the paged response with projects', async () => {
       mockOk(pagedOf(mockProject));
-      expect(await client.projects()).toEqual([mockProject]);
+      expect(await client.projects()).toEqual(pagedOf(mockProject));
     });
 
     it('appends limit and start as query params', async () => {
@@ -204,9 +204,9 @@ describe('BitbucketClient', () => {
       expect(fetchMock).toHaveBeenCalledWith(`${BASE}/projects/PROJ/repos`, expect.any(Object));
     });
 
-    it('returns the list of repositories', async () => {
+    it('returns the paged response with repositories', async () => {
       mockOk(pagedOf(mockRepo));
-      expect(await client.project('PROJ').repos()).toEqual([mockRepo]);
+      expect(await client.project('PROJ').repos()).toEqual(pagedOf(mockRepo));
     });
 
     it('appends limit and start as query params', async () => {
@@ -264,9 +264,9 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of pull requests', async () => {
+    it('returns the paged response with pull requests', async () => {
       mockOk(pagedOf(mockPullRequest));
-      expect(await client.project('PROJ').repo('my-repo').pullRequests()).toEqual([mockPullRequest]);
+      expect(await client.project('PROJ').repo('my-repo').pullRequests()).toEqual(pagedOf(mockPullRequest));
     });
 
     it('appends state filter as query param', async () => {
@@ -303,9 +303,9 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of commits', async () => {
+    it('returns the paged response with commits', async () => {
       mockOk(pagedOf(mockCommit));
-      expect(await client.project('PROJ').repo('my-repo').commits()).toEqual([mockCommit]);
+      expect(await client.project('PROJ').repo('my-repo').commits()).toEqual(pagedOf(mockCommit));
     });
 
     it('appends limit and until as query params', async () => {
@@ -387,10 +387,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of activities', async () => {
+    it('returns the paged response with activities', async () => {
       mockOk(pagedOf(mockActivity));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).activities();
-      expect(result).toEqual([mockActivity]);
+      expect(result).toEqual(pagedOf(mockActivity));
     });
 
     it('appends limit and start as query params', async () => {
@@ -447,10 +447,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of tasks', async () => {
+    it('returns the paged response with tasks', async () => {
       mockOk(pagedOf(mockTask));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).tasks();
-      expect(result).toEqual([mockTask]);
+      expect(result).toEqual(pagedOf(mockTask));
     });
 
     it('appends limit and start as query params', async () => {
@@ -480,10 +480,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of commits', async () => {
+    it('returns the paged response with commits', async () => {
       mockOk(pagedOf(mockCommit));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).commits();
-      expect(result).toEqual([mockCommit]);
+      expect(result).toEqual(pagedOf(mockCommit));
     });
 
     it('appends limit and start as query params', async () => {
@@ -531,10 +531,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of changes', async () => {
+    it('returns the paged response with changes', async () => {
       mockOk(pagedOf(mockChange));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).changes();
-      expect(result).toEqual([mockChange]);
+      expect(result).toEqual(pagedOf(mockChange));
     });
 
     it('appends limit and start as query params', async () => {
@@ -583,10 +583,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of reports', async () => {
+    it('returns the paged response with reports', async () => {
       mockOk(pagedOf(mockReport));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).reports();
-      expect(result).toEqual([mockReport]);
+      expect(result).toEqual(pagedOf(mockReport));
     });
 
     it('appends limit and start as query params', async () => {
@@ -682,9 +682,9 @@ describe('BitbucketClient', () => {
       expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users`, expect.any(Object));
     });
 
-    it('returns the list of users', async () => {
+    it('returns the paged response with users', async () => {
       mockOk(pagedOf(mockUser));
-      expect(await client.users()).toEqual([mockUser]);
+      expect(await client.users()).toEqual(pagedOf(mockUser));
     });
 
     it('appends filter and limit as query params', async () => {
@@ -753,9 +753,9 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of user permissions', async () => {
+    it('returns the paged response with user permissions', async () => {
       mockOk(pagedOf(mockUserPermission));
-      expect(await client.project('PROJ').users()).toEqual([mockUserPermission]);
+      expect(await client.project('PROJ').users()).toEqual(pagedOf(mockUserPermission));
     });
 
     it('appends filter and permission as query params', async () => {
@@ -841,10 +841,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of last-modified entries', async () => {
+    it('returns the paged response with last-modified entries', async () => {
       mockOk(pagedOf(mockEntry));
       const result = await client.project('PROJ').repo('my-repo').lastModified();
-      expect(result).toEqual([mockEntry]);
+      expect(result).toEqual(pagedOf(mockEntry));
     });
 
     it('appends at as a query param', async () => {
@@ -910,10 +910,10 @@ describe('BitbucketClient', () => {
       );
     });
 
-    it('returns the list of branches', async () => {
+    it('returns the paged response with branches', async () => {
       mockOk(pagedOf(mockBranch));
       const result = await client.project('PROJ').repo('my-repo').branches();
-      expect(result).toEqual([mockBranch]);
+      expect(result).toEqual(pagedOf(mockBranch));
     });
 
     it('appends filterText and orderBy as query params', async () => {

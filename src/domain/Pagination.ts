@@ -16,7 +16,8 @@ export interface PaginationParams {
 
 /**
  * Wrapper returned by Bitbucket paginated list endpoints.
- * @internal
+ *
+ * Use `values` for the items, `isLastPage` and `nextPageStart` for pagination.
  */
 export interface PagedResponse<T> {
   values: T[];
