@@ -5,6 +5,7 @@ import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketChange, ChangesParams } from '../domain/Change';
 import type { BitbucketReport, ReportsParams } from '../domain/Report';
 import type { BitbucketBuildSummaries } from '../domain/BuildSummary';
+import type { BitbucketIssue } from '../domain/Issue';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -36,6 +37,9 @@ import type { RequestFn } from './ProjectResource';
  *
  * // Get build summaries
  * const builds = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries();
+ *
+ * // Get linked Jira issues
+ * const issues = await bbClient.project('PROJ').repo('my-repo').pullRequest(42).issues();
  * ```
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
@@ -169,5 +173,16 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    */
   async buildSummaries(): Promise<BitbucketBuildSummaries> {
     return this.request<BitbucketBuildSummaries>(`${this.basePath}/build-summaries`);
+  }
+
+  /**
+   * Fetches the Jira issues linked to this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/issues`
+   *
+   * @returns An array of linked Jira issues
+   */
+  async issues(): Promise<BitbucketIssue[]> {
+    return this.request<BitbucketIssue[]>(`${this.basePath}/issues`);
   }
 }

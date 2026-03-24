@@ -8,6 +8,7 @@ import type { BitbucketPullRequestTask } from '../src/domain/PullRequestTask';
 import type { BitbucketChange } from '../src/domain/Change';
 import type { BitbucketReport } from '../src/domain/Report';
 import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
+import type { BitbucketIssue } from '../src/domain/Issue';
 
 const API_URL = 'https://bitbucket.example.com/rest/api/latest';
 const BASE = API_URL;
@@ -625,6 +626,35 @@ describe('BitbucketClient', () => {
       mockError(404, 'Not Found');
       await expect(
         client.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries(),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('project(key).repo(slug).pullRequest(id).issues()', () => {
+    const mockIssues: BitbucketIssue[] = [
+      { key: 'ABC-123', url: 'https://jira.example.com/browse/ABC-123' },
+      { key: 'ABC-456', url: 'https://jira.example.com/browse/ABC-456' },
+    ];
+
+    it('calls GET .../pull-requests/{id}/issues', async () => {
+      mockOk(mockIssues);
+      await client.project('PROJ').repo('my-repo').pullRequest(42).issues();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/issues`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the list of linked Jira issues', async () => {
+      mockOk(mockIssues);
+      const result = await client.project('PROJ').repo('my-repo').pullRequest(42).issues();
+      expect(result).toEqual(mockIssues);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        client.project('PROJ').repo('my-repo').pullRequest(42).issues(),
       ).rejects.toThrow('Bitbucket API error: 404 Not Found');
     });
   });

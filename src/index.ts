@@ -12,5 +12,6 @@ export type { BitbucketPullRequestTask, PullRequestTaskState, PullRequestTaskPer
 export type { BitbucketChange, BitbucketChangePath, ChangeType, ChangeNodeType, ChangesParams } from './domain/Change';
 export type { BitbucketReport, BitbucketReportData, ReportResult, ReportDataType, ReportsParams } from './domain/Report';
 export type { BitbucketBuildSummaries, BitbucketBuildCount } from './domain/BuildSummary';
+export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';
