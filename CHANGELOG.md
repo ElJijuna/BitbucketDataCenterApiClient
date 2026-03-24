@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.5.0...v1.6.0) (2026-03-24)
+
+
+### Features
+
+* add method to return tags with. commits. ([aa54cb3](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/aa54cb30a0f44e765eb8463db68b6739be41215b))
+
 # [1.5.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.4.0...v1.5.0) (2026-03-24)
 
 
