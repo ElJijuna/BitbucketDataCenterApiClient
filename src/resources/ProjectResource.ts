@@ -1,9 +1,13 @@
 import type { BitbucketProject } from '../domain/Project';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { PagedResponse } from '../domain/Pagination';
+import { RepositoryResource } from './RepositoryResource';
 
 /** @internal */
-export type RequestFn = <T>(path: string, params?: Record<string, string | number>) => Promise<T>;
+export type RequestFn = <T>(
+  path: string,
+  params?: Record<string, string | number | boolean>,
+) => Promise<T>;
 
 /**
  * Represents a Bitbucket project resource with chainable async methods.
@@ -16,11 +20,11 @@ export type RequestFn = <T>(path: string, params?: Record<string, string | numbe
  * // Await directly to get project info
  * const project = await bbClient.project('PROJ');
  *
- * // Chain to get repositories
- * const repos = await bbClient.project('PROJ').repos();
- *
- * // With filters
+ * // Get repositories with filters
  * const repos = await bbClient.project('PROJ').repos({ limit: 50, name: 'api' });
+ *
+ * // Navigate into a specific repository
+ * const prs = await bbClient.project('PROJ').repo('my-repo').pullRequests();
  * ```
  */
 export class ProjectResource implements PromiseLike<BitbucketProject> {
@@ -66,8 +70,29 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
   async repos(params?: ReposParams): Promise<BitbucketRepository[]> {
     const data = await this.request<PagedResponse<BitbucketRepository>>(
       `/projects/${this.key}/repos`,
-      params as Record<string, string | number>,
+      params as Record<string, string | number | boolean>,
     );
     return data.values;
+  }
+
+  /**
+   * Returns a {@link RepositoryResource} for a given repository slug, providing
+   * access to repository-level data and sub-resources (pull requests, commits, etc.).
+   *
+   * The returned resource can be awaited directly to fetch repository info,
+   * or chained to access nested resources.
+   *
+   * @param repoSlug - The repository slug (e.g., `'my-repo'`)
+   * @returns A chainable repository resource
+   *
+   * @example
+   * ```typescript
+   * const repo    = await bbClient.project('PROJ').repo('my-repo');
+   * const prs     = await bbClient.project('PROJ').repo('my-repo').pullRequests({ state: 'OPEN' });
+   * const commits = await bbClient.project('PROJ').repo('my-repo').commits({ limit: 10 });
+   * ```
+   */
+  repo(repoSlug: string): RepositoryResource {
+    return new RepositoryResource(this.request, this.key, repoSlug);
   }
 }

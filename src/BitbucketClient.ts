@@ -28,7 +28,10 @@ export interface BitbucketClientOptions {
  *
  * const projects = await bbClient.projects({ limit: 50 });
  * const project  = await bbClient.project('PROJ');
- * const repos    = await bbClient.project('PROJ').repos({ limit: 25, name: 'api' });
+ * const repos    = await bbClient.project('PROJ').repos({ name: 'api' });
+ * const repo     = await bbClient.project('PROJ').repo('my-repo');
+ * const prs      = await bbClient.project('PROJ').repo('my-repo').pullRequests({ state: 'OPEN' });
+ * const commits  = await bbClient.project('PROJ').repo('my-repo').commits({ limit: 10 });
  * ```
  */
 export class BitbucketClient {
@@ -52,7 +55,7 @@ export class BitbucketClient {
    */
   private async request<T>(
     path: string,
-    params?: Record<string, string | number>,
+    params?: Record<string, string | number | boolean>,
   ): Promise<T> {
     const base = `${this.security.getApiUrl()}/rest/api/latest${path}`;
     const url = buildUrl(base, params);
@@ -74,7 +77,7 @@ export class BitbucketClient {
   async projects(params?: ProjectsParams): Promise<BitbucketProject[]> {
     const data = await this.request<PagedResponse<BitbucketProject>>(
       '/projects',
-      params as Record<string, string | number>,
+      params as Record<string, string | number | boolean>,
     );
     return data.values;
   }
@@ -93,20 +96,23 @@ export class BitbucketClient {
    * ```typescript
    * const project = await bbClient.project('PROJ');
    * const repos   = await bbClient.project('PROJ').repos({ limit: 10 });
+   * const prs     = await bbClient.project('PROJ').repo('my-repo').pullRequests();
    * ```
    */
   project(projectKey: string): ProjectResource {
-    const request: RequestFn = <T>(path: string, params?: Record<string, string | number>) =>
-      this.request<T>(path, params);
+    const request: RequestFn = <T>(
+      path: string,
+      params?: Record<string, string | number | boolean>,
+    ) => this.request<T>(path, params);
     return new ProjectResource(request, projectKey);
   }
 }
 
 /**
- * Appends query parameters to a URL string using URLSearchParams.
+ * Appends query parameters to a URL string, skipping `undefined` values.
  * @internal
  */
-function buildUrl(base: string, params?: Record<string, string | number>): string {
+function buildUrl(base: string, params?: Record<string, string | number | boolean>): string {
   if (!params) return base;
   const entries = Object.entries(params).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return base;
