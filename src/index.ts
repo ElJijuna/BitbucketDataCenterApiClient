@@ -8,7 +8,7 @@ export { PullRequestResource } from './resources/PullRequestResource';
 export { CommitResource } from './resources/CommitResource';
 export { UserResource } from './resources/UserResource';
 export type { BitbucketProject, ProjectsParams } from './domain/Project';
-export type { BitbucketRepository, ReposParams } from './domain/Repository';
+export type { BitbucketRepository, ReposParams, SearchReposParams } from './domain/Repository';
 export type { BitbucketPullRequest, BitbucketParticipant, BitbucketRef, PullRequestsParams } from './domain/PullRequest';
 export type { BitbucketPullRequestActivity, BitbucketPullRequestComment, BitbucketActivityUser, PullRequestActivityAction, ActivitiesParams } from './domain/PullRequestActivity';
 export type { BitbucketPullRequestTask, PullRequestTaskState, PullRequestTaskPermittedOperations, PullRequestTaskAnchor, TasksParams } from './domain/PullRequestTask';

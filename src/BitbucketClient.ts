@@ -3,6 +3,7 @@ import { ProjectResource, type RequestFn, type RequestTextFn, type RequestBodyFn
 import { BitbucketApiError } from './errors/BitbucketApiError';
 import { UserResource } from './resources/UserResource';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
+import type { BitbucketRepository, SearchReposParams } from './domain/Repository';
 import type { BitbucketUser, UsersParams } from './domain/User';
 import type { PagedResponse } from './domain/Pagination';
 
@@ -182,6 +183,31 @@ export class BitbucketClient {
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
     const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string }) => this.requestPost<T>(path, body, options);
     return new UserResource(request, requestText, requestBody, slug);
+  }
+
+  /**
+   * Searches for repositories across all projects.
+   *
+   * `GET /rest/api/latest/repos`
+   *
+   * The `name` parameter is automatically prefixed with `%` to perform a
+   * contains-style match rather than a prefix match.
+   *
+   * @param params - Optional filters: `name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `limit`, `start`
+   * @returns A paged response of repositories
+   *
+   * @example
+   * ```typescript
+   * const repos = await bb.search({ name: 'api', projectkey: 'PROJ' });
+   * ```
+   */
+  async search(params?: SearchReposParams): Promise<PagedResponse<BitbucketRepository>> {
+    const { name, ...rest } = params ?? {};
+    const query: Record<string, string | number | boolean> = rest as Record<string, string | number | boolean>;
+    if (name !== undefined) {
+      query['name'] = `%${name}`;
+    }
+    return this.request<PagedResponse<BitbucketRepository>>('/repos', query);
   }
 }
 

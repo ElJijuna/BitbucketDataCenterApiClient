@@ -33,3 +33,29 @@ export interface ReposParams extends PaginationParams {
    */
   permission?: string;
 }
+
+/**
+ * Query parameters accepted by `GET /rest/api/latest/repos` (global repository search).
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-repository/#api-api-latest-repos-get}
+ */
+export interface SearchReposParams extends PaginationParams {
+  /**
+   * Filter by repository name. A `%` prefix is automatically prepended to
+   * perform a contains-style match (e.g. `'api'` → `'%api'`).
+   */
+  name?: string;
+  /** Filter by project key (exact match) */
+  projectkey?: string;
+  /** Filter by project name (case-insensitive prefix match) */
+  projectname?: string;
+  /**
+   * Filter by the permission the authenticated user has on the repository.
+   * e.g. `'REPO_READ'`, `'REPO_WRITE'`, `'REPO_ADMIN'`
+   */
+  permission?: string;
+  /** Filter by visibility: `'public'` or `'private'` */
+  visibility?: 'public' | 'private';
+  /** Filter by repository state */
+  state?: 'AVAILABLE' | 'INITIALISING' | 'INITIALISATION_FAILED';
+}

@@ -159,6 +159,17 @@ const summaries  = await bb.project('PROJ').repo('my-repo').pullRequest(42).buil
 const issues     = await bb.project('PROJ').repo('my-repo').pullRequest(42).issues();
 ```
 
+### Repository search
+
+```typescript
+// Search repositories across all projects
+const repos = await bb.search();
+const repos = await bb.search({ name: 'api' });                  // matches any repo containing 'api'
+const repos = await bb.search({ name: 'api', projectkey: 'PROJ' });
+const repos = await bb.search({ projectname: 'platform', visibility: 'private', limit: 25 });
+const repos = await bb.search({ state: 'AVAILABLE', permission: 'REPO_WRITE' });
+```
+
 ### Users
 
 ```typescript
@@ -266,7 +277,7 @@ import type {
   // Projects
   BitbucketProject, ProjectsParams,
   // Repositories
-  BitbucketRepository, ReposParams,
+  BitbucketRepository, ReposParams, SearchReposParams,
   BitbucketRepositorySize,
   BitbucketLastModifiedEntry, LastModifiedParams,
   RawFileParams,
