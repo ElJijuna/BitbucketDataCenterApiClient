@@ -45,4 +45,5 @@ export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
 export type { RawFileParams } from './domain/RawFile';
+export type { BitbucketBrowseResponse, BitbucketBrowseChild, BitbucketBrowsePath, BrowseParams } from './domain/Browse';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';

@@ -81,6 +81,11 @@ const entries = await bb.project('PROJ').repo('my-repo').lastModified({ at: 'mai
 // Raw file content
 const content = await bb.project('PROJ').repo('my-repo').raw('src/index.ts');
 const content = await bb.project('PROJ').repo('my-repo').raw('src/index.ts', { at: 'feature/my-branch' });
+
+// Browse repository contents
+const root    = await bb.project('PROJ').repo('my-repo').browse();
+const dir     = await bb.project('PROJ').repo('my-repo').browse('src');
+const dir     = await bb.project('PROJ').repo('my-repo').browse('src', { at: 'main' });
 ```
 
 ### Branches
@@ -281,6 +286,7 @@ import type {
   BitbucketRepositorySize,
   BitbucketLastModifiedEntry, LastModifiedParams,
   RawFileParams,
+  BitbucketBrowseResponse, BitbucketBrowseChild, BitbucketBrowsePath, BrowseParams,
   // Branches & Tags
   BitbucketBranch, BranchesParams,
   BitbucketTag, TagsParams,

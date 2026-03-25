@@ -6,6 +6,7 @@ import type { BitbucketTag, TagsParams } from '../domain/Tag';
 import type { BitbucketRepositorySize } from '../domain/RepositorySize';
 import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
 import type { RawFileParams } from '../domain/RawFile';
+import type { BitbucketBrowseResponse, BrowseParams } from '../domain/Browse';
 import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
@@ -227,6 +228,20 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
       `${this.basePath}/raw/${filePath}`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Browses the contents of a directory or file in this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/browse/{srcPath}`
+   *
+   * @param srcPath - Path to browse (e.g., `'src'` or `'src/index.ts'`). Omit to browse the root.
+   * @param params - Optional: `at` (branch/tag/commit), `type`, `blame`, `noContent`, `limit`, `start`
+   * @returns The browse response with path info and children
+   */
+  async browse(srcPath?: string, params?: BrowseParams): Promise<BitbucketBrowseResponse> {
+    const path = srcPath ? `${this.basePath}/browse/${srcPath}` : `${this.basePath}/browse`;
+    return this.request<BitbucketBrowseResponse>(path, params as Record<string, string | number | boolean>);
   }
 
   /**
