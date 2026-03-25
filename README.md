@@ -215,6 +215,35 @@ page.start         // number
 
 ---
 
+## Request events
+
+Subscribe to every HTTP request made by the client to get timing and error information. Useful for logging, monitoring, or debugging.
+
+```typescript
+bb.on('request', (event) => {
+  console.log(`[${event.method}] ${event.url} → ${event.statusCode} (${event.durationMs}ms)`);
+  if (event.error) {
+    console.error('Request failed:', event.error.message);
+  }
+});
+```
+
+The `event` object contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `url` | `string` | Full URL that was requested |
+| `method` | `'GET' \| 'POST'` | HTTP method used |
+| `startedAt` | `Date` | When the request started |
+| `finishedAt` | `Date` | When the request finished |
+| `durationMs` | `number` | Duration in milliseconds |
+| `statusCode` | `number \| undefined` | HTTP status code, if a response was received |
+| `error` | `Error \| undefined` | Present only if the request failed |
+
+The event is always emitted after the request completes, whether it succeeded or failed. Multiple listeners can be registered.
+
+---
+
 ## Error handling
 
 Non-2xx responses throw a `BitbucketApiError` with the HTTP status code and status text:
@@ -279,6 +308,7 @@ import type {
   // Core
   PagedResponse, PaginationParams,
   BitbucketApiError,
+  RequestEvent, BitbucketClientEvents,
   // Projects
   BitbucketProject, ProjectsParams,
   // Repositories

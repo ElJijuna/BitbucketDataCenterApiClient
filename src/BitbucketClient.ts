@@ -8,6 +8,31 @@ import type { BitbucketUser, UsersParams } from './domain/User';
 import type { PagedResponse } from './domain/Pagination';
 
 /**
+ * Payload emitted on every HTTP request made by {@link BitbucketClient}.
+ */
+export interface RequestEvent {
+  /** Full URL that was requested */
+  url: string;
+  /** HTTP method used */
+  method: 'GET' | 'POST';
+  /** Timestamp when the request started */
+  startedAt: Date;
+  /** Timestamp when the request finished (success or error) */
+  finishedAt: Date;
+  /** Total duration in milliseconds */
+  durationMs: number;
+  /** HTTP status code returned by the server, if a response was received */
+  statusCode?: number;
+  /** Error thrown, if the request failed */
+  error?: Error;
+}
+
+/** Map of supported client events to their callback signatures */
+export interface BitbucketClientEvents {
+  request: (event: RequestEvent) => void;
+}
+
+/**
  * Constructor options for {@link BitbucketClient}.
  */
 export interface BitbucketClientOptions {
@@ -46,6 +71,7 @@ export interface BitbucketClientOptions {
 export class BitbucketClient {
   private readonly security: Security;
   private readonly apiPath: string;
+  private readonly listeners: Map<keyof BitbucketClientEvents, BitbucketClientEvents[keyof BitbucketClientEvents][]> = new Map();
 
   /**
    * @param options - Connection and authentication options
@@ -54,6 +80,34 @@ export class BitbucketClient {
   constructor({ apiUrl, apiPath, user, token }: BitbucketClientOptions) {
     this.security = new Security(apiUrl, user, token);
     this.apiPath = apiPath.replace(/^\/|\/$/g, '');
+  }
+
+  /**
+   * Subscribes to a client event.
+   *
+   * @example
+   * ```typescript
+   * bbClient.on('request', (event) => {
+   *   console.log(`${event.method} ${event.url} — ${event.durationMs}ms`);
+   *   if (event.error) console.error('Request failed:', event.error);
+   * });
+   * ```
+   */
+  on<K extends keyof BitbucketClientEvents>(event: K, callback: BitbucketClientEvents[K]): this {
+    const callbacks = this.listeners.get(event) ?? [];
+    callbacks.push(callback);
+    this.listeners.set(event, callbacks);
+    return this;
+  }
+
+  private emit<K extends keyof BitbucketClientEvents>(
+    event: K,
+    payload: Parameters<BitbucketClientEvents[K]>[0],
+  ): void {
+    const callbacks = this.listeners.get(event) ?? [];
+    for (const cb of callbacks) {
+      (cb as (p: typeof payload) => void)(payload);
+    }
   }
 
   /**
@@ -70,25 +124,47 @@ export class BitbucketClient {
   ): Promise<T> {
     const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
     const url = buildUrl(base, params);
-    const response = await fetch(url, { headers: this.security.getHeaders() });
-    if (!response.ok) {
-      throw new BitbucketApiError(response.status, response.statusText);
+    const startedAt = new Date();
+    let statusCode: number | undefined;
+    try {
+      const response = await fetch(url, { headers: this.security.getHeaders() });
+      statusCode = response.status;
+      if (!response.ok) {
+        throw new BitbucketApiError(response.status, response.statusText);
+      }
+      const data = await response.json() as T;
+      this.emit('request', { url, method: 'GET', startedAt, finishedAt: new Date(), durationMs: Date.now() - startedAt.getTime(), statusCode });
+      return data;
+    } catch (err) {
+      const finishedAt = new Date();
+      this.emit('request', { url, method: 'GET', startedAt, finishedAt, durationMs: finishedAt.getTime() - startedAt.getTime(), statusCode, error: err instanceof Error ? err : new Error(String(err)) });
+      throw err;
     }
-    return response.json() as Promise<T>;
   }
 
   private async requestPost<T>(path: string, body: unknown, options?: { apiPath?: string }): Promise<T> {
     const apiPath = options?.apiPath ?? this.apiPath;
     const url = `${this.security.getApiUrl()}/${apiPath}${path}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: this.security.getHeaders(),
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      throw new BitbucketApiError(response.status, response.statusText);
+    const startedAt = new Date();
+    let statusCode: number | undefined;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.security.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      statusCode = response.status;
+      if (!response.ok) {
+        throw new BitbucketApiError(response.status, response.statusText);
+      }
+      const data = await response.json() as T;
+      this.emit('request', { url, method: 'POST', startedAt, finishedAt: new Date(), durationMs: Date.now() - startedAt.getTime(), statusCode });
+      return data;
+    } catch (err) {
+      const finishedAt = new Date();
+      this.emit('request', { url, method: 'POST', startedAt, finishedAt, durationMs: finishedAt.getTime() - startedAt.getTime(), statusCode, error: err instanceof Error ? err : new Error(String(err)) });
+      throw err;
     }
-    return response.json() as Promise<T>;
   }
 
   private async requestText(
@@ -97,11 +173,22 @@ export class BitbucketClient {
   ): Promise<string> {
     const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
     const url = buildUrl(base, params);
-    const response = await fetch(url, { headers: this.security.getHeaders() });
-    if (!response.ok) {
-      throw new BitbucketApiError(response.status, response.statusText);
+    const startedAt = new Date();
+    let statusCode: number | undefined;
+    try {
+      const response = await fetch(url, { headers: this.security.getHeaders() });
+      statusCode = response.status;
+      if (!response.ok) {
+        throw new BitbucketApiError(response.status, response.statusText);
+      }
+      const text = await response.text();
+      this.emit('request', { url, method: 'GET', startedAt, finishedAt: new Date(), durationMs: Date.now() - startedAt.getTime(), statusCode });
+      return text;
+    } catch (err) {
+      const finishedAt = new Date();
+      this.emit('request', { url, method: 'GET', startedAt, finishedAt, durationMs: finishedAt.getTime() - startedAt.getTime(), statusCode, error: err instanceof Error ? err : new Error(String(err)) });
+      throw err;
     }
-    return response.text();
   }
 
   /**
