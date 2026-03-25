@@ -43,6 +43,14 @@ const projects = await bb.projects({ limit: 50, name: 'platform' });
 
 // Get a single project
 const project = await bb.project('PROJ');
+
+// Webhooks on a project
+const hooks = await bb.project('PROJ').webhooks();
+const hooks = await bb.project('PROJ').webhooks({ event: 'pr:opened' });
+
+// Users with access to a project
+const members = await bb.project('PROJ').users();
+const members = await bb.project('PROJ').users({ permission: 'PROJECT_WRITE' });
 ```
 
 ### Repositories
@@ -59,7 +67,14 @@ const repo = await bb.project('PROJ').repo('my-repo');
 const size = await bb.project('PROJ').repo('my-repo').size();
 // { repository: 1048576, attachments: 0 }
 
-// Files last modified (with the commit that touched each)
+// Forks of the repository
+const forks = await bb.project('PROJ').repo('my-repo').forks();
+
+// Webhooks on a repository
+const hooks = await bb.project('PROJ').repo('my-repo').webhooks();
+const hooks = await bb.project('PROJ').repo('my-repo').webhooks({ event: 'repo:push' });
+
+// Files last modified with the commit that touched each
 const entries = await bb.project('PROJ').repo('my-repo').lastModified();
 const entries = await bb.project('PROJ').repo('my-repo').lastModified({ at: 'main' });
 
@@ -79,25 +94,53 @@ const branches = await bb.project('PROJ').repo('my-repo').branches({
 });
 ```
 
+### Tags
+
+```typescript
+// List tags
+const tags = await bb.project('PROJ').repo('my-repo').tags();
+const tags = await bb.project('PROJ').repo('my-repo').tags({ filterText: 'v1', orderBy: 'ALPHABETICAL' });
+
+// Tags associated with specific commits (POST)
+const tags = await bb.project('PROJ').repo('my-repo').tagsByCommits(['abc123', 'def456']);
+
+// Override the API path for this call only
+const tags = await bb.project('PROJ').repo('my-repo').tagsByCommits(['abc123'], { apiPath: 'rest/api/1.0' });
+```
+
 ### Commits
 
 ```typescript
-// Repository commits
+// List commits in a repository
 const commits = await bb.project('PROJ').repo('my-repo').commits();
 const commits = await bb.project('PROJ').repo('my-repo').commits({
-  limit:        25,
-  until:        'main',
-  path:         'src/index.ts',
+  limit:         25,
+  until:         'main',
+  path:          'src/index.ts',
   followRenames: true,
 });
+
+// Get a single commit
+const commit = await bb.project('PROJ').repo('my-repo').commit('abc123');
+
+// File changes introduced by a commit
+const changes = await bb.project('PROJ').repo('my-repo').commit('abc123').changes();
+const changes = await bb.project('PROJ').repo('my-repo').commit('abc123').changes({ since: 'def456' });
+
+// Full diff for a commit
+const diff = await bb.project('PROJ').repo('my-repo').commit('abc123').diff();
+const diff = await bb.project('PROJ').repo('my-repo').commit('abc123').diff({ contextLines: 5 });
+
+// Diff scoped to a single file (srcPath is appended as a URL path segment)
+const diff = await bb.project('PROJ').repo('my-repo').commit('abc123').diff({ srcPath: 'src/index.ts' });
 ```
 
 ### Pull requests
 
 ```typescript
 // List pull requests
-const prs = await bb.project('PROJ').repo('my-repo').pullRequests();
-const prs = await bb.project('PROJ').repo('my-repo').pullRequests({
+const pullRequests = await bb.project('PROJ').repo('my-repo').pullRequests();
+const pullRequests = await bb.project('PROJ').repo('my-repo').pullRequests({
   state:  'OPEN',
   order:  'NEWEST',
   limit:  10,
@@ -126,33 +169,79 @@ const users = await bb.users({ filter: 'john', limit: 20 });
 // Get a single user
 const user = await bb.user('pilmee');
 
-// Users with access to a project
-const members = await bb.project('PROJ').users();
-const members = await bb.project('PROJ').users({ permission: 'PROJECT_WRITE' });
+// List repositories belonging to a user
+const repos = await bb.user('pilmee').repos();
+const repos = await bb.user('pilmee').repos({ name: 'api' });
+
+// Navigate into a user repository — all repo sub-resources are available
+const repo    = await bb.user('pilmee').repo('my-repo');
+const content = await bb.user('pilmee').repo('my-repo').raw('src/index.ts');
+const commits = await bb.user('pilmee').repo('my-repo').commits();
+const prs     = await bb.user('pilmee').repo('my-repo').pullRequests();
+```
+
+---
+
+## Pagination
+
+Every list method returns a `PagedResponse<T>` with the full Bitbucket pagination envelope:
+
+```typescript
+const page = await bb.project('PROJ').repos({ limit: 25 });
+
+page.values        // BitbucketRepository[]  — the items
+page.isLastPage    // boolean
+page.nextPageStart // number | undefined     — pass as `start` to get the next page
+page.size          // number                 — items in this page
+page.limit         // number
+page.start         // number
+```
+
+---
+
+## Error handling
+
+Non-2xx responses throw a `BitbucketApiError` with the HTTP status code and status text:
+
+```typescript
+import { BitbucketApiError } from 'bitbucket-datacenter-api-client';
+
+try {
+  await bb.project('NONEXISTENT');
+} catch (err) {
+  if (err instanceof BitbucketApiError) {
+    console.log(err.status);     // 404
+    console.log(err.statusText); // 'Not Found'
+    console.log(err.message);    // 'Bitbucket API error: 404 Not Found'
+    console.log(err.stack);      // full stack trace
+  }
+}
 ```
 
 ---
 
 ## Chainable resource pattern
 
-Every resource that maps to a single entity (project, repo, pull request, user) implements `PromiseLike`, so you can **await it directly** to fetch the entity, or **chain methods** to access sub-resources — without an extra `.get()` call:
+Every resource that maps to a single entity implements `PromiseLike`, so you can **await it directly** or **chain methods** to access sub-resources:
 
 ```typescript
 // Await directly → fetches the project
 const project = await bb.project('PROJ');
 
-// Chain → fetches the repositories list
+// Chain → fetches the list
 const repos = await bb.project('PROJ').repos({ limit: 10 });
 
-// Deep chain → fetches PR activities
+// Deep chain
 const activities = await bb.project('PROJ').repo('my-repo').pullRequest(42).activities();
+const diff       = await bb.project('PROJ').repo('my-repo').commit('abc123').diff();
 ```
 
 ---
 
 ## Authentication
 
-The client uses **HTTP Basic Authentication** with a Personal Access Token (PAT). Generate one in Bitbucket under **Profile → Manage account → Personal access tokens**.
+The client uses **HTTP Basic Authentication** with a Personal Access Token (PAT).
+Generate one in Bitbucket under **Profile → Manage account → Personal access tokens**.
 
 ```typescript
 const bb = new BitbucketClient({
@@ -167,24 +256,40 @@ const bb = new BitbucketClient({
 
 ## TypeScript types
 
-All domain types are exported and fully typed:
+All domain types are exported:
 
 ```typescript
 import type {
-  BitbucketProject,
-  BitbucketRepository,
-  BitbucketBranch,
-  BitbucketCommit,
-  BitbucketPullRequest,
-  BitbucketPullRequestActivity,
-  BitbucketPullRequestTask,
-  BitbucketChange,
-  BitbucketReport,
+  // Core
+  PagedResponse, PaginationParams,
+  BitbucketApiError,
+  // Projects
+  BitbucketProject, ProjectsParams,
+  // Repositories
+  BitbucketRepository, ReposParams,
+  BitbucketRepositorySize,
+  BitbucketLastModifiedEntry, LastModifiedParams,
+  RawFileParams,
+  // Branches & Tags
+  BitbucketBranch, BranchesParams,
+  BitbucketTag, TagsParams,
+  // Commits
+  BitbucketCommit, CommitsParams,
+  BitbucketDiff, BitbucketDiffEntry, DiffParams, CommitChangesParams,
+  // Pull Requests
+  BitbucketPullRequest, PullRequestsParams,
+  BitbucketPullRequestActivity, ActivitiesParams,
+  BitbucketPullRequestTask, TasksParams,
+  BitbucketChange, ChangesParams,
+  BitbucketReport, ReportsParams,
   BitbucketBuildSummaries,
   BitbucketIssue,
-  BitbucketUser,
-  BitbucketRepositorySize,
-  BitbucketLastModifiedEntry,
+  // Users
+  BitbucketUser, UsersParams,
+  BitbucketUserPermission, ProjectUsersParams,
+  // Webhooks
+  BitbucketWebhook, BitbucketWebhookStatistics, BitbucketWebhookDelivery,
+  WebhooksParams, WebhookEvent, WebhookScopeType,
 } from 'bitbucket-datacenter-api-client';
 ```
 

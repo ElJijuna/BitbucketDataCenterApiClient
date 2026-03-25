@@ -109,7 +109,7 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    * ```
    */
   repo(repoSlug: string): RepositoryResource {
-    return new RepositoryResource(this.request, this.requestText, this.requestBody, this.key, repoSlug);
+    return new RepositoryResource(this.request, this.requestText, this.requestBody, `/projects/${this.key}/repos/${repoSlug}`);
   }
 
   /**

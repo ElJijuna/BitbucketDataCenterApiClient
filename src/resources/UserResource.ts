@@ -1,5 +1,8 @@
 import type { BitbucketUser } from '../domain/User';
-import type { RequestFn } from './ProjectResource';
+import type { BitbucketRepository, ReposParams } from '../domain/Repository';
+import type { PagedResponse } from '../domain/Pagination';
+import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
+import { RepositoryResource } from './RepositoryResource';
 
 /**
  * Represents a Bitbucket user resource.
@@ -19,7 +22,9 @@ export class UserResource implements PromiseLike<BitbucketUser> {
   /** @internal */
   constructor(
     private readonly request: RequestFn,
-    slug: string,
+    private readonly requestText: RequestTextFn,
+    private readonly requestBody: RequestBodyFn,
+    private readonly slug: string,
   ) {
     this.basePath = `/users/${slug}`;
   }
@@ -44,5 +49,42 @@ export class UserResource implements PromiseLike<BitbucketUser> {
    */
   async get(): Promise<BitbucketUser> {
     return this.request<BitbucketUser>(this.basePath);
+  }
+
+  /**
+   * Fetches repositories belonging to this user.
+   *
+   * `GET /rest/api/latest/users/{slug}/repos`
+   *
+   * @param params - Optional filters: `limit`, `start`, `name`, `permission`
+   * @returns A paged response of repositories
+   */
+  async repos(params?: ReposParams): Promise<PagedResponse<BitbucketRepository>> {
+    return this.request<PagedResponse<BitbucketRepository>>(
+      `${this.basePath}/repos`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Returns a {@link RepositoryResource} for a given repository slug under this user,
+   * providing access to all repository sub-resources including `raw`, `commits`, `branches`, etc.
+   *
+   * @param repoSlug - The repository slug
+   * @returns A chainable repository resource
+   *
+   * @example
+   * ```typescript
+   * const repo    = await bbClient.user('pilmee').repo('my-repo');
+   * const content = await bbClient.user('pilmee').repo('my-repo').raw('src/index.ts');
+   * ```
+   */
+  repo(repoSlug: string): RepositoryResource {
+    return new RepositoryResource(
+      this.request,
+      this.requestText,
+      this.requestBody,
+      `${this.basePath}/repos/${repoSlug}`,
+    );
   }
 }

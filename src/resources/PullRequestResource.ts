@@ -48,11 +48,10 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   /** @internal */
   constructor(
     private readonly request: RequestFn,
-    projectKey: string,
-    repoSlug: string,
+    repoBasePath: string,
     pullRequestId: number,
   ) {
-    this.basePath = `/projects/${projectKey}/repos/${repoSlug}/pull-requests/${pullRequestId}`;
+    this.basePath = `${repoBasePath}/pull-requests/${pullRequestId}`;
   }
 
   /**

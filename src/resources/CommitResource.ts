@@ -28,11 +28,10 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
   /** @internal */
   constructor(
     private readonly request: RequestFn,
-    projectKey: string,
-    repoSlug: string,
+    repoBasePath: string,
     commitId: string,
   ) {
-    this.basePath = `/projects/${projectKey}/repos/${repoSlug}/commits/${commitId}`;
+    this.basePath = `${repoBasePath}/commits/${commitId}`;
   }
 
   /**

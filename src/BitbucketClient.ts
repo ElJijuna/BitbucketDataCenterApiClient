@@ -179,7 +179,9 @@ export class BitbucketClient {
       path: string,
       params?: Record<string, string | number | boolean>,
     ) => this.request<T>(path, params);
-    return new UserResource(request, slug);
+    const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
+    const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string }) => this.requestPost<T>(path, body, options);
+    return new UserResource(request, requestText, requestBody, slug);
   }
 }
 

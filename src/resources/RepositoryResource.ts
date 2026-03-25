@@ -41,10 +41,9 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
     private readonly request: RequestFn,
     private readonly requestText: RequestTextFn,
     private readonly requestBody: RequestBodyFn,
-    private readonly projectKey: string,
-    private readonly repoSlug: string,
+    basePath: string,
   ) {
-    this.basePath = `/projects/${projectKey}/repos/${repoSlug}`;
+    this.basePath = basePath;
   }
 
   /**
@@ -248,10 +247,10 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * ```
    */
   commit(commitId: string): CommitResource {
-    return new CommitResource(this.request, this.projectKey, this.repoSlug, commitId);
+    return new CommitResource(this.request, this.basePath, commitId);
   }
 
   pullRequest(pullRequestId: number): PullRequestResource {
-    return new PullRequestResource(this.request, this.projectKey, this.repoSlug, pullRequestId);
+    return new PullRequestResource(this.request, this.basePath, pullRequestId);
   }
 }

@@ -843,6 +843,68 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('user(slug).repos()', () => {
+    it('calls GET /users/{slug}/repos', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.user('pilmee').repos();
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/pilmee/repos`, expect.any(Object));
+    });
+
+    it('returns the paged response with repositories', async () => {
+      mockOk(pagedOf(mockRepo));
+      expect(await client.user('pilmee').repos()).toEqual(pagedOf(mockRepo));
+    });
+
+    it('appends name and limit as query params', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.user('pilmee').repos({ name: 'api', limit: 10 });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/users/pilmee/repos?name=api&limit=10`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(client.user('pilmee').repos()).rejects.toThrow('Bitbucket API error: 403 Forbidden');
+    });
+  });
+
+  describe('user(slug).repo(slug)', () => {
+    it('resolves to repository info when awaited', async () => {
+      mockOk(mockRepo);
+      expect(await client.user('pilmee').repo('my-repo')).toEqual(mockRepo);
+    });
+
+    it('calls GET /users/{slug}/repos/{slug} when awaited', async () => {
+      mockOk(mockRepo);
+      await client.user('pilmee').repo('my-repo');
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/pilmee/repos/my-repo`, expect.any(Object));
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.user('pilmee').repo('my-repo')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('user(slug).repo(slug).raw()', () => {
+    it('calls GET /users/{slug}/repos/{slug}/raw/{path}', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK', text: () => Promise.resolve('export const x = 1;') } as Response);
+      await client.user('pilmee').repo('my-repo').raw('src/index.ts');
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${BASE}/users/pilmee/repos/my-repo/raw/src/index.ts`);
+    });
+
+    it('returns the raw file content', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK', text: () => Promise.resolve('hello') } as Response);
+      expect(await client.user('pilmee').repo('my-repo').raw('README.md')).toBe('hello');
+    });
+
+    it('throws on a non-OK response', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found', text: () => Promise.resolve('') } as Response);
+      await expect(client.user('pilmee').repo('my-repo').raw('src/index.ts')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
   describe('project(key).users()', () => {
     const mockUserPermission: BitbucketUserPermission = {
       user: {
