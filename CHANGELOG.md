@@ -1,3 +1,11 @@
+# [1.8.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.7.0...v1.8.0) (2026-03-25)
+
+
+### Features
+
+* add methos to return repos and raw file from user. ([8ad11c6](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/8ad11c642c7ac79626af1431538fb77455273638))
+* add srcPath in commit diff. ([802ff84](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/802ff843f54c72fc5d9f7cbd6c2d2f1305a585f3))
+
 # [1.7.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.6.0...v1.7.0) (2026-03-24)
 
 
