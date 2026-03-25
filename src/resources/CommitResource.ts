@@ -81,9 +81,13 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
    * @returns The diff object
    */
   async diff(params?: DiffParams): Promise<BitbucketDiff> {
+    const { srcPath, ...queryParams } = params ?? {};
+    const path = srcPath
+      ? `${this.basePath}/diff/${encodeURIComponent(srcPath)}`
+      : `${this.basePath}/diff`;
     return this.request<BitbucketDiff>(
-      `${this.basePath}/diff`,
-      params as Record<string, string | number | boolean>,
+      path,
+      queryParams as Record<string, string | number | boolean>,
     );
   }
 }

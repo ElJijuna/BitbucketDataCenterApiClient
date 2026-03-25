@@ -50,13 +50,19 @@ export interface BitbucketDiff {
 
 /**
  * Query parameters accepted by
- * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff`.
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff[/{path}]`.
  */
 export interface DiffParams {
   /** Number of context lines to include around each change (default: 10) */
   contextLines?: number;
-  /** Source path to diff against (for renames) */
+  /**
+   * Limit the diff to a specific file path.
+   * When provided it is appended to the URL as a path segment:
+   * `.../diff/{encodedSrcPath}`
+   */
   srcPath?: string;
+  /** Only include changes introduced after this commit SHA */
+  since?: string;
   /** Whitespace handling: `'IGNORE_ALL'` | `'IGNORE_CHANGE'` */
   whitespace?: 'IGNORE_ALL' | 'IGNORE_CHANGE';
 }

@@ -411,15 +411,37 @@ describe('BitbucketClient', () => {
       expect(await client.project('PROJ').repo('my-repo').commit('abc123').diff()).toEqual(mockDiff);
     });
 
-    it('appends contextLines and whitespace as query params', async () => {
+    it('appends contextLines, since and whitespace as query params', async () => {
       mockOk(mockDiff);
       await client.project('PROJ').repo('my-repo').commit('abc123').diff({
         contextLines: 5,
+        since: 'def456',
         whitespace: 'IGNORE_ALL',
       });
       const [url] = fetchMock.mock.calls[0];
       expect(url).toBe(
-        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff?contextLines=5&whitespace=IGNORE_ALL`,
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff?contextLines=5&since=def456&whitespace=IGNORE_ALL`,
+      );
+    });
+
+    it('appends srcPath as a URL path segment', async () => {
+      mockOk(mockDiff);
+      await client.project('PROJ').repo('my-repo').commit('abc123').diff({ srcPath: 'src/index.ts' });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts`,
+      );
+    });
+
+    it('combines srcPath path segment with other query params', async () => {
+      mockOk(mockDiff);
+      await client.project('PROJ').repo('my-repo').commit('abc123').diff({
+        srcPath: 'src/index.ts',
+        contextLines: 3,
+      });
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts?contextLines=3`,
       );
     });
 
