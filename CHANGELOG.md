@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.8.0...v1.9.0) (2026-03-25)
+
+
+### Features
+
+* add search method to filter repos. ([0d0a0d4](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/0d0a0d4c2120a4ce1742b23612d3d1806946a6b6))
+
 # [1.8.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.7.0...v1.8.0) (2026-03-25)
 
 
