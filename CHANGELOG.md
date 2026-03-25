@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.9.0...v1.10.0) (2026-03-25)
+
+
+### Features
+
+* add method browe in repository. ([6f3b877](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/6f3b87776bb73c9ae6369f6d899d2f55bdb3a5c9))
+
 # [1.9.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.8.0...v1.9.0) (2026-03-25)
 
 
