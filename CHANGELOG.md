@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.10.0...v1.11.0) (2026-03-26)
+
+
+### Features
+
+* add .on('request', callback) method and listeners for subscribe in all events. ([b032452](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/b0324527356a734e9fc05aa3897cfadb1dd68faa))
+
 # [1.10.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.9.0...v1.10.0) (2026-03-25)
 
 
