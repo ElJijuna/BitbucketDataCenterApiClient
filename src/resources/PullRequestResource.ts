@@ -1,5 +1,5 @@
 import type { BitbucketPullRequest } from '../domain/PullRequest';
-import type { BitbucketPullRequestActivity, ActivitiesParams } from '../domain/PullRequestActivity';
+import type { BitbucketPullRequestActivity, BitbucketPullRequestComment, ActivitiesParams } from '../domain/PullRequestActivity';
 import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
 import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketChange, ChangesParams } from '../domain/Change';
@@ -122,6 +122,21 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   async commits(params?: PaginationParams): Promise<PagedResponse<BitbucketCommit>> {
     return this.request<PagedResponse<BitbucketCommit>>(
       `${this.basePath}/commits`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches the comments on this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns A paged response of comments
+   */
+  async comments(params?: PaginationParams): Promise<PagedResponse<BitbucketPullRequestComment>> {
+    return this.request<PagedResponse<BitbucketPullRequestComment>>(
+      `${this.basePath}/comments`,
       params as Record<string, string | number | boolean>,
     );
   }

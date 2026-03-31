@@ -99,7 +99,7 @@
 | `commits(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/commits` | ✅ |
 | `changes(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/changes` | ✅ |
 | `diff(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/diff` | ✅ |
-| `comments(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/comments` | ⬜ |
+| `comments(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/comments` | ✅ |
 | `addComment(data)` | `POST /projects/{key}/repos/{slug}/pull-requests/{id}/comments` | ⬜ |
 | `updateComment(commentId, data)` | `PUT /projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}` | ⬜ |
 | `deleteComment(commentId)` | `DELETE /projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}` | ⬜ |
