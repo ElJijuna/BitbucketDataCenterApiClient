@@ -119,7 +119,7 @@
 | `get()` | `GET /projects/{key}/repos/{slug}/commits/{id}` | ✅ |
 | `changes(params?)` | `GET /projects/{key}/repos/{slug}/commits/{id}/changes` | ✅ |
 | `diff(params?)` | `GET /projects/{key}/repos/{slug}/commits/{id}/diff` | ✅ |
-| `comments(params?)` | `GET /projects/{key}/repos/{slug}/commits/{id}/comments` | ⬜ |
+| `comments(params?)` | `GET /projects/{key}/repos/{slug}/commits/{id}/comments` | ✅ |
 | `addComment(data)` | `POST /projects/{key}/repos/{slug}/commits/{id}/comments` | ⬜ |
 | `buildStatuses(params?)` | `GET /rest/build-status/latest/commits/{id}` | ⬜ |
 | `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` | ⬜ |
