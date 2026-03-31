@@ -2,6 +2,7 @@ import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketChange } from '../domain/Change';
 import type { BitbucketDiff, DiffParams, CommitChangesParams } from '../domain/Diff';
 import type { BitbucketPullRequestComment } from '../domain/PullRequestActivity';
+import type { BitbucketBuildStatus, BuildStatusesParams } from '../domain/BuildStatus';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -25,6 +26,7 @@ import type { RequestFn } from './ProjectResource';
  */
 export class CommitResource implements PromiseLike<BitbucketCommit> {
   private readonly basePath: string;
+  private readonly commitId: string;
 
   /** @internal */
   constructor(
@@ -33,6 +35,7 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     commitId: string,
   ) {
     this.basePath = `${repoBasePath}/commits/${commitId}`;
+    this.commitId = commitId;
   }
 
   /**
@@ -84,6 +87,22 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     return this.request<PagedResponse<BitbucketPullRequestComment>>(
       `${this.basePath}/comments`,
       params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches the build statuses associated with this commit.
+   *
+   * `GET /rest/build-status/latest/commits/{id}`
+   *
+   * @param params - Optional filters: `limit`, `start`, `key`
+   * @returns A paged response of build statuses
+   */
+  async buildStatuses(params?: BuildStatusesParams): Promise<PagedResponse<BitbucketBuildStatus>> {
+    return this.request<PagedResponse<BitbucketBuildStatus>>(
+      `/commits/${this.commitId}`,
+      params as Record<string, string | number | boolean>,
+      { apiPath: 'rest/build-status/latest' },
     );
   }
 

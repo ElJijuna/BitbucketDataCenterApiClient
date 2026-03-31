@@ -121,8 +121,10 @@ export class BitbucketClient {
   private async request<T>(
     path: string,
     params?: Record<string, string | number | boolean>,
+    options?: { apiPath?: string },
   ): Promise<T> {
-    const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
+    const apiPath = options?.apiPath ?? this.apiPath;
+    const base = `${this.security.getApiUrl()}/${apiPath}${path}`;
     const url = buildUrl(base, params);
     const startedAt = new Date();
     let statusCode: number | undefined;
@@ -227,7 +229,8 @@ export class BitbucketClient {
     const request: RequestFn = <T>(
       path: string,
       params?: Record<string, string | number | boolean>,
-    ) => this.request<T>(path, params);
+      options?: { apiPath?: string },
+    ) => this.request<T>(path, params, options);
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
     const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string }) => this.requestPost<T>(path, body, options);
     return new ProjectResource(request, requestText, requestBody, projectKey);
@@ -266,7 +269,8 @@ export class BitbucketClient {
     const request: RequestFn = <T>(
       path: string,
       params?: Record<string, string | number | boolean>,
-    ) => this.request<T>(path, params);
+      options?: { apiPath?: string },
+    ) => this.request<T>(path, params, options);
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
     const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string }) => this.requestPost<T>(path, body, options);
     return new UserResource(request, requestText, requestBody, slug);
