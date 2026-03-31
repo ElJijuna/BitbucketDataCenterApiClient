@@ -75,7 +75,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests`
    *
    * @param params - Optional filters: `limit`, `start`, `state`, `direction`, `at`, `order`
-   * @returns An array of pull requests
+   * @returns A paged response of pull requests
    */
   async pullRequests(params?: PullRequestsParams): Promise<PagedResponse<BitbucketPullRequest>> {
     return this.request<PagedResponse<BitbucketPullRequest>>(
