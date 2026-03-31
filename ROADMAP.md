@@ -133,7 +133,7 @@
 | `get()` | `GET /users/{slug}` | ✅ |
 | `repos(params?)` | `GET /users/{slug}/repos` | ✅ |
 | `repo(slug)` | — chainable | ✅ |
-| `sshKeys(params?)` | `GET /users/{slug}/ssh` | ⬜ |
+| `sshKeys(params?)` | `GET /users/{slug}/ssh` | ✅ |
 | `addSshKey(data)` | `POST /users/{slug}/ssh` | ⬜ |
 | `deleteSshKey(keyId)` | `DELETE /users/{slug}/ssh/{keyId}` | ⬜ |
 | `settings()` | `GET /users/{slug}/settings` | ⬜ |

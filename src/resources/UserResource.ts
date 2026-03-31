@@ -1,5 +1,6 @@
 import type { BitbucketUser } from '../domain/User';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
+import type { BitbucketSshKey, SshKeysParams } from '../domain/SshKey';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
 import { RepositoryResource } from './RepositoryResource';
@@ -79,6 +80,21 @@ export class UserResource implements PromiseLike<BitbucketUser> {
    * const content = await bbClient.user('pilmee').repo('my-repo').raw('src/index.ts');
    * ```
    */
+  /**
+   * Fetches the SSH keys associated with this user.
+   *
+   * `GET /rest/api/latest/users/{slug}/ssh`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns A paged response of SSH keys
+   */
+  async sshKeys(params?: SshKeysParams): Promise<PagedResponse<BitbucketSshKey>> {
+    return this.request<PagedResponse<BitbucketSshKey>>(
+      `${this.basePath}/ssh`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
   repo(repoSlug: string): RepositoryResource {
     return new RepositoryResource(
       this.request,
