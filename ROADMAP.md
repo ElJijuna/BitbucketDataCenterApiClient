@@ -74,7 +74,7 @@
 | `createWebhook(data)` | `POST /projects/{key}/repos/{slug}/webhooks` | ⬜ |
 | `updateWebhook(webhookId, data)` | `PUT /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ⬜ |
 | `deleteWebhook(webhookId)` | `DELETE /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ⬜ |
-| `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` | ⬜ |
+| `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
 | `updateSettings(data)` | `PUT /projects/{key}/repos/{slug}/settings/pull-requests` | ⬜ |
 
 ---

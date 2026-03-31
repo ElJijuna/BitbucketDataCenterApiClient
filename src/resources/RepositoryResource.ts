@@ -8,6 +8,7 @@ import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/L
 import type { RawFileParams } from '../domain/RawFile';
 import type { BitbucketBrowseResponse, BrowseParams } from '../domain/Browse';
 import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
+import type { BitbucketRepositorySettings } from '../domain/RepositorySettings';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
@@ -272,6 +273,17 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * const diff    = await bbClient.project('PROJ').repo('my-repo').commit('abc123').diff();
    * ```
    */
+  /**
+   * Fetches the pull-request settings for this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/settings/pull-requests`
+   *
+   * @returns The repository pull-request settings object
+   */
+  async settings(): Promise<BitbucketRepositorySettings> {
+    return this.request<BitbucketRepositorySettings>(`${this.basePath}/settings/pull-requests`);
+  }
+
   commit(commitId: string): CommitResource {
     return new CommitResource(this.request, this.basePath, commitId);
   }
