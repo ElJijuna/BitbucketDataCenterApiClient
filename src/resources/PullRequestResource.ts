@@ -6,6 +6,7 @@ import type { BitbucketChange, ChangesParams } from '../domain/Change';
 import type { BitbucketReport, ReportsParams } from '../domain/Report';
 import type { BitbucketBuildSummaries } from '../domain/BuildSummary';
 import type { BitbucketIssue } from '../domain/Issue';
+import type { BitbucketDiff, DiffParams } from '../domain/Diff';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn } from './ProjectResource';
 
@@ -123,6 +124,22 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
       `${this.basePath}/commits`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Fetches the diff for this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/diff`
+   *
+   * @param params - Optional: `contextLines`, `srcPath`, `whitespace`
+   * @returns The diff object
+   */
+  async diff(params?: DiffParams): Promise<BitbucketDiff> {
+    const { srcPath, ...queryParams } = params ?? {};
+    const path = srcPath
+      ? `${this.basePath}/diff/${encodeURIComponent(srcPath)}`
+      : `${this.basePath}/diff`;
+    return this.request<BitbucketDiff>(path, queryParams as Record<string, string | number | boolean>);
   }
 
   /**
