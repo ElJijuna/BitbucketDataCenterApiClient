@@ -33,7 +33,7 @@
 | `users(params?)` | `GET /projects/{key}/permissions/users` | ✅ |
 | `setUserPermission(slug, permission)` | `PUT /projects/{key}/permissions/users` | ⬜ |
 | `removeUserPermission(slug)` | `DELETE /projects/{key}/permissions/users` | ⬜ |
-| `groups(params?)` | `GET /projects/{key}/permissions/groups` | ⬜ |
+| `groups(params?)` | `GET /projects/{key}/permissions/groups` | ✅ |
 | `setGroupPermission(group, permission)` | `PUT /projects/{key}/permissions/groups` | ⬜ |
 | `removeGroupPermission(group)` | `DELETE /projects/{key}/permissions/groups` | ⬜ |
 | `webhooks(params?)` | `GET /projects/{key}/webhooks` | ✅ |
