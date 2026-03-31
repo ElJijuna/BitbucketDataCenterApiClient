@@ -1,6 +1,7 @@
 import type { BitbucketUser } from '../domain/User';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { BitbucketSshKey, SshKeysParams } from '../domain/SshKey';
+import type { BitbucketUserSettings } from '../domain/UserSettings';
 import type { PagedResponse } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
 import { RepositoryResource } from './RepositoryResource';
@@ -93,6 +94,17 @@ export class UserResource implements PromiseLike<BitbucketUser> {
       `${this.basePath}/ssh`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Fetches the settings of this user.
+   *
+   * `GET /rest/api/latest/users/{slug}/settings`
+   *
+   * @returns The user settings object
+   */
+  async settings(): Promise<BitbucketUserSettings> {
+    return this.request<BitbucketUserSettings>(`${this.basePath}/settings`);
   }
 
   repo(repoSlug: string): RepositoryResource {

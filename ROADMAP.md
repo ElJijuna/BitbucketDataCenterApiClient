@@ -136,5 +136,5 @@
 | `sshKeys(params?)` | `GET /users/{slug}/ssh` | ✅ |
 | `addSshKey(data)` | `POST /users/{slug}/ssh` | ⬜ |
 | `deleteSshKey(keyId)` | `DELETE /users/{slug}/ssh/{keyId}` | ⬜ |
-| `settings()` | `GET /users/{slug}/settings` | ⬜ |
+| `settings()` | `GET /users/{slug}/settings` | ✅ |
 | `updateSettings(data)` | `PUT /users/{slug}/settings` | ⬜ |
