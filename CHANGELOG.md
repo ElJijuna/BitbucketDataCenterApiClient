@@ -1,3 +1,20 @@
+# [1.12.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.11.0...v1.12.0) (2026-03-31)
+
+
+### Features
+
+* add buildStatuses() method to fetch the build statuses associated with commit, update BitbucketClient and type RequestFn with options params for override apiPath. ([6f09875](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/6f0987520416277a8aac196e8f71d65bc5e1230e))
+* add comments() method to fetch comments on commit. ([94721ea](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/94721ea36591392280e33b1ee389eeca228d83b9))
+* add comments() method to fetch comments on pull request. ([8f8cb77](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/8f8cb77820ccac7fb21adae2edd1aa2258e56cfe))
+* add currentUser() method to fetch the authenticated user. ([420d852](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/420d852f4db90272face769fc8dcea877d8834e4))
+* add defaultBranch() method to return default branch on repository. ([d073bad](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/d073bad2eba0429b9dc527653098f8b3d094001c))
+* add diff() method to fetch diff on pull request. ([b7631c8](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/b7631c8bb4cb8e6af06907a13ac6560fd1219887))
+* add groups() method to fetch the explicits permissions on this project. ([2453fe7](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/2453fe75c100589e517fa98f207d1bfe9af4012a))
+* add reviewers() method to fetch the reviewers on pull request. ([121cd64](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/121cd6409d3749168685077b3a524eda9a9a5374))
+* add settings() method to fetch settings for repository. ([07d2a60](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/07d2a605138a5851f0c64ec1e82f96c2f499236e))
+* add settings() method to fetch user settings. ([5b64889](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/5b648894970c93a5f7f27b5dd8c1674f007f806b))
+* add sshKeys() method to fetch SSH keys with user. ([35a2832](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/35a28323663a0ba41c17e95e0df993824e5f8cdc))
+
 # [1.11.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.10.0...v1.11.0) (2026-03-26)
 
 
