@@ -58,7 +58,7 @@
 | `commits(params?)` | `GET /projects/{key}/repos/{slug}/commits` | ✅ |
 | `commit(commitId)` | — chainable | ✅ |
 | `branches(params?)` | `GET /projects/{key}/repos/{slug}/branches` | ✅ |
-| `defaultBranch()` | `GET /projects/{key}/repos/{slug}/branches/default` | ⬜ |
+| `defaultBranch()` | `GET /projects/{key}/repos/{slug}/branches/default` | ✅ |
 | `setDefaultBranch(branch)` | `PUT /projects/{key}/repos/{slug}/branches/default` | ⬜ |
 | `createBranch(data)` | `POST /projects/{key}/repos/{slug}/branches` | ⬜ |
 | `deleteBranch(branchName)` | `DELETE /projects/{key}/repos/{slug}/branches` | ⬜ |

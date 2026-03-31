@@ -141,6 +141,17 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   }
 
   /**
+   * Fetches the default branch of this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/branches/default`
+   *
+   * @returns The default branch object
+   */
+  async defaultBranch(): Promise<BitbucketBranch> {
+    return this.request<BitbucketBranch>(`${this.basePath}/branches/default`);
+  }
+
+  /**
    * Fetches the forks of this repository.
    *
    * `GET /rest/api/latest/projects/{key}/repos/{slug}/forks`
