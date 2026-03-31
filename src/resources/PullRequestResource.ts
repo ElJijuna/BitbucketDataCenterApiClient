@@ -1,4 +1,4 @@
-import type { BitbucketPullRequest } from '../domain/PullRequest';
+import type { BitbucketPullRequest, BitbucketParticipant } from '../domain/PullRequest';
 import type { BitbucketPullRequestActivity, BitbucketPullRequestComment, ActivitiesParams } from '../domain/PullRequestActivity';
 import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
 import type { BitbucketCommit } from '../domain/Commit';
@@ -168,6 +168,21 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   async changes(params?: ChangesParams): Promise<PagedResponse<BitbucketChange>> {
     return this.request<PagedResponse<BitbucketChange>>(
       `${this.basePath}/changes`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches the participants (reviewers) of this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns A paged response of participants
+   */
+  async reviewers(params?: PaginationParams): Promise<PagedResponse<BitbucketParticipant>> {
+    return this.request<PagedResponse<BitbucketParticipant>>(
+      `${this.basePath}/participants`,
       params as Record<string, string | number | boolean>,
     );
   }

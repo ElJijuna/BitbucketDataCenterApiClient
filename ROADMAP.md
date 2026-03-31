@@ -103,7 +103,7 @@
 | `addComment(data)` | `POST /projects/{key}/repos/{slug}/pull-requests/{id}/comments` | ⬜ |
 | `updateComment(commentId, data)` | `PUT /projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}` | ⬜ |
 | `deleteComment(commentId)` | `DELETE /projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}` | ⬜ |
-| `reviewers(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/participants` | ⬜ |
+| `reviewers(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/participants` | ✅ |
 | `addReviewer(data)` | `POST /projects/{key}/repos/{slug}/pull-requests/{id}/participants` | ⬜ |
 | `removeReviewer(userSlug)` | `DELETE /projects/{key}/repos/{slug}/pull-requests/{id}/participants/{userSlug}` | ⬜ |
 | `reports(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests/{id}/reports` | ✅ |
