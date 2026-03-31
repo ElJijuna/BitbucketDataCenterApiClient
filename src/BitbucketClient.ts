@@ -273,6 +273,22 @@ export class BitbucketClient {
   }
 
   /**
+   * Fetches the currently authenticated user.
+   *
+   * `GET /rest/api/latest/users/credentials`
+   *
+   * @returns The authenticated user object
+   *
+   * @example
+   * ```typescript
+   * const me = await bbClient.currentUser();
+   * ```
+   */
+  async currentUser(): Promise<BitbucketUser> {
+    return this.request<BitbucketUser>('/users/credentials');
+  }
+
+  /**
    * Searches for repositories across all projects.
    *
    * `GET /rest/api/latest/repos`
