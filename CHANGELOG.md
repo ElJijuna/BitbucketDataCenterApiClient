@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.12.0...v1.13.0) (2026-04-01)
+
+
+### Features
+
+* implement CommitResource roadmap. ([2cfd0c3](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/2cfd0c3c50b4508c9640ef93bb1af2caea876cbf))
+
 # [1.11.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.10.0...v1.11.0) (2026-03-26)
 
 
