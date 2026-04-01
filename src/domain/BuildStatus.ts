@@ -26,3 +26,16 @@ export interface BuildStatusesParams extends PaginationParams {
   /** Filter by build key */
   key?: string;
 }
+
+/**
+ * Payload for `POST /rest/build-status/latest/commits/{id}`.
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-builds-and-deployments/#api-build-status-latest-commits-commitid-post}
+ */
+export interface AddBuildStatusData {
+  state: BuildState;
+  key: string;
+  name?: string;
+  url: string;
+  description?: string;
+}

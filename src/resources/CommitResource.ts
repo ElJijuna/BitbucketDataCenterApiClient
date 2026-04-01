@@ -1,10 +1,10 @@
 import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketChange } from '../domain/Change';
 import type { BitbucketDiff, DiffParams, CommitChangesParams } from '../domain/Diff';
-import type { BitbucketPullRequestComment } from '../domain/PullRequestActivity';
-import type { BitbucketBuildStatus, BuildStatusesParams } from '../domain/BuildStatus';
+import type { BitbucketPullRequestComment, AddCommitCommentData } from '../domain/PullRequestActivity';
+import type { BitbucketBuildStatus, BuildStatusesParams, AddBuildStatusData } from '../domain/BuildStatus';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
-import type { RequestFn } from './ProjectResource';
+import type { RequestFn, RequestBodyFn } from './ProjectResource';
 
 /**
  * Represents a Bitbucket commit resource with chainable async methods.
@@ -33,6 +33,7 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     private readonly request: RequestFn,
     repoBasePath: string,
     commitId: string,
+    private readonly requestBody?: RequestBodyFn,
   ) {
     this.basePath = `${repoBasePath}/commits/${commitId}`;
     this.commitId = commitId;
@@ -122,6 +123,34 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     return this.request<BitbucketDiff>(
       path,
       queryParams as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Posts a comment on this commit.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/comments`
+   *
+   * @param data - Comment text and optional anchor/parent
+   * @returns The created comment
+   */
+  async addComment(data: AddCommitCommentData): Promise<BitbucketPullRequestComment> {
+    return this.requestBody!<BitbucketPullRequestComment>(`${this.basePath}/comments`, data);
+  }
+
+  /**
+   * Posts a build status for this commit.
+   *
+   * `POST /rest/build-status/latest/commits/{id}`
+   *
+   * @param data - Build state, key, url and optional metadata
+   * @returns The created build status
+   */
+  async addBuildStatus(data: AddBuildStatusData): Promise<BitbucketBuildStatus> {
+    return this.requestBody!<BitbucketBuildStatus>(
+      `/commits/${this.commitId}`,
+      data,
+      { apiPath: 'rest/build-status/latest' },
     );
   }
 }

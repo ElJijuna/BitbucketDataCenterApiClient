@@ -13,6 +13,23 @@ export interface BitbucketActivityUser {
   type: string;
 }
 
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/comments`.
+ */
+export interface AddCommitCommentData {
+  text: string;
+  /** Anchor the comment to a specific file/line. */
+  anchor?: {
+    line?: number;
+    lineType?: 'CONTEXT' | 'ADDED' | 'REMOVED';
+    fileType?: 'FROM' | 'TO';
+    path?: string;
+    srcPath?: string;
+  };
+  /** Parent comment id for reply threads. */
+  parent?: { id: number };
+}
+
 /** A comment posted on a pull request. */
 export interface BitbucketPullRequestComment {
   id: number;

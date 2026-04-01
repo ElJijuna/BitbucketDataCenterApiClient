@@ -285,7 +285,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   }
 
   commit(commitId: string): CommitResource {
-    return new CommitResource(this.request, this.basePath, commitId);
+    return new CommitResource(this.request, this.basePath, commitId, this.requestBody);
   }
 
   pullRequest(pullRequestId: number): PullRequestResource {
