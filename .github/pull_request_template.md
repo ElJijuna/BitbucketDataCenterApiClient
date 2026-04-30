@@ -4,8 +4,6 @@
 
 ## Related issue
 
-<!-- Closes #123 -->
-
 ## Checklist
 
 - [ ] `npm test` passes

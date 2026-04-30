@@ -71,8 +71,6 @@ jobs:
 
           ## Related issue
 
-          <!-- Closes #123 -->
-
           ## Checklist
 
           - [x] \`npm test\` passes
