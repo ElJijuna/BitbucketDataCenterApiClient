@@ -1112,6 +1112,56 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('project(key).repo(slug).editFile()', () => {
+    const payload = {
+      content: 'hello world',
+      message: 'chore: update file',
+      branch: 'main',
+      sourceCommitId: 'abc123def456',
+    };
+
+    it('calls PUT .../browse/{path} with form-encoded body', async () => {
+      mockOk(mockCommit);
+      await client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload);
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/browse/src/index.ts`);
+      expect(options).toMatchObject({ method: 'PUT' });
+      expect(options.body).toBeInstanceOf(URLSearchParams);
+      const body = options.body as URLSearchParams;
+      expect(body.get('content')).toBe(payload.content);
+      expect(body.get('message')).toBe(payload.message);
+      expect(body.get('branch')).toBe(payload.branch);
+      expect(body.get('sourceCommitId')).toBe(payload.sourceCommitId);
+    });
+
+    it('omits sourceBranch when not provided', async () => {
+      mockOk(mockCommit);
+      await client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload);
+      const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((options.body as URLSearchParams).has('sourceBranch')).toBe(false);
+    });
+
+    it('includes sourceBranch when provided', async () => {
+      mockOk(mockCommit);
+      await client.project('PROJ').repo('my-repo').editFile('src/index.ts', { ...payload, sourceBranch: 'feature' });
+      const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((options.body as URLSearchParams).get('sourceBranch')).toBe('feature');
+    });
+
+    it('returns the commit created by the edit', async () => {
+      mockOk(mockCommit);
+      const result = await client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload);
+      expect(result).toEqual(mockCommit);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(409, 'Conflict');
+      await expect(
+        client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload),
+      ).rejects.toThrow('Bitbucket API error: 409 Conflict');
+    });
+  });
+
   describe('project(key).repo(slug).tags()', () => {
     const mockTag: BitbucketTag = {
       id: 'refs/tags/v1.0.0',

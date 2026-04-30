@@ -9,6 +9,7 @@ import type { RawFileParams } from '../domain/RawFile';
 import type { BitbucketBrowseResponse, BrowseParams } from '../domain/Browse';
 import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import type { BitbucketRepositorySettings } from '../domain/RepositorySettings';
+import type { EditFilePayload } from '../domain/EditFile';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
@@ -282,6 +283,23 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    */
   async settings(): Promise<BitbucketRepositorySettings> {
     return this.request<BitbucketRepositorySettings>(`${this.basePath}/settings/pull-requests`);
+  }
+
+  /**
+   * Creates or updates a file in this repository.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/browse/{path}`
+   *
+   * @param filePath - Path to the file (e.g., `'src/index.ts'`)
+   * @param payload - File content, commit message, branch, and source commit ID
+   * @returns The commit created by this edit
+   */
+  async editFile(filePath: string, payload: EditFilePayload): Promise<BitbucketCommit> {
+    return this.requestBody<BitbucketCommit>(
+      `${this.basePath}/browse/${filePath}`,
+      payload,
+      { method: 'PUT', form: true },
+    );
   }
 
   commit(commitId: string): CommitResource {

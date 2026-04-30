@@ -23,7 +23,7 @@ export type RequestTextFn = (
 export type RequestBodyFn = <T>(
   path: string,
   body: unknown,
-  options?: { apiPath?: string },
+  options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
 ) => Promise<T>;
 
 /**

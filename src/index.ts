@@ -47,3 +47,4 @@ export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/La
 export type { RawFileParams } from './domain/RawFile';
 export type { BitbucketBrowseResponse, BitbucketBrowseChild, BitbucketBrowsePath, BrowseParams } from './domain/Browse';
 export type { PaginationParams, PagedResponse } from './domain/Pagination';
+export type { EditFilePayload } from './domain/EditFile';
