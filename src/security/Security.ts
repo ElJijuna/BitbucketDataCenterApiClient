@@ -3,10 +3,7 @@
  * @internal
  */
 function toBase64(value: string): string {
-  if (typeof btoa !== 'undefined') {
-    return btoa(value);
-  }
-  return Buffer.from(value).toString('base64');
+  return btoa(value);
 }
 
 /**
