@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.13.1...v1.14.0) (2026-04-30)
+
+
+### Features
+
+* implement editFile() on RepositoryResource (closes [#2](https://github.com/ElJijuna/BitbucketDataCenterApiClient/issues/2)) ([6da4bce](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/6da4bce9e32e72f97c6c87be3dded1d12a3bb1fd))
+
 # [1.13.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.12.0...v1.13.0) (2026-04-01)
 
 
