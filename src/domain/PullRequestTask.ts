@@ -41,4 +41,4 @@ export interface BitbucketPullRequestTask {
  *
  * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-tasks-get}
  */
-export interface TasksParams extends PaginationParams {}
+export type TasksParams = PaginationParams;

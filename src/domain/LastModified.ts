@@ -1,6 +1,6 @@
-import type { PaginationParams } from './Pagination';
 import type { BitbucketChangePath } from './Change';
 import type { BitbucketCommit } from './Commit';
+import type { PaginationParams } from './Pagination';
 
 /**
  * Represents a file entry returned by the last-modified endpoint,

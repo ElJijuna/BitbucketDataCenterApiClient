@@ -25,4 +25,4 @@ export interface BitbucketSshKey {
 /**
  * Query parameters accepted by `GET /rest/api/latest/users/{slug}/ssh`.
  */
-export interface SshKeysParams extends PaginationParams {}
+export type SshKeysParams = PaginationParams;

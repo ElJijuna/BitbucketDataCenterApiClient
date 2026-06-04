@@ -1,9 +1,9 @@
+import type { BitbucketGroupPermission, ProjectGroupsParams } from '../domain/Group';
+import type { PagedResponse } from '../domain/Pagination';
 import type { BitbucketProject } from '../domain/Project';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { BitbucketUserPermission, ProjectUsersParams } from '../domain/User';
-import type { BitbucketGroupPermission, ProjectGroupsParams } from '../domain/Group';
 import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
-import type { PagedResponse } from '../domain/Pagination';
 import { RepositoryResource } from './RepositoryResource';
 
 /** @internal */
@@ -60,6 +60,7 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    * Allows the resource to be awaited directly, resolving with the project info.
    * Delegates to {@link ProjectResource.get}.
    */
+  // biome-ignore lint/suspicious/noThenProperty: intentional PromiseLike implementation for await support
   then<TResult1 = BitbucketProject, TResult2 = never>(
     onfulfilled?: ((value: BitbucketProject) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -111,7 +112,12 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    * ```
    */
   repo(repoSlug: string): RepositoryResource {
-    return new RepositoryResource(this.request, this.requestText, this.requestBody, `/projects/${this.key}/repos/${repoSlug}`);
+    return new RepositoryResource(
+      this.request,
+      this.requestText,
+      this.requestBody,
+      `/projects/${this.key}/repos/${repoSlug}`,
+    );
   }
 
   /**

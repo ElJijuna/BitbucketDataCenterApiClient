@@ -1,5 +1,5 @@
-import type { PaginationParams } from './Pagination';
 import type { BitbucketChangePath } from './Change';
+import type { PaginationParams } from './Pagination';
 
 export type DiffSegmentType = 'CONTEXT' | 'ADDED' | 'REMOVED';
 

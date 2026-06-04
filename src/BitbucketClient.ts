@@ -1,11 +1,16 @@
-import { Security } from './security/Security';
-import { ProjectResource, type RequestFn, type RequestTextFn, type RequestBodyFn } from './resources/ProjectResource';
-import { BitbucketApiError } from './errors/BitbucketApiError';
-import { UserResource } from './resources/UserResource';
+import type { PagedResponse } from './domain/Pagination';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
 import type { BitbucketRepository, SearchReposParams } from './domain/Repository';
 import type { BitbucketUser, UsersParams } from './domain/User';
-import type { PagedResponse } from './domain/Pagination';
+import { BitbucketApiError } from './errors/BitbucketApiError';
+import {
+  ProjectResource,
+  type RequestBodyFn,
+  type RequestFn,
+  type RequestTextFn,
+} from './resources/ProjectResource';
+import { UserResource } from './resources/UserResource';
+import { Security } from './security/Security';
 
 /**
  * Payload emitted on every HTTP request made by {@link BitbucketClient}.
@@ -71,7 +76,10 @@ export interface BitbucketClientOptions {
 export class BitbucketClient {
   private readonly security: Security;
   private readonly apiPath: string;
-  private readonly listeners: Map<keyof BitbucketClientEvents, BitbucketClientEvents[keyof BitbucketClientEvents][]> = new Map();
+  private readonly listeners: Map<
+    keyof BitbucketClientEvents,
+    BitbucketClientEvents[keyof BitbucketClientEvents][]
+  > = new Map();
 
   /**
    * @param options - Connection and authentication options
@@ -95,8 +103,10 @@ export class BitbucketClient {
    */
   on<K extends keyof BitbucketClientEvents>(event: K, callback: BitbucketClientEvents[K]): this {
     const callbacks = this.listeners.get(event) ?? [];
+
     callbacks.push(callback);
     this.listeners.set(event, callbacks);
+
     return this;
   }
 
@@ -105,6 +115,7 @@ export class BitbucketClient {
     payload: Parameters<BitbucketClientEvents[K]>[0],
   ): void {
     const callbacks = this.listeners.get(event) ?? [];
+
     for (const cb of callbacks) {
       (cb as (p: typeof payload) => void)(payload);
     }
@@ -127,28 +138,55 @@ export class BitbucketClient {
     const base = `${this.security.getApiUrl()}/${apiPath}${path}`;
     const url = buildUrl(base, params);
     const startedAt = new Date();
+
     let statusCode: number | undefined;
+
     try {
       const response = await fetch(url, { headers: this.security.getHeaders() });
+
       statusCode = response.status;
       if (!response.ok) {
         throw new BitbucketApiError(response.status, response.statusText);
       }
-      const data = await response.json() as T;
-      this.emit('request', { url, method: 'GET', startedAt, finishedAt: new Date(), durationMs: Date.now() - startedAt.getTime(), statusCode });
+
+      const data = (await response.json()) as T;
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt: new Date(),
+        durationMs: Date.now() - startedAt.getTime(),
+        statusCode,
+      });
+
       return data;
     } catch (err) {
       const finishedAt = new Date();
-      this.emit('request', { url, method: 'GET', startedAt, finishedAt, durationMs: finishedAt.getTime() - startedAt.getTime(), statusCode, error: err instanceof Error ? err : new Error(String(err)) });
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt,
+        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        statusCode,
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
       throw err;
     }
   }
 
-  private async requestPost<T>(path: string, body: unknown, options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean }): Promise<T> {
+  private async requestPost<T>(
+    path: string,
+    body: unknown,
+    options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+  ): Promise<T> {
     const method = options?.method ?? 'POST';
     const apiPath = options?.apiPath ?? this.apiPath;
     const url = `${this.security.getApiUrl()}/${apiPath}${path}`;
     const startedAt = new Date();
+
     let statusCode: number | undefined;
     const { Authorization, Accept } = this.security.getHeaders();
     const [headers, fetchBody]: [HeadersInit, BodyInit] = options?.form
@@ -161,18 +199,39 @@ export class BitbucketClient {
           ),
         ]
       : [this.security.getHeaders(), JSON.stringify(body)];
+
     try {
       const response = await fetch(url, { method, headers, body: fetchBody });
+
       statusCode = response.status;
       if (!response.ok) {
         throw new BitbucketApiError(response.status, response.statusText);
       }
-      const data = await response.json() as T;
-      this.emit('request', { url, method, startedAt, finishedAt: new Date(), durationMs: Date.now() - startedAt.getTime(), statusCode });
+
+      const data = (await response.json()) as T;
+
+      this.emit('request', {
+        url,
+        method,
+        startedAt,
+        finishedAt: new Date(),
+        durationMs: Date.now() - startedAt.getTime(),
+        statusCode,
+      });
+
       return data;
     } catch (err) {
       const finishedAt = new Date();
-      this.emit('request', { url, method, startedAt, finishedAt, durationMs: finishedAt.getTime() - startedAt.getTime(), statusCode, error: err instanceof Error ? err : new Error(String(err)) });
+
+      this.emit('request', {
+        url,
+        method,
+        startedAt,
+        finishedAt,
+        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        statusCode,
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
       throw err;
     }
   }
@@ -184,19 +243,41 @@ export class BitbucketClient {
     const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
     const url = buildUrl(base, params);
     const startedAt = new Date();
+
     let statusCode: number | undefined;
+
     try {
       const response = await fetch(url, { headers: this.security.getHeaders() });
+
       statusCode = response.status;
       if (!response.ok) {
         throw new BitbucketApiError(response.status, response.statusText);
       }
+
       const text = await response.text();
-      this.emit('request', { url, method: 'GET', startedAt, finishedAt: new Date(), durationMs: Date.now() - startedAt.getTime(), statusCode });
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt: new Date(),
+        durationMs: Date.now() - startedAt.getTime(),
+        statusCode,
+      });
+
       return text;
     } catch (err) {
       const finishedAt = new Date();
-      this.emit('request', { url, method: 'GET', startedAt, finishedAt, durationMs: finishedAt.getTime() - startedAt.getTime(), statusCode, error: err instanceof Error ? err : new Error(String(err)) });
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt,
+        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        statusCode,
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
       throw err;
     }
   }
@@ -240,7 +321,12 @@ export class BitbucketClient {
       options?: { apiPath?: string },
     ) => this.request<T>(path, params, options);
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
-    const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean }) => this.requestPost<T>(path, body, options);
+    const requestBody: RequestBodyFn = <T>(
+      path: string,
+      body: unknown,
+      options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+    ) => this.requestPost<T>(path, body, options);
+
     return new ProjectResource(request, requestText, requestBody, projectKey);
   }
 
@@ -280,7 +366,12 @@ export class BitbucketClient {
       options?: { apiPath?: string },
     ) => this.request<T>(path, params, options);
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
-    const requestBody: RequestBodyFn = <T>(path: string, body: unknown, options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean }) => this.requestPost<T>(path, body, options);
+    const requestBody: RequestBodyFn = <T>(
+      path: string,
+      body: unknown,
+      options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+    ) => this.requestPost<T>(path, body, options);
+
     return new UserResource(request, requestText, requestBody, slug);
   }
 
@@ -318,10 +409,15 @@ export class BitbucketClient {
    */
   async search(params?: SearchReposParams): Promise<PagedResponse<BitbucketRepository>> {
     const { name, ...rest } = params ?? {};
-    const query: Record<string, string | number | boolean> = rest as Record<string, string | number | boolean>;
+    const query: Record<string, string | number | boolean> = rest as Record<
+      string,
+      string | number | boolean
+    >;
+
     if (name !== undefined) {
-      query['name'] = `%${name}`;
+      query.name = `%${name}`;
     }
+
     return this.request<PagedResponse<BitbucketRepository>>('/repos', query);
   }
 }
@@ -331,9 +427,17 @@ export class BitbucketClient {
  * @internal
  */
 function buildUrl(base: string, params?: Record<string, string | number | boolean>): string {
-  if (!params) return base;
+  if (!params) {
+    return base;
+  }
+
   const entries = Object.entries(params).filter(([, v]) => v !== undefined);
-  if (entries.length === 0) return base;
+
+  if (entries.length === 0) {
+    return base;
+  }
+
   const search = new URLSearchParams(entries.map(([k, v]) => [k, String(v)]));
+
   return `${base}?${search.toString()}`;
 }

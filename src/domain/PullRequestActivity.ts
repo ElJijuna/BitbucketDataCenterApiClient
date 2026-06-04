@@ -1,6 +1,6 @@
+import type { BitbucketCommit } from './Commit';
 import type { PaginationParams } from './Pagination';
 import type { BitbucketParticipant } from './PullRequest';
-import type { BitbucketCommit } from './Commit';
 
 /** Minimal user shape used inside activity records. */
 export interface BitbucketActivityUser {

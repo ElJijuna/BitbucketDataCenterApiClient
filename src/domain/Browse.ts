@@ -1,4 +1,4 @@
-import type { PaginationParams, PagedResponse } from './Pagination';
+import type { PagedResponse, PaginationParams } from './Pagination';
 
 /**
  * Represents the path components of a file or directory returned by the browse endpoint.

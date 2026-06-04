@@ -1,9 +1,9 @@
-import type { BitbucketUser } from '../domain/User';
+import type { PagedResponse } from '../domain/Pagination';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { BitbucketSshKey, SshKeysParams } from '../domain/SshKey';
+import type { BitbucketUser } from '../domain/User';
 import type { BitbucketUserSettings } from '../domain/UserSettings';
-import type { PagedResponse } from '../domain/Pagination';
-import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
+import type { RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
 import { RepositoryResource } from './RepositoryResource';
 
 /**
@@ -26,7 +26,7 @@ export class UserResource implements PromiseLike<BitbucketUser> {
     private readonly request: RequestFn,
     private readonly requestText: RequestTextFn,
     private readonly requestBody: RequestBodyFn,
-    private readonly slug: string,
+    readonly slug: string,
   ) {
     this.basePath = `/users/${slug}`;
   }
@@ -35,6 +35,7 @@ export class UserResource implements PromiseLike<BitbucketUser> {
    * Allows the resource to be awaited directly, resolving with the user info.
    * Delegates to {@link UserResource.get}.
    */
+  // biome-ignore lint/suspicious/noThenProperty: intentional PromiseLike implementation for await support
   then<TResult1 = BitbucketUser, TResult2 = never>(
     onfulfilled?: ((value: BitbucketUser) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,

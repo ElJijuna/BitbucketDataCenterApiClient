@@ -51,4 +51,4 @@ export interface BitbucketReport {
  *
  * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-code-insights/#api-insights-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-reports-get}
  */
-export interface ReportsParams extends PaginationParams {}
+export type ReportsParams = PaginationParams;

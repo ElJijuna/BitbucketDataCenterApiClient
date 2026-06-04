@@ -1,10 +1,17 @@
-import type { BitbucketCommit } from '../domain/Commit';
+import type {
+  AddBuildStatusData,
+  BitbucketBuildStatus,
+  BuildStatusesParams,
+} from '../domain/BuildStatus';
 import type { BitbucketChange } from '../domain/Change';
-import type { BitbucketDiff, DiffParams, CommitChangesParams } from '../domain/Diff';
-import type { BitbucketPullRequestComment, AddCommitCommentData } from '../domain/PullRequestActivity';
-import type { BitbucketBuildStatus, BuildStatusesParams, AddBuildStatusData } from '../domain/BuildStatus';
+import type { BitbucketCommit } from '../domain/Commit';
+import type { BitbucketDiff, CommitChangesParams, DiffParams } from '../domain/Diff';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
-import type { RequestFn, RequestBodyFn } from './ProjectResource';
+import type {
+  AddCommitCommentData,
+  BitbucketPullRequestComment,
+} from '../domain/PullRequestActivity';
+import type { RequestBodyFn, RequestFn } from './ProjectResource';
 
 /**
  * Represents a Bitbucket commit resource with chainable async methods.
@@ -43,6 +50,7 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
    * Allows the resource to be awaited directly, resolving with the commit info.
    * Delegates to {@link CommitResource.get}.
    */
+  // biome-ignore lint/suspicious/noThenProperty: intentional PromiseLike implementation for await support
   then<TResult1 = BitbucketCommit, TResult2 = never>(
     onfulfilled?: ((value: BitbucketCommit) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -120,6 +128,7 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     const path = srcPath
       ? `${this.basePath}/diff/${encodeURIComponent(srcPath)}`
       : `${this.basePath}/diff`;
+
     return this.request<BitbucketDiff>(
       path,
       queryParams as Record<string, string | number | boolean>,
@@ -135,6 +144,7 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
    * @returns The created comment
    */
   async addComment(data: AddCommitCommentData): Promise<BitbucketPullRequestComment> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
     return this.requestBody!<BitbucketPullRequestComment>(`${this.basePath}/comments`, data);
   }
 
@@ -147,10 +157,9 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
    * @returns The created build status
    */
   async addBuildStatus(data: AddBuildStatusData): Promise<BitbucketBuildStatus> {
-    return this.requestBody!<BitbucketBuildStatus>(
-      `/commits/${this.commitId}`,
-      data,
-      { apiPath: 'rest/build-status/latest' },
-    );
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketBuildStatus>(`/commits/${this.commitId}`, data, {
+      apiPath: 'rest/build-status/latest',
+    });
   }
 }

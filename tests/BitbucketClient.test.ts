@@ -1,21 +1,21 @@
 import { BitbucketClient } from '../src/BitbucketClient';
-import { BitbucketApiError } from '../src/errors/BitbucketApiError';
-import type { BitbucketProject } from '../src/domain/Project';
-import type { BitbucketRepository } from '../src/domain/Repository';
-import type { BitbucketPullRequest, BitbucketParticipant } from '../src/domain/PullRequest';
+import type { BitbucketBranch } from '../src/domain/Branch';
+import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
+import type { BitbucketChange } from '../src/domain/Change';
 import type { BitbucketCommit } from '../src/domain/Commit';
+import type { BitbucketIssue } from '../src/domain/Issue';
+import type { BitbucketLastModifiedEntry } from '../src/domain/LastModified';
+import type { BitbucketProject } from '../src/domain/Project';
+import type { BitbucketParticipant, BitbucketPullRequest } from '../src/domain/PullRequest';
 import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
 import type { BitbucketPullRequestTask } from '../src/domain/PullRequestTask';
-import type { BitbucketChange } from '../src/domain/Change';
 import type { BitbucketReport } from '../src/domain/Report';
-import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
-import type { BitbucketIssue } from '../src/domain/Issue';
-import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
-import type { BitbucketBranch } from '../src/domain/Branch';
-import type { BitbucketTag } from '../src/domain/Tag';
-import type { BitbucketWebhook } from '../src/domain/Webhook';
+import type { BitbucketRepository } from '../src/domain/Repository';
 import type { BitbucketRepositorySize } from '../src/domain/RepositorySize';
-import type { BitbucketLastModifiedEntry } from '../src/domain/LastModified';
+import type { BitbucketTag } from '../src/domain/Tag';
+import type { BitbucketUser, BitbucketUserPermission } from '../src/domain/User';
+import type { BitbucketWebhook } from '../src/domain/Webhook';
+import { BitbucketApiError } from '../src/errors/BitbucketApiError';
 
 const API_URL = 'https://bitbucket.example.com';
 const API_PATH = 'rest/api/latest';
@@ -135,7 +135,8 @@ describe('BitbucketClient', () => {
   describe('constructor', () => {
     it('throws TypeError when apiUrl is invalid', () => {
       expect(
-        () => new BitbucketClient({ apiUrl: 'not-a-url', apiPath: API_PATH, user: USER, token: TOKEN }),
+        () =>
+          new BitbucketClient({ apiUrl: 'not-a-url', apiPath: API_PATH, user: USER, token: TOKEN }),
       ).toThrow(TypeError);
     });
   });
@@ -159,6 +160,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockProject));
       await client.projects({ limit: 10, start: 20 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects?limit=10&start=20`);
     });
 
@@ -166,6 +168,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockProject));
       await client.projects({ name: 'my-proj' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects?name=my-proj`);
     });
 
@@ -173,6 +176,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockProject));
       await client.projects({ limit: 5, name: undefined });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects?limit=5`);
     });
 
@@ -216,6 +220,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockRepo));
       await client.project('PROJ').repos({ limit: 50, start: 100 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos?limit=50&start=100`);
     });
 
@@ -223,6 +228,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockRepo));
       await client.project('PROJ').repos({ name: 'api' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos?name=api`);
     });
 
@@ -269,20 +275,27 @@ describe('BitbucketClient', () => {
 
     it('returns the paged response with pull requests', async () => {
       mockOk(pagedOf(mockPullRequest));
-      expect(await client.project('PROJ').repo('my-repo').pullRequests()).toEqual(pagedOf(mockPullRequest));
+      expect(await client.project('PROJ').repo('my-repo').pullRequests()).toEqual(
+        pagedOf(mockPullRequest),
+      );
     });
 
     it('appends state filter as query param', async () => {
       mockOk(pagedOf(mockPullRequest));
       await client.project('PROJ').repo('my-repo').pullRequests({ state: 'MERGED' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/pull-requests?state=MERGED`);
     });
 
     it('appends limit, start and order as query params', async () => {
       mockOk(pagedOf(mockPullRequest));
-      await client.project('PROJ').repo('my-repo').pullRequests({ limit: 10, start: 0, order: 'NEWEST' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .pullRequests({ limit: 10, start: 0, order: 'NEWEST' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests?limit=10&start=0&order=NEWEST`,
       );
@@ -315,6 +328,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockCommit));
       await client.project('PROJ').repo('my-repo').commits({ limit: 5, until: 'main' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits?limit=5&until=main`);
     });
 
@@ -322,6 +336,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockCommit));
       await client.project('PROJ').repo('my-repo').commits({ followRenames: true });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits?followRenames=true`);
     });
 
@@ -329,9 +344,8 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockCommit));
       await client.project('PROJ').repo('my-repo').commits({ path: 'src/index.ts' });
       const [url] = fetchMock.mock.calls[0];
-      expect(url).toBe(
-        `${BASE}/projects/PROJ/repos/my-repo/commits?path=src%2Findex.ts`,
-      );
+
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits?path=src%2Findex.ts`);
     });
 
     it('throws on a non-OK response', async () => {
@@ -359,9 +373,9 @@ describe('BitbucketClient', () => {
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').commit('abc123'),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').commit('abc123')).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -379,6 +393,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf());
       await client.project('PROJ').repo('my-repo').commit('abc123').changes({ since: 'def456' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits/abc123/changes?since=def456`);
     });
 
@@ -408,7 +423,9 @@ describe('BitbucketClient', () => {
 
     it('returns the diff object', async () => {
       mockOk(mockDiff);
-      expect(await client.project('PROJ').repo('my-repo').commit('abc123').diff()).toEqual(mockDiff);
+      expect(await client.project('PROJ').repo('my-repo').commit('abc123').diff()).toEqual(
+        mockDiff,
+      );
     });
 
     it('appends contextLines, since and whitespace as query params', async () => {
@@ -419,6 +436,7 @@ describe('BitbucketClient', () => {
         whitespace: 'IGNORE_ALL',
       });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff?contextLines=5&since=def456&whitespace=IGNORE_ALL`,
       );
@@ -426,11 +444,14 @@ describe('BitbucketClient', () => {
 
     it('appends srcPath as a URL path segment', async () => {
       mockOk(mockDiff);
-      await client.project('PROJ').repo('my-repo').commit('abc123').diff({ srcPath: 'src/index.ts' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .commit('abc123')
+        .diff({ srcPath: 'src/index.ts' });
       const [url] = fetchMock.mock.calls[0];
-      expect(url).toBe(
-        `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts`,
-      );
+
+      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts`);
     });
 
     it('combines srcPath path segment with other query params', async () => {
@@ -440,6 +461,7 @@ describe('BitbucketClient', () => {
         contextLines: 3,
       });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts?contextLines=3`,
       );
@@ -447,9 +469,9 @@ describe('BitbucketClient', () => {
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').commit('abc123').diff(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').commit('abc123').diff()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -504,13 +526,19 @@ describe('BitbucketClient', () => {
     it('returns the paged response with activities', async () => {
       mockOk(pagedOf(mockActivity));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).activities();
+
       expect(result).toEqual(pagedOf(mockActivity));
     });
 
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockActivity));
-      await client.project('PROJ').repo('my-repo').pullRequest(42).activities({ limit: 10, start: 5 });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .pullRequest(42)
+        .activities({ limit: 10, start: 5 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities?limit=10&start=5`,
       );
@@ -518,8 +546,13 @@ describe('BitbucketClient', () => {
 
     it('appends fromId and fromType as query params', async () => {
       mockOk(pagedOf(mockActivity));
-      await client.project('PROJ').repo('my-repo').pullRequest(42).activities({ fromId: 7, fromType: 'COMMENT' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .pullRequest(42)
+        .activities({ fromId: 7, fromType: 'COMMENT' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities?fromId=7&fromType=COMMENT`,
       );
@@ -564,6 +597,7 @@ describe('BitbucketClient', () => {
     it('returns the paged response with tasks', async () => {
       mockOk(pagedOf(mockTask));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).tasks();
+
       expect(result).toEqual(pagedOf(mockTask));
     });
 
@@ -571,6 +605,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockTask));
       await client.project('PROJ').repo('my-repo').pullRequest(42).tasks({ limit: 10, start: 5 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/tasks?limit=10&start=5`,
       );
@@ -578,9 +613,9 @@ describe('BitbucketClient', () => {
 
     it('throws on a non-OK response', async () => {
       mockError(403, 'Forbidden');
-      await expect(
-        client.project('PROJ').repo('my-repo').pullRequest(42).tasks(),
-      ).rejects.toThrow('Bitbucket API error: 403 Forbidden');
+      await expect(client.project('PROJ').repo('my-repo').pullRequest(42).tasks()).rejects.toThrow(
+        'Bitbucket API error: 403 Forbidden',
+      );
     });
   });
 
@@ -597,13 +632,19 @@ describe('BitbucketClient', () => {
     it('returns the paged response with commits', async () => {
       mockOk(pagedOf(mockCommit));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).commits();
+
       expect(result).toEqual(pagedOf(mockCommit));
     });
 
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockCommit));
-      await client.project('PROJ').repo('my-repo').pullRequest(42).commits({ limit: 10, start: 20 });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .pullRequest(42)
+        .commits({ limit: 10, start: 20 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/commits?limit=10&start=20`,
       );
@@ -648,6 +689,7 @@ describe('BitbucketClient', () => {
     it('returns the paged response with changes', async () => {
       mockOk(pagedOf(mockChange));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).changes();
+
       expect(result).toEqual(pagedOf(mockChange));
     });
 
@@ -655,6 +697,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockChange));
       await client.project('PROJ').repo('my-repo').pullRequest(42).changes({ limit: 50, start: 0 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes?limit=50&start=0`,
       );
@@ -664,6 +707,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockChange));
       await client.project('PROJ').repo('my-repo').pullRequest(42).changes({ withComments: true });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes?withComments=true`,
       );
@@ -700,6 +744,7 @@ describe('BitbucketClient', () => {
     it('returns the paged response with reports', async () => {
       mockOk(pagedOf(mockReport));
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).reports();
+
       expect(result).toEqual(pagedOf(mockReport));
     });
 
@@ -707,6 +752,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockReport));
       await client.project('PROJ').repo('my-repo').pullRequest(42).reports({ limit: 10, start: 0 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/reports?limit=10&start=0`,
       );
@@ -738,6 +784,7 @@ describe('BitbucketClient', () => {
     it('returns the build summaries map', async () => {
       mockOk(mockBuildSummaries);
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries();
+
       expect(result).toEqual(mockBuildSummaries);
     });
 
@@ -767,14 +814,15 @@ describe('BitbucketClient', () => {
     it('returns the list of linked Jira issues', async () => {
       mockOk(mockIssues);
       const result = await client.project('PROJ').repo('my-repo').pullRequest(42).issues();
+
       expect(result).toEqual(mockIssues);
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').pullRequest(42).issues(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').pullRequest(42).issues()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -805,6 +853,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockUser));
       await client.users({ filter: 'john', limit: 10 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/users?filter=john&limit=10`);
     });
 
@@ -859,12 +908,15 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockRepo));
       await client.user('pilmee').repos({ name: 'api', limit: 10 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/users/pilmee/repos?name=api&limit=10`);
     });
 
     it('throws on a non-OK response', async () => {
       mockError(403, 'Forbidden');
-      await expect(client.user('pilmee').repos()).rejects.toThrow('Bitbucket API error: 403 Forbidden');
+      await expect(client.user('pilmee').repos()).rejects.toThrow(
+        'Bitbucket API error: 403 Forbidden',
+      );
     });
   });
 
@@ -877,31 +929,54 @@ describe('BitbucketClient', () => {
     it('calls GET /users/{slug}/repos/{slug} when awaited', async () => {
       mockOk(mockRepo);
       await client.user('pilmee').repo('my-repo');
-      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/pilmee/repos/my-repo`, expect.any(Object));
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/users/pilmee/repos/my-repo`,
+        expect.any(Object),
+      );
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(client.user('pilmee').repo('my-repo')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.user('pilmee').repo('my-repo')).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
   describe('user(slug).repo(slug).raw()', () => {
     it('calls GET /users/{slug}/repos/{slug}/raw/{path}', async () => {
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK', text: () => Promise.resolve('export const x = 1;') } as Response);
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve('export const x = 1;'),
+      } as Response);
       await client.user('pilmee').repo('my-repo').raw('src/index.ts');
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/users/pilmee/repos/my-repo/raw/src/index.ts`);
     });
 
     it('returns the raw file content', async () => {
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK', text: () => Promise.resolve('hello') } as Response);
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve('hello'),
+      } as Response);
       expect(await client.user('pilmee').repo('my-repo').raw('README.md')).toBe('hello');
     });
 
     it('throws on a non-OK response', async () => {
-      fetchMock.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found', text: () => Promise.resolve('') } as Response);
-      await expect(client.user('pilmee').repo('my-repo').raw('src/index.ts')).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: () => Promise.resolve(''),
+      } as Response);
+      await expect(client.user('pilmee').repo('my-repo').raw('src/index.ts')).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -938,6 +1013,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockUserPermission));
       await client.project('PROJ').users({ filter: 'john', permission: 'PROJECT_WRITE' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/permissions/users?filter=john&permission=PROJECT_WRITE`,
       );
@@ -973,6 +1049,7 @@ describe('BitbucketClient', () => {
     it('returns the raw file content as a string', async () => {
       mockText('export const x = 1;');
       const result = await client.project('PROJ').repo('my-repo').raw('src/index.ts');
+
       expect(result).toBe('export const x = 1;');
     });
 
@@ -980,6 +1057,7 @@ describe('BitbucketClient', () => {
       mockText('export const x = 1;');
       await client.project('PROJ').repo('my-repo').raw('src/index.ts', { at: 'main' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/raw/src/index.ts?at=main`);
     });
 
@@ -990,9 +1068,9 @@ describe('BitbucketClient', () => {
         statusText: 'Not Found',
         text: () => Promise.resolve(''),
       } as Response);
-      await expect(
-        client.project('PROJ').repo('my-repo').raw('src/index.ts'),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').raw('src/index.ts')).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1020,6 +1098,7 @@ describe('BitbucketClient', () => {
     it('returns the paged response with last-modified entries', async () => {
       mockOk(pagedOf(mockEntry));
       const result = await client.project('PROJ').repo('my-repo').lastModified();
+
       expect(result).toEqual(pagedOf(mockEntry));
     });
 
@@ -1027,14 +1106,15 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockEntry));
       await client.project('PROJ').repo('my-repo').lastModified({ at: 'main' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/last-modified?at=main`);
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').lastModified(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').lastModified()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1051,6 +1131,7 @@ describe('BitbucketClient', () => {
     it('returns the paged response with forked repositories', async () => {
       mockOk(pagedOf(mockRepo));
       const result = await client.project('PROJ').repo('my-repo').forks();
+
       expect(result).toEqual(pagedOf(mockRepo));
     });
 
@@ -1058,14 +1139,15 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockRepo));
       await client.project('PROJ').repo('my-repo').forks({ limit: 10, start: 0 });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/forks?limit=10&start=0`);
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').forks(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').forks()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1094,21 +1176,26 @@ describe('BitbucketClient', () => {
     it('returns the paged response with tags', async () => {
       mockOk(pagedOf(mockTag));
       const result = await client.project('PROJ').repo('my-repo').tagsByCommits(commits);
+
       expect(result).toEqual(pagedOf(mockTag));
     });
 
     it('uses a custom apiPath when provided', async () => {
       mockOk(pagedOf(mockTag));
-      await client.project('PROJ').repo('my-repo').tagsByCommits(commits, { apiPath: 'rest/api/1.0' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .tagsByCommits(commits, { apiPath: 'rest/api/1.0' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${API_URL}/rest/api/1.0/projects/PROJ/repos/my-repo/tags`);
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').tagsByCommits(commits),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').tagsByCommits(commits)).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1124,10 +1211,12 @@ describe('BitbucketClient', () => {
       mockOk(mockCommit);
       await client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload);
       const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/browse/src/index.ts`);
       expect(options).toMatchObject({ method: 'PUT' });
       expect(options.body).toBeInstanceOf(URLSearchParams);
       const body = options.body as URLSearchParams;
+
       expect(body.get('content')).toBe(payload.content);
       expect(body.get('message')).toBe(payload.message);
       expect(body.get('branch')).toBe(payload.branch);
@@ -1138,19 +1227,25 @@ describe('BitbucketClient', () => {
       mockOk(mockCommit);
       await client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload);
       const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+
       expect((options.body as URLSearchParams).has('sourceBranch')).toBe(false);
     });
 
     it('includes sourceBranch when provided', async () => {
       mockOk(mockCommit);
-      await client.project('PROJ').repo('my-repo').editFile('src/index.ts', { ...payload, sourceBranch: 'feature' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .editFile('src/index.ts', { ...payload, sourceBranch: 'feature' });
       const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+
       expect((options.body as URLSearchParams).get('sourceBranch')).toBe('feature');
     });
 
     it('returns the commit created by the edit', async () => {
       mockOk(mockCommit);
       const result = await client.project('PROJ').repo('my-repo').editFile('src/index.ts', payload);
+
       expect(result).toEqual(mockCommit);
     });
 
@@ -1183,21 +1278,28 @@ describe('BitbucketClient', () => {
     it('returns the paged response with tags', async () => {
       mockOk(pagedOf(mockTag));
       const result = await client.project('PROJ').repo('my-repo').tags();
+
       expect(result).toEqual(pagedOf(mockTag));
     });
 
     it('appends filterText and orderBy as query params', async () => {
       mockOk(pagedOf(mockTag));
-      await client.project('PROJ').repo('my-repo').tags({ filterText: 'v1', orderBy: 'ALPHABETICAL' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .tags({ filterText: 'v1', orderBy: 'ALPHABETICAL' });
       const [url] = fetchMock.mock.calls[0];
-      expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/tags?filterText=v1&orderBy=ALPHABETICAL`);
+
+      expect(url).toBe(
+        `${BASE}/projects/PROJ/repos/my-repo/tags?filterText=v1&orderBy=ALPHABETICAL`,
+      );
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').tags(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').tags()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1215,10 +1317,7 @@ describe('BitbucketClient', () => {
     it('calls GET /projects/{key}/webhooks', async () => {
       mockOk(pagedOf(mockWebhook));
       await client.project('PROJ').webhooks();
-      expect(fetchMock).toHaveBeenCalledWith(
-        `${BASE}/projects/PROJ/webhooks`,
-        expect.any(Object),
-      );
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/projects/PROJ/webhooks`, expect.any(Object));
     });
 
     it('returns the paged response with webhooks', async () => {
@@ -1230,6 +1329,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockWebhook));
       await client.project('PROJ').webhooks({ event: 'pr:opened' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/webhooks?event=pr%3Aopened`);
     });
 
@@ -1270,6 +1370,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockWebhook));
       await client.project('PROJ').repo('my-repo').webhooks({ event: 'repo:push' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/webhooks/search?event=repo%3Apush`);
     });
 
@@ -1299,14 +1400,15 @@ describe('BitbucketClient', () => {
     it('returns the repository size object', async () => {
       mockOk(mockSize);
       const result = await client.project('PROJ').repo('my-repo').size();
+
       expect(result).toEqual(mockSize);
     });
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').size(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').size()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1332,13 +1434,18 @@ describe('BitbucketClient', () => {
     it('returns the paged response with branches', async () => {
       mockOk(pagedOf(mockBranch));
       const result = await client.project('PROJ').repo('my-repo').branches();
+
       expect(result).toEqual(pagedOf(mockBranch));
     });
 
     it('appends filterText and orderBy as query params', async () => {
       mockOk(pagedOf(mockBranch));
-      await client.project('PROJ').repo('my-repo').branches({ filterText: 'feat', orderBy: 'MODIFICATION' });
+      await client
+        .project('PROJ')
+        .repo('my-repo')
+        .branches({ filterText: 'feat', orderBy: 'MODIFICATION' });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/branches?filterText=feat&orderBy=MODIFICATION`,
       );
@@ -1348,6 +1455,7 @@ describe('BitbucketClient', () => {
       mockOk(pagedOf(mockBranch));
       await client.project('PROJ').repo('my-repo').branches({ details: true, boostMatches: true });
       const [url] = fetchMock.mock.calls[0];
+
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/branches?details=true&boostMatches=true`,
       );
@@ -1355,9 +1463,9 @@ describe('BitbucketClient', () => {
 
     it('throws on a non-OK response', async () => {
       mockError(404, 'Not Found');
-      await expect(
-        client.project('PROJ').repo('my-repo').branches(),
-      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+      await expect(client.project('PROJ').repo('my-repo').branches()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
     });
   });
 
@@ -1404,7 +1512,8 @@ describe('BitbucketClient', () => {
       await client.projects();
       const [, init] = fetchMock.mock.calls[0];
       const headers = (init as RequestInit).headers as Record<string, string>;
-      expect(headers['Authorization']).toMatch(/^Basic /);
+
+      expect(headers.Authorization).toMatch(/^Basic /);
     });
   });
 });

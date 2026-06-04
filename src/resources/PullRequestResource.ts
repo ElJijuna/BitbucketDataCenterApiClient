@@ -1,13 +1,17 @@
-import type { BitbucketPullRequest, BitbucketParticipant } from '../domain/PullRequest';
-import type { BitbucketPullRequestActivity, BitbucketPullRequestComment, ActivitiesParams } from '../domain/PullRequestActivity';
-import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
-import type { BitbucketCommit } from '../domain/Commit';
-import type { BitbucketChange, ChangesParams } from '../domain/Change';
-import type { BitbucketReport, ReportsParams } from '../domain/Report';
 import type { BitbucketBuildSummaries } from '../domain/BuildSummary';
-import type { BitbucketIssue } from '../domain/Issue';
+import type { BitbucketChange, ChangesParams } from '../domain/Change';
+import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketDiff, DiffParams } from '../domain/Diff';
+import type { BitbucketIssue } from '../domain/Issue';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
+import type { BitbucketParticipant, BitbucketPullRequest } from '../domain/PullRequest';
+import type {
+  ActivitiesParams,
+  BitbucketPullRequestActivity,
+  BitbucketPullRequestComment,
+} from '../domain/PullRequestActivity';
+import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
+import type { BitbucketReport, ReportsParams } from '../domain/Report';
 import type { RequestFn } from './ProjectResource';
 
 /**
@@ -59,6 +63,7 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * Allows the resource to be awaited directly, resolving with the pull request info.
    * Delegates to {@link PullRequestResource.get}.
    */
+  // biome-ignore lint/suspicious/noThenProperty: intentional PromiseLike implementation for await support
   then<TResult1 = BitbucketPullRequest, TResult2 = never>(
     onfulfilled?: ((value: BitbucketPullRequest) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -87,7 +92,9 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * @param params - Optional filters: `limit`, `start`, `fromId`, `fromType`
    * @returns An array of pull request activities, ordered from most recent to oldest
    */
-  async activities(params?: ActivitiesParams): Promise<PagedResponse<BitbucketPullRequestActivity>> {
+  async activities(
+    params?: ActivitiesParams,
+  ): Promise<PagedResponse<BitbucketPullRequestActivity>> {
     return this.request<PagedResponse<BitbucketPullRequestActivity>>(
       `${this.basePath}/activities`,
       params as Record<string, string | number | boolean>,
@@ -154,7 +161,11 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
     const path = srcPath
       ? `${this.basePath}/diff/${encodeURIComponent(srcPath)}`
       : `${this.basePath}/diff`;
-    return this.request<BitbucketDiff>(path, queryParams as Record<string, string | number | boolean>);
+
+    return this.request<BitbucketDiff>(
+      path,
+      queryParams as Record<string, string | number | boolean>,
+    );
   }
 
   /**

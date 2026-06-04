@@ -1,19 +1,19 @@
-import type { BitbucketRepository } from '../domain/Repository';
-import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullRequest';
-import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
-import type { BitbucketTag, TagsParams } from '../domain/Tag';
-import type { BitbucketRepositorySize } from '../domain/RepositorySize';
-import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
-import type { RawFileParams } from '../domain/RawFile';
 import type { BitbucketBrowseResponse, BrowseParams } from '../domain/Browse';
-import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
-import type { BitbucketRepositorySettings } from '../domain/RepositorySettings';
+import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { EditFilePayload } from '../domain/EditFile';
+import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/LastModified';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
-import type { RequestFn, RequestTextFn, RequestBodyFn } from './ProjectResource';
-import { PullRequestResource } from './PullRequestResource';
+import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullRequest';
+import type { RawFileParams } from '../domain/RawFile';
+import type { BitbucketRepository } from '../domain/Repository';
+import type { BitbucketRepositorySettings } from '../domain/RepositorySettings';
+import type { BitbucketRepositorySize } from '../domain/RepositorySize';
+import type { BitbucketTag, TagsParams } from '../domain/Tag';
+import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import { CommitResource } from './CommitResource';
+import type { RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
+import { PullRequestResource } from './PullRequestResource';
 
 /**
  * Represents a Bitbucket repository resource with chainable async methods.
@@ -53,6 +53,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * Allows the resource to be awaited directly, resolving with the repository info.
    * Delegates to {@link RepositoryResource.get}.
    */
+  // biome-ignore lint/suspicious/noThenProperty: intentional PromiseLike implementation for await support
   then<TResult1 = BitbucketRepository, TResult2 = never>(
     onfulfilled?: ((value: BitbucketRepository) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -109,7 +110,9 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @param params - Optional filters: `limit`, `start`, `at`
    * @returns An array of last-modified entries
    */
-  async lastModified(params?: LastModifiedParams): Promise<PagedResponse<BitbucketLastModifiedEntry>> {
+  async lastModified(
+    params?: LastModifiedParams,
+  ): Promise<PagedResponse<BitbucketLastModifiedEntry>> {
     return this.request<PagedResponse<BitbucketLastModifiedEntry>>(
       `${this.basePath}/last-modified`,
       params as Record<string, string | number | boolean>,
@@ -177,7 +180,10 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @param options - Optional overrides (e.g. `apiPath` to target a different API version)
    * @returns A paged response of tags
    */
-  async tagsByCommits(commits: string[], options?: { apiPath?: string }): Promise<PagedResponse<BitbucketTag>> {
+  async tagsByCommits(
+    commits: string[],
+    options?: { apiPath?: string },
+  ): Promise<PagedResponse<BitbucketTag>> {
     return this.requestBody<PagedResponse<BitbucketTag>>(`${this.basePath}/tags`, commits, options);
   }
 
@@ -254,7 +260,11 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    */
   async browse(srcPath?: string, params?: BrowseParams): Promise<BitbucketBrowseResponse> {
     const path = srcPath ? `${this.basePath}/browse/${srcPath}` : `${this.basePath}/browse`;
-    return this.request<BitbucketBrowseResponse>(path, params as Record<string, string | number | boolean>);
+
+    return this.request<BitbucketBrowseResponse>(
+      path,
+      params as Record<string, string | number | boolean>,
+    );
   }
 
   /**
@@ -295,11 +305,10 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    * @returns The commit created by this edit
    */
   async editFile(filePath: string, payload: EditFilePayload): Promise<BitbucketCommit> {
-    return this.requestBody<BitbucketCommit>(
-      `${this.basePath}/browse/${filePath}`,
-      payload,
-      { method: 'PUT', form: true },
-    );
+    return this.requestBody<BitbucketCommit>(`${this.basePath}/browse/${filePath}`, payload, {
+      method: 'PUT',
+      form: true,
+    });
   }
 
   commit(commitId: string): CommitResource {
