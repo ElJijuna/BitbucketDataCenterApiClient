@@ -1,7 +1,10 @@
+import type { AutoMergeRequest, RequestAutoMergeData } from '../domain/AutoMerge';
 import type { BitbucketBuildSummaries } from '../domain/BuildSummary';
 import type { BitbucketChange, ChangesParams } from '../domain/Change';
 import type { BitbucketCommit } from '../domain/Commit';
+import type { CommitMessageSuggestion } from '../domain/CommitMessageSuggestion';
 import type { BitbucketDiff, DiffParams } from '../domain/Diff';
+import type { BitbucketDiffStatsSummary } from '../domain/DiffStatsSummary';
 import type { BitbucketIssue } from '../domain/Issue';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type {
@@ -24,14 +27,16 @@ import type {
   BitbucketPullRequestComment,
   UpdatePullRequestCommentData,
 } from '../domain/PullRequestActivity';
+import type { CompleteReviewData, PullRequestReview } from '../domain/PullRequestReview';
 import type {
   BitbucketPullRequestTask,
   CreateTaskData,
   TasksParams,
   UpdateTaskData,
 } from '../domain/PullRequestTask';
+import type { CanRebaseResult, RebaseResult } from '../domain/Rebase';
 import type { BitbucketReport, ReportsParams } from '../domain/Report';
-import type { RequestBodyFn, RequestFn } from './ProjectResource';
+import type { RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
 
 /**
  * Represents a Bitbucket pull request resource with chainable async methods.
@@ -76,6 +81,7 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
     repoBasePath: string,
     pullRequestId: number,
     private readonly requestBody?: RequestBodyFn,
+    private readonly requestText?: RequestTextFn,
   ) {
     this.repoBasePath = repoBasePath;
     this.basePath = `${repoBasePath}/pull-requests/${pullRequestId}`;
@@ -492,6 +498,42 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
       path,
       queryParams as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Fetches the raw unified diff for this pull request, in `git diff` format.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}.diff`
+   *
+   * @returns The raw diff as plain text
+   */
+  async rawDiff(): Promise<string> {
+    // biome-ignore lint/style/noNonNullAssertion: requestText is always set when this method is called
+    return this.requestText!(`${this.basePath}.diff`);
+  }
+
+  /**
+   * Fetches this pull request as a `git format-patch`-compatible patch file.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}.patch`
+   *
+   * @returns The raw patch as plain text
+   */
+  async patch(): Promise<string> {
+    // biome-ignore lint/style/noNonNullAssertion: requestText is always set when this method is called
+    return this.requestText!(`${this.basePath}.patch`);
+  }
+
+  /**
+   * Fetches aggregated line-change counts for a single file's diff.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/diff-stats-summary/{path}`
+   *
+   * @param path - The file path to summarize
+   * @returns Added/removed line counts for the file
+   */
+  async diffStatsSummary(path: string): Promise<BitbucketDiffStatsSummary> {
+    return this.request<BitbucketDiffStatsSummary>(`${this.basePath}/diff-stats-summary/${path}`);
   }
 
   /**

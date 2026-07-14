@@ -321,6 +321,12 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   }
 
   pullRequest(pullRequestId: number): PullRequestResource {
-    return new PullRequestResource(this.request, this.basePath, pullRequestId, this.requestBody);
+    return new PullRequestResource(
+      this.request,
+      this.basePath,
+      pullRequestId,
+      this.requestBody,
+      this.requestText,
+    );
   }
 }
