@@ -22,7 +22,6 @@ const API_PATH = 'rest/api/latest';
 const BASE = `${API_URL}/${API_PATH}`;
 const USER = 'pilmee';
 const TOKEN = 'my-token';
-
 const mockProject: BitbucketProject = {
   key: 'PROJ',
   id: 1,
@@ -31,7 +30,6 @@ const mockProject: BitbucketProject = {
   type: 'NORMAL',
   links: {},
 };
-
 const mockRepo: BitbucketRepository = {
   slug: 'my-repo',
   id: 1,
@@ -43,7 +41,6 @@ const mockRepo: BitbucketRepository = {
   public: false,
   links: {},
 };
-
 const mockAuthorParticipant: BitbucketParticipant = {
   user: {
     name: 'pilmee',
@@ -58,7 +55,6 @@ const mockAuthorParticipant: BitbucketParticipant = {
   approved: false,
   status: 'UNAPPROVED',
 };
-
 const mockRef = {
   id: 'refs/heads/feature',
   displayId: 'feature',
@@ -66,7 +62,6 @@ const mockRef = {
   type: 'BRANCH' as const,
   repository: { slug: 'my-repo', id: 1, name: 'My Repo', links: {} },
 };
-
 const mockPullRequest: BitbucketPullRequest = {
   id: 42,
   version: 1,
@@ -84,7 +79,6 @@ const mockPullRequest: BitbucketPullRequest = {
   participants: [],
   links: {},
 };
-
 const mockCommit: BitbucketCommit = {
   id: 'abc123def456',
   displayId: 'abc123d',
@@ -159,7 +153,7 @@ describe('BitbucketClient', () => {
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockProject));
       await client.projects({ limit: 10, start: 20 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects?limit=10&start=20`);
     });
@@ -167,7 +161,7 @@ describe('BitbucketClient', () => {
     it('appends name filter as query param', async () => {
       mockOk(pagedOf(mockProject));
       await client.projects({ name: 'my-proj' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects?name=my-proj`);
     });
@@ -175,7 +169,7 @@ describe('BitbucketClient', () => {
     it('ignores undefined filter values', async () => {
       mockOk(pagedOf(mockProject));
       await client.projects({ limit: 5, name: undefined });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects?limit=5`);
     });
@@ -219,7 +213,7 @@ describe('BitbucketClient', () => {
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockRepo));
       await client.project('PROJ').repos({ limit: 50, start: 100 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos?limit=50&start=100`);
     });
@@ -227,7 +221,7 @@ describe('BitbucketClient', () => {
     it('appends name filter as query param', async () => {
       mockOk(pagedOf(mockRepo));
       await client.project('PROJ').repos({ name: 'api' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos?name=api`);
     });
@@ -283,7 +277,7 @@ describe('BitbucketClient', () => {
     it('appends state filter as query param', async () => {
       mockOk(pagedOf(mockPullRequest));
       await client.project('PROJ').repo('my-repo').pullRequests({ state: 'MERGED' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/pull-requests?state=MERGED`);
     });
@@ -294,7 +288,7 @@ describe('BitbucketClient', () => {
         .project('PROJ')
         .repo('my-repo')
         .pullRequests({ limit: 10, start: 0, order: 'NEWEST' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests?limit=10&start=0&order=NEWEST`,
@@ -327,7 +321,7 @@ describe('BitbucketClient', () => {
     it('appends limit and until as query params', async () => {
       mockOk(pagedOf(mockCommit));
       await client.project('PROJ').repo('my-repo').commits({ limit: 5, until: 'main' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits?limit=5&until=main`);
     });
@@ -335,7 +329,7 @@ describe('BitbucketClient', () => {
     it('appends boolean params as strings', async () => {
       mockOk(pagedOf(mockCommit));
       await client.project('PROJ').repo('my-repo').commits({ followRenames: true });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits?followRenames=true`);
     });
@@ -343,7 +337,7 @@ describe('BitbucketClient', () => {
     it('appends path filter as query param', async () => {
       mockOk(pagedOf(mockCommit));
       await client.project('PROJ').repo('my-repo').commits({ path: 'src/index.ts' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits?path=src%2Findex.ts`);
     });
@@ -392,7 +386,7 @@ describe('BitbucketClient', () => {
     it('appends since as a query param', async () => {
       mockOk(pagedOf());
       await client.project('PROJ').repo('my-repo').commit('abc123').changes({ since: 'def456' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits/abc123/changes?since=def456`);
     });
@@ -435,7 +429,7 @@ describe('BitbucketClient', () => {
         since: 'def456',
         whitespace: 'IGNORE_ALL',
       });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff?contextLines=5&since=def456&whitespace=IGNORE_ALL`,
@@ -449,7 +443,7 @@ describe('BitbucketClient', () => {
         .repo('my-repo')
         .commit('abc123')
         .diff({ srcPath: 'src/index.ts' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts`);
     });
@@ -460,7 +454,7 @@ describe('BitbucketClient', () => {
         srcPath: 'src/index.ts',
         contextLines: 3,
       });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/commits/abc123/diff/src%2Findex.ts?contextLines=3`,
@@ -537,7 +531,7 @@ describe('BitbucketClient', () => {
         .repo('my-repo')
         .pullRequest(42)
         .activities({ limit: 10, start: 5 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities?limit=10&start=5`,
@@ -551,7 +545,7 @@ describe('BitbucketClient', () => {
         .repo('my-repo')
         .pullRequest(42)
         .activities({ fromId: 7, fromType: 'COMMENT' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/activities?fromId=7&fromType=COMMENT`,
@@ -604,7 +598,7 @@ describe('BitbucketClient', () => {
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockTask));
       await client.project('PROJ').repo('my-repo').pullRequest(42).tasks({ limit: 10, start: 5 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/tasks?limit=10&start=5`,
@@ -643,7 +637,7 @@ describe('BitbucketClient', () => {
         .repo('my-repo')
         .pullRequest(42)
         .commits({ limit: 10, start: 20 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/commits?limit=10&start=20`,
@@ -696,7 +690,7 @@ describe('BitbucketClient', () => {
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockChange));
       await client.project('PROJ').repo('my-repo').pullRequest(42).changes({ limit: 50, start: 0 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes?limit=50&start=0`,
@@ -706,7 +700,7 @@ describe('BitbucketClient', () => {
     it('appends withComments as query param', async () => {
       mockOk(pagedOf(mockChange));
       await client.project('PROJ').repo('my-repo').pullRequest(42).changes({ withComments: true });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/changes?withComments=true`,
@@ -751,7 +745,7 @@ describe('BitbucketClient', () => {
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockReport));
       await client.project('PROJ').repo('my-repo').pullRequest(42).reports({ limit: 10, start: 0 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/pull-requests/42/reports?limit=10&start=0`,
@@ -852,7 +846,7 @@ describe('BitbucketClient', () => {
     it('appends filter and limit as query params', async () => {
       mockOk(pagedOf(mockUser));
       await client.users({ filter: 'john', limit: 10 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/users?filter=john&limit=10`);
     });
@@ -907,7 +901,7 @@ describe('BitbucketClient', () => {
     it('appends name and limit as query params', async () => {
       mockOk(pagedOf(mockRepo));
       await client.user('pilmee').repos({ name: 'api', limit: 10 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/users/pilmee/repos?name=api&limit=10`);
     });
@@ -952,7 +946,7 @@ describe('BitbucketClient', () => {
         text: () => Promise.resolve('export const x = 1;'),
       } as Response);
       await client.user('pilmee').repo('my-repo').raw('src/index.ts');
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/users/pilmee/repos/my-repo/raw/src/index.ts`);
     });
@@ -1012,7 +1006,7 @@ describe('BitbucketClient', () => {
     it('appends filter and permission as query params', async () => {
       mockOk(pagedOf(mockUserPermission));
       await client.project('PROJ').users({ filter: 'john', permission: 'PROJECT_WRITE' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/permissions/users?filter=john&permission=PROJECT_WRITE`,
@@ -1056,7 +1050,7 @@ describe('BitbucketClient', () => {
     it('appends at as a query param', async () => {
       mockText('export const x = 1;');
       await client.project('PROJ').repo('my-repo').raw('src/index.ts', { at: 'main' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/raw/src/index.ts?at=main`);
     });
@@ -1105,7 +1099,7 @@ describe('BitbucketClient', () => {
     it('appends at as a query param', async () => {
       mockOk(pagedOf(mockEntry));
       await client.project('PROJ').repo('my-repo').lastModified({ at: 'main' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/last-modified?at=main`);
     });
@@ -1138,7 +1132,7 @@ describe('BitbucketClient', () => {
     it('appends limit and start as query params', async () => {
       mockOk(pagedOf(mockRepo));
       await client.project('PROJ').repo('my-repo').forks({ limit: 10, start: 0 });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/forks?limit=10&start=0`);
     });
@@ -1186,7 +1180,7 @@ describe('BitbucketClient', () => {
         .project('PROJ')
         .repo('my-repo')
         .tagsByCommits(commits, { apiPath: 'rest/api/1.0' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${API_URL}/rest/api/1.0/projects/PROJ/repos/my-repo/tags`);
     });
@@ -1288,7 +1282,7 @@ describe('BitbucketClient', () => {
         .project('PROJ')
         .repo('my-repo')
         .tags({ filterText: 'v1', orderBy: 'ALPHABETICAL' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/tags?filterText=v1&orderBy=ALPHABETICAL`,
@@ -1328,7 +1322,7 @@ describe('BitbucketClient', () => {
     it('appends event filter as query param', async () => {
       mockOk(pagedOf(mockWebhook));
       await client.project('PROJ').webhooks({ event: 'pr:opened' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/webhooks?event=pr%3Aopened`);
     });
@@ -1369,7 +1363,7 @@ describe('BitbucketClient', () => {
     it('appends event filter as query param', async () => {
       mockOk(pagedOf(mockWebhook));
       await client.project('PROJ').repo('my-repo').webhooks({ event: 'repo:push' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(`${BASE}/projects/PROJ/repos/my-repo/webhooks/search?event=repo%3Apush`);
     });
@@ -1444,7 +1438,7 @@ describe('BitbucketClient', () => {
         .project('PROJ')
         .repo('my-repo')
         .branches({ filterText: 'feat', orderBy: 'MODIFICATION' });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/branches?filterText=feat&orderBy=MODIFICATION`,
@@ -1454,7 +1448,7 @@ describe('BitbucketClient', () => {
     it('appends details and boostMatches as boolean query params', async () => {
       mockOk(pagedOf(mockBranch));
       await client.project('PROJ').repo('my-repo').branches({ details: true, boostMatches: true });
-      const [url] = fetchMock.mock.calls[0];
+      const [[url]] = fetchMock.mock.calls;
 
       expect(url).toBe(
         `${BASE}/projects/PROJ/repos/my-repo/branches?details=true&boostMatches=true`,
@@ -1477,6 +1471,7 @@ describe('BitbucketClient', () => {
 
     it('exposes the HTTP status code', async () => {
       mockError(403, 'Forbidden');
+
       try {
         await client.project('PROJ');
       } catch (err) {
@@ -1486,6 +1481,7 @@ describe('BitbucketClient', () => {
 
     it('exposes the HTTP status text', async () => {
       mockError(401, 'Unauthorized');
+
       try {
         await client.project('PROJ');
       } catch (err) {
@@ -1510,7 +1506,7 @@ describe('BitbucketClient', () => {
     it('sends the Authorization header on every request', async () => {
       mockOk(pagedOf(mockProject));
       await client.projects();
-      const [, init] = fetchMock.mock.calls[0];
+      const [[, init]] = fetchMock.mock.calls;
       const headers = (init as RequestInit).headers as Record<string, string>;
 
       expect(headers.Authorization).toMatch(/^Basic /);

@@ -145,6 +145,7 @@ export class BitbucketClient {
       const response = await fetch(url, { headers: this.security.getHeaders() });
 
       statusCode = response.status;
+
       if (!response.ok) {
         throw new BitbucketApiError(response.status, response.statusText);
       }
@@ -173,6 +174,7 @@ export class BitbucketClient {
         statusCode,
         error: err instanceof Error ? err : new Error(String(err)),
       });
+
       throw err;
     }
   }
@@ -188,6 +190,7 @@ export class BitbucketClient {
     const startedAt = new Date();
 
     let statusCode: number | undefined;
+
     const { Authorization, Accept } = this.security.getHeaders();
     const [headers, fetchBody]: [HeadersInit, BodyInit] = options?.form
       ? [
@@ -204,6 +207,7 @@ export class BitbucketClient {
       const response = await fetch(url, { method, headers, body: fetchBody });
 
       statusCode = response.status;
+
       if (!response.ok) {
         throw new BitbucketApiError(response.status, response.statusText);
       }
@@ -232,6 +236,7 @@ export class BitbucketClient {
         statusCode,
         error: err instanceof Error ? err : new Error(String(err)),
       });
+
       throw err;
     }
   }
@@ -250,6 +255,7 @@ export class BitbucketClient {
       const response = await fetch(url, { headers: this.security.getHeaders() });
 
       statusCode = response.status;
+
       if (!response.ok) {
         throw new BitbucketApiError(response.status, response.statusText);
       }
@@ -278,6 +284,7 @@ export class BitbucketClient {
         statusCode,
         error: err instanceof Error ? err : new Error(String(err)),
       });
+
       throw err;
     }
   }

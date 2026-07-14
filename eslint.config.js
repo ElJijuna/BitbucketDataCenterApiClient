@@ -7,12 +7,4 @@ export default [
   },
   ...eslintTs,
   ...eslintJest,
-  {
-    // Biome handles all formatting — disable conflicting @stylistic rules
-    rules: {
-      '@stylistic/brace-style': 'off',
-      '@stylistic/indent': 'off',
-      '@stylistic/padding-line-between-statements': 'off',
-    },
-  },
 ];

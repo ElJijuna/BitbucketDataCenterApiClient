@@ -58,6 +58,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
     onfulfilled?: ((value: BitbucketRepository) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
+    // eslint-disable-next-line no-restricted-syntax -- delegating .then() is required to implement PromiseLike
     return this.get().then(onfulfilled, onrejected);
   }
 
