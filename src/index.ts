@@ -89,10 +89,13 @@ export type {
   WebhookScopeType,
   WebhooksParams,
 } from './domain/Webhook';
+export type { BitbucketErrorDetail } from './errors/BitbucketApiError';
 export { BitbucketApiError } from './errors/BitbucketApiError';
+export { paginate } from './pagination';
 export { CommitResource } from './resources/CommitResource';
 export { ProjectResource } from './resources/ProjectResource';
 export { PullRequestResource } from './resources/PullRequestResource';
 export { RepositoryResource } from './resources/RepositoryResource';
 export { UserResource } from './resources/UserResource';
+export type { AuthType } from './security/Security';
 export { Security } from './security/Security';

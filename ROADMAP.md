@@ -18,13 +18,26 @@ Prerequisites for most pending write operations.
 
 | Task | Notes | Status |
 | --- | --- | --- |
-| `DELETE` support in the HTTP layer | `requestPost` only accepts `POST`/`PUT` | ⬜ |
-| Handle `204 No Content` / `202 Accepted` responses | `request()` always calls `response.json()`, which throws on empty bodies | ⬜ |
-| Parse Bitbucket error bodies | `{ errors: [{ context, message, exceptionName }] }` should be surfaced on `BitbucketApiError` | ⬜ |
-| Rate-limit handling | Respond to `429` + `Retry-After` (adaptive throttling) with configurable retry/backoff | ⬜ |
-| Auto-pagination helper | `for await…of` iterator over `isLastPage`/`nextPageStart` | ⬜ |
-| Bearer authentication | HTTP access tokens recommend `Authorization: Bearer <token>`; only Basic is supported today | ⬜ |
-| Document API version coverage in README | v10.3, auth modes, error/pagination behaviour | ⬜ |
+| `DELETE` support in the HTTP layer | `requestPost` accepts `method: 'DELETE'`, with an optional body | ✅ |
+| Handle `204 No Content` / `202 Accepted` responses | `request()`/`requestPost()` tolerate empty bodies, resolving to `undefined` instead of throwing | ✅ |
+| Parse Bitbucket error bodies | `{ errors: [{ context, message, exceptionName }] }` is surfaced on `BitbucketApiError.errors` | ✅ |
+| Rate-limit handling | `429` + `Retry-After` retried with configurable `retry: { maxRetries, maxDelayMs }` | ✅ |
+| Auto-pagination helper | `paginate()` async generator, `for await…of` over `isLastPage`/`nextPageStart` | ✅ |
+| Bearer authentication | `authType: 'bearer'` sends `Authorization: Bearer <token>`; `'basic'` remains the default | ✅ |
+
+---
+
+## Documentation
+
+| Task | Notes | Status |
+| --- | --- | --- |
+| Mark unofficial endpoints with `@remarks` in TSDoc | Done for `size()`; keep the policy for any future unofficial endpoint | ✅ |
+| Document methods that issue more than one request | `currentUser()`, `pullRequest().reports()`, `pullRequest().buildSummaries()` document it in TSDoc | ✅ |
+| README: API version coverage | State that the client targets Bitbucket Data Center REST API v10.3 (`/rest/api/latest`) | ⬜ |
+| README: supported authentication | Basic (user + token) today; Bearer once implemented | ⬜ |
+| README: error handling behaviour | `BitbucketApiError` semantics, and error-body parsing once implemented | ⬜ |
+| README: pagination guide | `PagedResponse` fields (`isLastPage`, `nextPageStart`) and manual paging example | ⬜ |
+| Release notes for the endpoint migration | Breaking changes: `tasks()` shape (blocker comments), `diff()` `srcPath`→`path` semantics, personal-repo URLs (`/projects/~slug/…`), `whitespace: 'ignore-all'`, `currentUser()`/`reports()`/`buildSummaries()` now issue two requests | ⬜ |
 
 ---
 

@@ -1656,5 +1656,275 @@ describe('BitbucketClient', () => {
 
       expect(headers.Authorization).toMatch(/^Basic /);
     });
+
+    it('defaults to Basic authentication', () => {
+      expect(
+        () => new BitbucketClient({ apiUrl: API_URL, apiPath: API_PATH, user: USER, token: TOKEN }),
+      ).not.toThrow();
+    });
+
+    it('throws when authType is basic and user is missing', () => {
+      expect(
+        () =>
+          new BitbucketClient({
+            apiUrl: API_URL,
+            apiPath: API_PATH,
+            token: TOKEN,
+          }),
+      ).toThrow('"user" is required when authType is "basic"');
+    });
+
+    it('sends a Bearer Authorization header when authType is "bearer"', async () => {
+      const bearerClient = new BitbucketClient({
+        apiUrl: API_URL,
+        apiPath: API_PATH,
+        token: TOKEN,
+        authType: 'bearer',
+      });
+
+      mockOk(pagedOf(mockProject));
+      await bearerClient.projects();
+      const [[, init]] = fetchMock.mock.calls;
+      const headers = (init as RequestInit).headers as Record<string, string>;
+
+      expect(headers.Authorization).toBe(`Bearer ${TOKEN}`);
+    });
+  });
+
+  describe('DELETE support', () => {
+    type PrivateRequestBody = {
+      requestPost<T>(
+        path: string,
+        body?: unknown,
+        options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
+      ): Promise<T>;
+    };
+
+    function asPrivate(c: BitbucketClient): PrivateRequestBody {
+      return c as unknown as PrivateRequestBody;
+    }
+
+    it('issues a DELETE request with no body by default', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        statusText: 'No Content',
+        json: () => Promise.reject(new SyntaxError('Unexpected end of JSON input')),
+      } as unknown as Response);
+
+      await asPrivate(client).requestPost('/projects/PROJ', undefined, { method: 'DELETE' });
+      const [[url, init]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/projects/PROJ`);
+      expect((init as RequestInit).method).toBe('DELETE');
+      expect((init as RequestInit).body).toBeUndefined();
+    });
+
+    it('issues a DELETE request with a JSON body when provided', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        statusText: 'No Content',
+      } as Response);
+
+      await asPrivate(client).requestPost(
+        '/projects/PROJ/repos/my-repo/branches',
+        { name: 'refs/heads/feature' },
+        { apiPath: 'rest/branch-utils/latest', method: 'DELETE' },
+      );
+      const [[url, init]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${API_URL}/rest/branch-utils/latest/projects/PROJ/repos/my-repo/branches`);
+      expect((init as RequestInit).method).toBe('DELETE');
+      expect((init as RequestInit).body).toBe(JSON.stringify({ name: 'refs/heads/feature' }));
+    });
+
+    it('throws a BitbucketApiError on a non-OK DELETE response', async () => {
+      mockError(404, 'Not Found');
+      await expect(
+        asPrivate(client).requestPost('/projects/PROJ', undefined, { method: 'DELETE' }),
+      ).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('204 No Content / 202 Accepted handling', () => {
+    it('resolves to undefined on a 204 response without calling json()', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        statusText: 'No Content',
+        json: () => Promise.reject(new Error('should not be called for 204')),
+      } as unknown as Response);
+
+      await expect(client.project('PROJ')).resolves.toBeUndefined();
+    });
+
+    it('resolves to undefined on a 202 response with an empty body', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 202,
+        statusText: 'Accepted',
+        json: () => Promise.reject(new SyntaxError('Unexpected end of JSON input')),
+      } as unknown as Response);
+
+      await expect(client.project('PROJ')).resolves.toBeUndefined();
+    });
+
+    it('still parses a JSON body on a 202 response when present', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 202,
+        statusText: 'Accepted',
+        json: () => Promise.resolve(mockProject),
+      } as Response);
+
+      await expect(client.project('PROJ')).resolves.toEqual(mockProject);
+    });
+
+    it('rethrows non-JSON-parse errors from a successful response', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.reject(new Error('boom')),
+      } as unknown as Response);
+
+      await expect(client.project('PROJ')).rejects.toThrow('boom');
+    });
+  });
+
+  describe('Bitbucket error body parsing', () => {
+    it('surfaces the first error message on BitbucketApiError', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: () =>
+          Promise.resolve({
+            errors: [
+              { context: null, message: 'The project key is invalid', exceptionName: 'com.x.Bad' },
+            ],
+          }),
+      } as Response);
+
+      await expect(client.project('PROJ')).rejects.toThrow(
+        'Bitbucket API error: 400 Bad Request - The project key is invalid',
+      );
+    });
+
+    it('exposes the parsed errors array on the thrown error', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: () =>
+          Promise.resolve({
+            errors: [{ context: 'name', message: 'Required', exceptionName: undefined }],
+          }),
+      } as Response);
+
+      try {
+        await client.project('PROJ');
+
+        throw new Error('expected client.project to reject');
+      } catch (err) {
+        expect((err as BitbucketApiError).errors).toEqual([
+          { context: 'name', message: 'Required', exceptionName: undefined },
+        ]);
+      }
+    });
+
+    it('falls back to an empty errors array when the body has no errors field', async () => {
+      mockError(404, 'Not Found');
+
+      try {
+        await client.project('PROJ');
+
+        throw new Error('expected client.project to reject');
+      } catch (err) {
+        expect((err as BitbucketApiError).errors).toEqual([]);
+      }
+    });
+
+    it('falls back to an empty errors array when the body is not JSON', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: () => Promise.reject(new SyntaxError('Unexpected token <')),
+      } as unknown as Response);
+
+      try {
+        await client.project('PROJ');
+
+        throw new Error('expected client.project to reject');
+      } catch (err) {
+        expect((err as BitbucketApiError).errors).toEqual([]);
+        expect((err as BitbucketApiError).message).toBe(
+          'Bitbucket API error: 500 Internal Server Error',
+        );
+      }
+    });
+  });
+
+  describe('rate-limit retry handling', () => {
+    it('does not retry 429 responses by default', async () => {
+      mockError(429, 'Too Many Requests');
+      await expect(client.projects()).rejects.toThrow('Bitbucket API error: 429 Too Many Requests');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries a 429 response using the Retry-After header, up to maxRetries', async () => {
+      const retryClient = new BitbucketClient({
+        apiUrl: API_URL,
+        apiPath: API_PATH,
+        user: USER,
+        token: TOKEN,
+        retry: { maxRetries: 2 },
+      });
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          statusText: 'Too Many Requests',
+          headers: { get: (name: string) => (name === 'Retry-After' ? '0' : null) },
+          json: () => Promise.resolve({}),
+        } as unknown as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve(pagedOf(mockProject)),
+        } as Response);
+
+      const result = await retryClient.projects();
+
+      expect(result).toEqual(pagedOf(mockProject));
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('gives up after exhausting maxRetries and throws the last 429 response', async () => {
+      const retryClient = new BitbucketClient({
+        apiUrl: API_URL,
+        apiPath: API_PATH,
+        user: USER,
+        token: TOKEN,
+        retry: { maxRetries: 1 },
+      });
+
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
+        headers: { get: (name: string) => (name === 'Retry-After' ? '0' : null) },
+        json: () => Promise.resolve({}),
+      } as unknown as Response);
+
+      await expect(retryClient.projects()).rejects.toThrow(
+        'Bitbucket API error: 429 Too Many Requests',
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
   });
 });

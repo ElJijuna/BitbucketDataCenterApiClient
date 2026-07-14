@@ -84,4 +84,29 @@ describe('Security', () => {
       expect(Object.keys(headers)).toHaveLength(3);
     });
   });
+
+  describe('bearer authentication', () => {
+    it('defaults to Basic when authType is omitted', () => {
+      const s = new Security(API_URL, USER, TOKEN);
+
+      expect(s.getAuthorizationHeader()).toMatch(/^Basic /);
+    });
+
+    it('produces a Bearer auth header when authType is "bearer"', () => {
+      const s = new Security(API_URL, '', TOKEN, 'bearer');
+
+      expect(s.getAuthorizationHeader()).toBe(`Bearer ${TOKEN}`);
+    });
+
+    it('ignores the user argument when authType is "bearer"', () => {
+      const withUser = new Security(API_URL, 'some-user', TOKEN, 'bearer');
+      const withoutUser = new Security(API_URL, '', TOKEN, 'bearer');
+
+      expect(withUser.getAuthorizationHeader()).toBe(withoutUser.getAuthorizationHeader());
+    });
+
+    it('still validates apiUrl when using Bearer authentication', () => {
+      expect(() => new Security('not-a-url', '', TOKEN, 'bearer')).toThrow(TypeError);
+    });
+  });
 });

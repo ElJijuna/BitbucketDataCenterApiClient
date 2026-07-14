@@ -6,7 +6,7 @@ import type {
   SearchReposParams,
 } from './domain/Repository';
 import type { BitbucketUser, UsersParams } from './domain/User';
-import { BitbucketApiError } from './errors/BitbucketApiError';
+import { BitbucketApiError, type BitbucketErrorDetail } from './errors/BitbucketApiError';
 import {
   ProjectResource,
   type RequestBodyFn,
@@ -14,7 +14,7 @@ import {
   type RequestTextFn,
 } from './resources/ProjectResource';
 import { UserResource } from './resources/UserResource';
-import { Security } from './security/Security';
+import { type AuthType, Security } from './security/Security';
 
 /**
  * Payload emitted on every HTTP request made by {@link BitbucketClient}.
@@ -23,7 +23,7 @@ export interface RequestEvent {
   /** Full URL that was requested */
   url: string;
   /** HTTP method used */
-  method: 'GET' | 'POST' | 'PUT';
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   /** Timestamp when the request started */
   startedAt: Date;
   /** Timestamp when the request finished (success or error) */
@@ -42,6 +42,16 @@ export interface BitbucketClientEvents {
 }
 
 /**
+ * Configures adaptive retry/backoff behaviour for `429 Too Many Requests` responses.
+ */
+export interface RetryOptions {
+  /** Maximum number of retry attempts on `429` responses. Defaults to `0` (retries disabled). */
+  maxRetries?: number;
+  /** Upper bound, in milliseconds, applied to the delay derived from the `Retry-After` header. Defaults to `30000`. */
+  maxDelayMs?: number;
+}
+
+/**
  * Constructor options for {@link BitbucketClient}.
  */
 export interface BitbucketClientOptions {
@@ -49,10 +59,14 @@ export interface BitbucketClientOptions {
   apiUrl: string;
   /** The API path to prepend to every request (e.g., `'rest/api/latest'`) */
   apiPath: string;
-  /** The username to authenticate with */
-  user: string;
+  /** The username to authenticate with. Required when `authType` is `'basic'` (the default). */
+  user?: string;
   /** The personal access token or password to authenticate with */
   token: string;
+  /** The authentication scheme to use. Defaults to `'basic'`; use `'bearer'` for HTTP access tokens. */
+  authType?: AuthType;
+  /** Retry/backoff behaviour applied when the API responds with `429 Too Many Requests`. */
+  retry?: RetryOptions;
 }
 
 /**
@@ -80,6 +94,8 @@ export interface BitbucketClientOptions {
 export class BitbucketClient {
   private readonly security: Security;
   private readonly apiPath: string;
+  private readonly maxRetries: number;
+  private readonly maxDelayMs: number;
   private readonly listeners: Map<
     keyof BitbucketClientEvents,
     BitbucketClientEvents[keyof BitbucketClientEvents][]
@@ -87,11 +103,17 @@ export class BitbucketClient {
 
   /**
    * @param options - Connection and authentication options
-   * @throws {TypeError} If `apiUrl` is not a valid URL
+   * @throws {TypeError} If `apiUrl` is not a valid URL, or if `user` is missing while `authType` is `'basic'`
    */
-  constructor({ apiUrl, apiPath, user, token }: BitbucketClientOptions) {
-    this.security = new Security(apiUrl, user, token);
+  constructor({ apiUrl, apiPath, user, token, authType = 'basic', retry }: BitbucketClientOptions) {
+    if (authType === 'basic' && !user) {
+      throw new TypeError('"user" is required when authType is "basic"');
+    }
+
+    this.security = new Security(apiUrl, user ?? '', token, authType);
     this.apiPath = apiPath.replace(/^\/|\/$/g, '');
+    this.maxRetries = retry?.maxRetries ?? 0;
+    this.maxDelayMs = retry?.maxDelayMs ?? 30000;
   }
 
   /**
@@ -126,6 +148,27 @@ export class BitbucketClient {
   }
 
   /**
+   * Performs a `fetch()` call, transparently retrying on `429 Too Many Requests`
+   * responses according to the configured {@link RetryOptions}. Any other status
+   * (including non-2xx) is returned as-is for the caller to handle.
+   * @internal
+   */
+  private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+    let attempt = 0;
+
+    while (true) {
+      const response = await fetch(url, init);
+
+      if (response.status !== 429 || attempt >= this.maxRetries) {
+        return response;
+      }
+
+      await sleep(Math.min(retryAfterMs(response), this.maxDelayMs));
+      attempt += 1;
+    }
+  }
+
+  /**
    * Performs an authenticated GET request to the Bitbucket REST API.
    *
    * @param path - API path appended directly to `apiUrl` (e.g., `'/projects'`)
@@ -146,15 +189,19 @@ export class BitbucketClient {
     let statusCode: number | undefined;
 
     try {
-      const response = await fetch(url, { headers: this.security.getHeaders() });
+      const response = await this.fetchWithRetry(url, { headers: this.security.getHeaders() });
 
       statusCode = response.status;
 
       if (!response.ok) {
-        throw new BitbucketApiError(response.status, response.statusText);
+        throw new BitbucketApiError(
+          response.status,
+          response.statusText,
+          await parseErrorBody(response),
+        );
       }
 
-      const data = (await response.json()) as T;
+      const data = await parseJsonBody<T>(response);
 
       this.emit('request', {
         url,
@@ -185,8 +232,8 @@ export class BitbucketClient {
 
   private async requestPost<T>(
     path: string,
-    body: unknown,
-    options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+    body?: unknown,
+    options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
   ): Promise<T> {
     const method = options?.method ?? 'POST';
     const apiPath = options?.apiPath ?? this.apiPath;
@@ -196,7 +243,7 @@ export class BitbucketClient {
     let statusCode: number | undefined;
 
     const { Authorization, Accept } = this.security.getHeaders();
-    const [headers, fetchBody]: [HeadersInit, BodyInit] = options?.form
+    const [headers, fetchBody]: [HeadersInit, BodyInit | undefined] = options?.form
       ? [
           { Authorization, Accept },
           new URLSearchParams(
@@ -205,18 +252,22 @@ export class BitbucketClient {
               .map(([k, v]) => [k, String(v)]),
           ),
         ]
-      : [this.security.getHeaders(), JSON.stringify(body)];
+      : [this.security.getHeaders(), body === undefined ? undefined : JSON.stringify(body)];
 
     try {
-      const response = await fetch(url, { method, headers, body: fetchBody });
+      const response = await this.fetchWithRetry(url, { method, headers, body: fetchBody });
 
       statusCode = response.status;
 
       if (!response.ok) {
-        throw new BitbucketApiError(response.status, response.statusText);
+        throw new BitbucketApiError(
+          response.status,
+          response.statusText,
+          await parseErrorBody(response),
+        );
       }
 
-      const data = (await response.json()) as T;
+      const data = await parseJsonBody<T>(response);
 
       this.emit('request', {
         url,
@@ -256,12 +307,16 @@ export class BitbucketClient {
     let statusCode: number | undefined;
 
     try {
-      const response = await fetch(url, { headers: this.security.getHeaders() });
+      const response = await this.fetchWithRetry(url, { headers: this.security.getHeaders() });
 
       statusCode = response.status;
 
       if (!response.ok) {
-        throw new BitbucketApiError(response.status, response.statusText);
+        throw new BitbucketApiError(
+          response.status,
+          response.statusText,
+          await parseErrorBody(response),
+        );
       }
 
       const text = await response.text();
@@ -334,8 +389,8 @@ export class BitbucketClient {
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
     const requestBody: RequestBodyFn = <T>(
       path: string,
-      body: unknown,
-      options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+      body?: unknown,
+      options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
     ) => this.requestPost<T>(path, body, options);
 
     return new ProjectResource(request, requestText, requestBody, projectKey);
@@ -379,8 +434,8 @@ export class BitbucketClient {
     const requestText: RequestTextFn = (path, params) => this.requestText(path, params);
     const requestBody: RequestBodyFn = <T>(
       path: string,
-      body: unknown,
-      options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+      body?: unknown,
+      options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
     ) => this.requestPost<T>(path, body, options);
 
     return new UserResource(request, requestText, requestBody, slug);
@@ -429,12 +484,16 @@ export class BitbucketClient {
     let statusCode: number | undefined;
 
     try {
-      const response = await fetch(url, { headers: this.security.getHeaders() });
+      const response = await this.fetchWithRetry(url, { headers: this.security.getHeaders() });
 
       statusCode = response.status;
 
       if (!response.ok) {
-        throw new BitbucketApiError(response.status, response.statusText);
+        throw new BitbucketApiError(
+          response.status,
+          response.statusText,
+          await parseErrorBody(response),
+        );
       }
 
       const username = response.headers.get('X-AUSERNAME');
@@ -550,4 +609,70 @@ function buildUrl(base: string, params?: Record<string, string | number | boolea
   const search = new URLSearchParams(entries.map(([k, v]) => [k, String(v)]));
 
   return `${base}?${search.toString()}`;
+}
+
+/**
+ * Parses a JSON response body, tolerating empty bodies (`204 No Content`, or a
+ * `202 Accepted` with no payload) by resolving to `undefined` instead of throwing.
+ * @internal
+ */
+async function parseJsonBody<T>(response: Response): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  try {
+    return (await response.json()) as T;
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      return undefined as T;
+    }
+
+    throw err;
+  }
+}
+
+/**
+ * Parses the structured `{ errors: [{ context, message, exceptionName }] }` body
+ * Bitbucket returns on error responses. Returns an empty array if the body is
+ * missing, empty, or not in the expected shape.
+ * @internal
+ */
+async function parseErrorBody(response: Response): Promise<BitbucketErrorDetail[]> {
+  try {
+    const data = (await response.json()) as { errors?: BitbucketErrorDetail[] };
+
+    return Array.isArray(data?.errors) ? data.errors : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Computes the delay, in milliseconds, indicated by a `429` response's `Retry-After`
+ * header (either delta-seconds or an HTTP date). Falls back to `1000` if the header
+ * is missing or unparseable.
+ * @internal
+ */
+function retryAfterMs(response: Response): number {
+  const header = response.headers.get('Retry-After');
+
+  if (!header) {
+    return 1000;
+  }
+
+  const seconds = Number(header);
+
+  if (!Number.isNaN(seconds)) {
+    return seconds * 1000;
+  }
+
+  const date = Date.parse(header);
+
+  return Number.isNaN(date) ? 1000 : Math.max(0, date - Date.now());
+}
+
+/** @internal */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

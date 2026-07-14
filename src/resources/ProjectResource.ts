@@ -22,8 +22,8 @@ export type RequestTextFn = (
 /** @internal */
 export type RequestBodyFn = <T>(
   path: string,
-  body: unknown,
-  options?: { apiPath?: string; method?: 'POST' | 'PUT'; form?: boolean },
+  body?: unknown,
+  options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
 ) => Promise<T>;
 
 /**

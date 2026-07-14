@@ -6,8 +6,11 @@ function toBase64(value: string): string {
   return btoa(value);
 }
 
+/** Authentication scheme used to build the `Authorization` header. */
+export type AuthType = 'basic' | 'bearer';
+
 /**
- * Handles Basic Authentication for Bitbucket Data Center REST API requests.
+ * Handles authentication (Basic or Bearer) for Bitbucket Data Center REST API requests.
  *
  * @example
  * ```typescript
@@ -19,6 +22,10 @@ function toBase64(value: string): string {
  *
  * const headers = security.getHeaders();
  * // { Authorization: 'Basic <base64>', 'Content-Type': 'application/json', Accept: 'application/json' }
+ *
+ * // HTTP access tokens recommend Bearer authentication instead:
+ * const bearerSecurity = new Security('https://bitbucket.example.com', '', 'my-token', 'bearer');
+ * // { Authorization: 'Bearer my-token', ... }
  * ```
  */
 export class Security {
@@ -26,22 +33,24 @@ export class Security {
   private readonly authorizationHeader: string;
 
   /**
-   * Creates a new Security instance with Basic Authentication credentials.
+   * Creates a new Security instance with Basic or Bearer authentication credentials.
    *
    * @param apiUrl - The base URL of the Bitbucket Data Center instance (e.g., `https://bitbucket.example.com`).
    *   Must be a valid URL; throws if it cannot be parsed.
-   * @param user - The username to authenticate with
+   * @param user - The username to authenticate with. Ignored when `authType` is `'bearer'`.
    * @param token - The personal access token or password to authenticate with
+   * @param authType - The authentication scheme to use. Defaults to `'basic'`.
    *
    * @throws {TypeError} If `apiUrl` is not a valid URL
    */
-  constructor(apiUrl: string, user: string, token: string) {
+  constructor(apiUrl: string, user: string, token: string, authType: AuthType = 'basic') {
     if (!URL.canParse(apiUrl)) {
       throw new TypeError(`Invalid apiUrl: "${apiUrl}" is not a valid URL`);
     }
 
     this.apiUrl = apiUrl.replace(/\/$/, '');
-    this.authorizationHeader = `Basic ${toBase64(`${user}:${token}`)}`;
+    this.authorizationHeader =
+      authType === 'bearer' ? `Bearer ${token}` : `Basic ${toBase64(`${user}:${token}`)}`;
   }
 
   /**
