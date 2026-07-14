@@ -1,3 +1,17 @@
+# [1.16.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.15.0...v1.16.0) (2026-07-14)
+
+
+### Features
+
+* add ClientEvents and ClientOptions interfaces; refactor BitbucketClient imports ([066e2a2](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/066e2a25077a1d7cd06224f985ae9c985e54fe12))
+* add interfaces for auto-merge requests, commit message suggestions, diff stats summary, and pull request reviews; implement new methods in PullRequestResource and RepositoryResource ([30e5833](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/30e5833f47a0a8003a9509e77b9ffdc6433d2b46))
+* add interfaces for pull request comments and tasks, including create and update payloads ([9c3b4b7](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/9c3b4b762246f13ca44ac12388e46c1e7e68085d))
+* add llms.txt as a concise API reference and update package.json to include it in the distribution ([df52ff9](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/df52ff9dd7954b453af206660f4e0e30a2ea1804))
+* add methods for creating, updating, and deleting pull request tasks and comments; implement reactions ([8580a19](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/8580a197b4b6748f9818b87c7bd34575807c379a))
+* add methods for managing pull request participants and updating pull request details ([d8860ee](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/d8860eea2c1d8ca28ac04cc23f84d8b0a16964ce))
+* enhance PullRequestResource with review, auto-merge, and commit message suggestion methods; add tests for new functionalities ([7d37439](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/7d37439d3bb35dd5ebd9d4432abc5e8bce4da39e))
+* implement DELETE support and Bearer authentication in BitbucketClient; enhance error handling and pagination ([3a8d527](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/3a8d5275f875541c4384a5f6d43909420b32878b))
+
 # [1.14.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.13.1...v1.14.0) (2026-04-30)
 
 
