@@ -125,6 +125,10 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    *
    * `GET /rest/api/latest/projects/{key}/repos/{slug}/sizes`
    *
+   * @remarks This endpoint is not part of the official Bitbucket Data Center
+   * REST API documentation. It is a well-known internal endpoint used by the
+   * Bitbucket UI and may change or be removed without notice in future versions.
+   *
    * @returns The repository size object
    */
   async size(): Promise<BitbucketRepositorySize> {
@@ -317,6 +321,6 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   }
 
   pullRequest(pullRequestId: number): PullRequestResource {
-    return new PullRequestResource(this.request, this.basePath, pullRequestId);
+    return new PullRequestResource(this.request, this.basePath, pullRequestId, this.requestBody);
   }
 }

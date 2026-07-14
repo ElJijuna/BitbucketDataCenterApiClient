@@ -385,9 +385,13 @@ export class BitbucketClient {
   /**
    * Fetches the currently authenticated user.
    *
-   * `GET /rest/api/latest/users/credentials`
+   * Bitbucket Data Center has no documented "whoami" endpoint, so this method
+   * resolves the username from the `X-AUSERNAME` header that Bitbucket attaches
+   * to every authenticated response, and then looks the user up via
+   * `GET /rest/api/latest/users?filter={username}` (two requests).
    *
    * @returns The authenticated user object
+   * @throws {Error} If the authenticated user cannot be determined
    *
    * @example
    * ```typescript
@@ -395,7 +399,73 @@ export class BitbucketClient {
    * ```
    */
   async currentUser(): Promise<BitbucketUser> {
-    return this.request<BitbucketUser>('/users/credentials');
+    const username = await this.whoami();
+    const users = await this.request<PagedResponse<BitbucketUser>>('/users', {
+      filter: username,
+    });
+    const user =
+      users.values.find((u) => u.name.toLowerCase() === username.toLowerCase()) ?? users.values[0];
+
+    if (!user) {
+      throw new Error(`Unable to find the authenticated user "${username}"`);
+    }
+
+    return user;
+  }
+
+  /**
+   * Resolves the username of the authenticated user from the `X-AUSERNAME`
+   * response header, which Bitbucket attaches to every authenticated response.
+   * @internal
+   */
+  private async whoami(): Promise<string> {
+    const url = `${this.security.getApiUrl()}/${this.apiPath}/application-properties`;
+    const startedAt = new Date();
+
+    let statusCode: number | undefined;
+
+    try {
+      const response = await fetch(url, { headers: this.security.getHeaders() });
+
+      statusCode = response.status;
+
+      if (!response.ok) {
+        throw new BitbucketApiError(response.status, response.statusText);
+      }
+
+      const username = response.headers.get('X-AUSERNAME');
+
+      if (!username) {
+        throw new Error(
+          'Unable to determine the authenticated user: the X-AUSERNAME response header is missing',
+        );
+      }
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt: new Date(),
+        durationMs: Date.now() - startedAt.getTime(),
+        statusCode,
+      });
+
+      return decodeURIComponent(username);
+    } catch (err) {
+      const finishedAt = new Date();
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt,
+        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        statusCode,
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
+
+      throw err;
+    }
   }
 
   /**

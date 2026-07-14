@@ -58,14 +58,17 @@ export class UserResource implements PromiseLike<BitbucketUser> {
   /**
    * Fetches repositories belonging to this user.
    *
-   * `GET /rest/api/latest/users/{slug}/repos`
+   * Personal repositories live in the user's personal project (`~{slug}`), so
+   * this method queries the documented project repos endpoint.
+   *
+   * `GET /rest/api/latest/projects/~{slug}/repos`
    *
    * @param params - Optional filters: `limit`, `start`, `name`, `permission`
    * @returns A paged response of repositories
    */
   async repos(params?: ReposParams): Promise<PagedResponse<BitbucketRepository>> {
     return this.request<PagedResponse<BitbucketRepository>>(
-      `${this.basePath}/repos`,
+      `/projects/~${this.slug}/repos`,
       params as Record<string, string | number | boolean>,
     );
   }
@@ -86,15 +89,16 @@ export class UserResource implements PromiseLike<BitbucketUser> {
   /**
    * Fetches the SSH keys associated with this user.
    *
-   * `GET /rest/api/latest/users/{slug}/ssh`
+   * `GET /rest/ssh/latest/keys?user={slug}`
    *
    * @param params - Optional pagination: `limit`, `start`
    * @returns A paged response of SSH keys
    */
   async sshKeys(params?: SshKeysParams): Promise<PagedResponse<BitbucketSshKey>> {
     return this.request<PagedResponse<BitbucketSshKey>>(
-      `${this.basePath}/ssh`,
-      params as Record<string, string | number | boolean>,
+      '/keys',
+      { user: this.slug, ...params } as Record<string, string | number | boolean>,
+      { apiPath: 'rest/ssh/latest' },
     );
   }
 
@@ -114,7 +118,7 @@ export class UserResource implements PromiseLike<BitbucketUser> {
       this.request,
       this.requestText,
       this.requestBody,
-      `${this.basePath}/repos/${repoSlug}`,
+      `/projects/~${this.slug}/repos/${repoSlug}`,
     );
   }
 }

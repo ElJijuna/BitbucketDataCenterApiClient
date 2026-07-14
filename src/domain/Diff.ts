@@ -50,21 +50,28 @@ export interface BitbucketDiff {
 
 /**
  * Query parameters accepted by
- * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff[/{path}]`.
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff/{path}` and
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/diff/{path}`.
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-commits-commitid-diff-path-get}
  */
 export interface DiffParams {
+  /**
+   * Limit the diff to a specific file. When provided it is appended to the URL
+   * as a path segment: `.../diff/{path}`. Omit to diff all files.
+   */
+  path?: string;
   /** Number of context lines to include around each change (default: 10) */
   contextLines?: number;
   /**
-   * Limit the diff to a specific file path.
-   * When provided it is appended to the URL as a path segment:
-   * `.../diff/{encodedSrcPath}`
+   * The previous path of the file, if the file has been copied, moved or
+   * renamed. Sent as a query parameter.
    */
   srcPath?: string;
   /** Only include changes introduced after this commit SHA */
   since?: string;
-  /** Whitespace handling: `'IGNORE_ALL'` | `'IGNORE_CHANGE'` */
-  whitespace?: 'IGNORE_ALL' | 'IGNORE_CHANGE';
+  /** Whitespace handling: `'ignore-all'` */
+  whitespace?: 'ignore-all';
 }
 
 /**

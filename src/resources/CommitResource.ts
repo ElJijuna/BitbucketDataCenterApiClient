@@ -119,16 +119,18 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
   /**
    * Fetches the full diff for this commit.
    *
-   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff`
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff/{path}`
    *
-   * @param params - Optional: `contextLines`, `srcPath`, `whitespace`
+   * The `path` param (the file to diff) is optional: when omitted, the diff for
+   * the whole commit is returned. `srcPath` is sent as a query parameter and
+   * identifies the previous path of a copied, moved or renamed file.
+   *
+   * @param params - Optional: `path`, `contextLines`, `srcPath`, `since`, `whitespace`
    * @returns The diff object
    */
   async diff(params?: DiffParams): Promise<BitbucketDiff> {
-    const { srcPath, ...queryParams } = params ?? {};
-    const path = srcPath
-      ? `${this.basePath}/diff/${encodeURIComponent(srcPath)}`
-      : `${this.basePath}/diff`;
+    const { path: filePath, ...queryParams } = params ?? {};
+    const path = filePath ? `${this.basePath}/diff/${filePath}` : `${this.basePath}/diff`;
 
     return this.request<BitbucketDiff>(
       path,

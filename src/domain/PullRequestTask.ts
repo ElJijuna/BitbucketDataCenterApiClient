@@ -11,7 +11,12 @@ export interface PullRequestTaskPermittedOperations {
   transitionable: boolean;
 }
 
-/** The comment anchor to which a task is attached. */
+/**
+ * The comment anchor to which a legacy task was attached.
+ *
+ * @deprecated Tasks are blocker comments since Bitbucket 7.2 and are no longer
+ * anchored to a separate comment. Kept for backwards compatibility.
+ */
 export interface PullRequestTaskAnchor {
   id: number;
   type: {
@@ -22,23 +27,37 @@ export interface PullRequestTaskAnchor {
 /**
  * Represents a task (review to-do item) on a Bitbucket Data Center pull request.
  *
- * Tasks are created by reviewers on specific comments and can be either `OPEN` or `RESOLVED`.
+ * Since Bitbucket 7.2 tasks are modelled as blocker comments: comments with
+ * `severity: 'BLOCKER'` whose `state` can be `OPEN` or `RESOLVED`.
  */
 export interface BitbucketPullRequestTask {
   id: number;
+  version?: number;
   createdDate: number;
+  updatedDate?: number;
   author: BitbucketActivityUser;
   text: string;
+  /** Blocker comments (tasks) always have `BLOCKER` severity */
+  severity: 'BLOCKER';
   state: PullRequestTaskState;
   permittedOperations: PullRequestTaskPermittedOperations;
-  /** The comment the task is anchored to */
-  anchor: PullRequestTaskAnchor;
+  /** Timestamp of resolution, present when `state` is `RESOLVED` */
+  resolvedDate?: number;
+  /** The user who resolved the task, present when `state` is `RESOLVED` */
+  resolver?: BitbucketActivityUser;
+  /** @deprecated Legacy field from the removed `/tasks` endpoint */
+  anchor?: PullRequestTaskAnchor;
 }
 
 /**
  * Query parameters accepted by
- * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/tasks`.
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments`.
  *
- * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-tasks-get}
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-blocker-comments-get}
  */
-export type TasksParams = PaginationParams;
+export interface TasksParams extends PaginationParams {
+  /** Only return tasks in the given states (e.g. `'OPEN'`, `'RESOLVED'`) */
+  states?: string;
+  /** If `true`, only the count of tasks by state is returned */
+  count?: boolean;
+}

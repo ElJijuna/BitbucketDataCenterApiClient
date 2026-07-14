@@ -12,7 +12,7 @@ import type {
 } from '../domain/PullRequestActivity';
 import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
 import type { BitbucketReport, ReportsParams } from '../domain/Report';
-import type { RequestFn } from './ProjectResource';
+import type { RequestBodyFn, RequestFn } from './ProjectResource';
 
 /**
  * Represents a Bitbucket pull request resource with chainable async methods.
@@ -49,13 +49,16 @@ import type { RequestFn } from './ProjectResource';
  */
 export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   private readonly basePath: string;
+  private readonly repoBasePath: string;
 
   /** @internal */
   constructor(
     private readonly request: RequestFn,
     repoBasePath: string,
     pullRequestId: number,
+    private readonly requestBody?: RequestBodyFn,
   ) {
+    this.repoBasePath = repoBasePath;
     this.basePath = `${repoBasePath}/pull-requests/${pullRequestId}`;
   }
 
@@ -105,16 +108,18 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   /**
    * Fetches the tasks (review to-do items) for this pull request.
    *
-   * Tasks are created by reviewers on specific comments and can be `OPEN` or `RESOLVED`.
+   * Since Bitbucket 7.2 tasks are modelled as blocker comments (comments with
+   * `severity: 'BLOCKER'`) and the legacy `/tasks` endpoint was removed, so this
+   * method queries the blocker-comments endpoint. Tasks can be `OPEN` or `RESOLVED`.
    *
-   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/tasks`
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments`
    *
-   * @param params - Optional filters: `limit`, `start`
-   * @returns An array of pull request tasks
+   * @param params - Optional filters: `limit`, `start`, `states`
+   * @returns A paged response of pull request tasks (blocker comments)
    */
   async tasks(params?: TasksParams): Promise<PagedResponse<BitbucketPullRequestTask>> {
     return this.request<PagedResponse<BitbucketPullRequestTask>>(
-      `${this.basePath}/tasks`,
+      `${this.basePath}/blocker-comments`,
       params as Record<string, string | number | boolean>,
     );
   }
@@ -152,16 +157,18 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   /**
    * Fetches the diff for this pull request.
    *
-   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/diff`
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/diff/{path}`
    *
-   * @param params - Optional: `contextLines`, `srcPath`, `whitespace`
+   * The `path` param (the file to diff) is optional: when omitted, the diff for
+   * the whole pull request is returned. `srcPath` is sent as a query parameter
+   * and identifies the previous path of a copied, moved or renamed file.
+   *
+   * @param params - Optional: `path`, `contextLines`, `srcPath`, `whitespace`
    * @returns The diff object
    */
   async diff(params?: DiffParams): Promise<BitbucketDiff> {
-    const { srcPath, ...queryParams } = params ?? {};
-    const path = srcPath
-      ? `${this.basePath}/diff/${encodeURIComponent(srcPath)}`
-      : `${this.basePath}/diff`;
+    const { path: filePath, ...queryParams } = params ?? {};
+    const path = filePath ? `${this.basePath}/diff/${filePath}` : `${this.basePath}/diff`;
 
     return this.request<BitbucketDiff>(
       path,
@@ -202,15 +209,23 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   /**
    * Fetches the Code Insights reports for this pull request.
    *
-   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/reports`
+   * Code Insights reports are attached to commits, so this method first fetches
+   * the pull request to resolve the latest commit of its source branch and then
+   * queries the official Code Insights API for that commit (two requests).
+   *
+   * `GET /rest/insights/latest/projects/{key}/repos/{slug}/commits/{commitId}/reports`
    *
    * @param params - Optional pagination: `limit`, `start`
-   * @returns An array of Code Insights reports
+   * @returns A paged response of Code Insights reports for the latest source commit
    */
   async reports(params?: ReportsParams): Promise<PagedResponse<BitbucketReport>> {
+    const pullRequest = await this.get();
+    const commitId = pullRequest.fromRef.latestCommit;
+
     return this.request<PagedResponse<BitbucketReport>>(
-      `${this.basePath}/reports`,
+      `${this.repoBasePath}/commits/${commitId}/reports`,
       params as Record<string, string | number | boolean>,
+      { apiPath: 'rest/insights/latest' },
     );
   }
 
@@ -220,22 +235,35 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    * Returns a map of commit hash → build counts per state
    * (`successful`, `failed`, `inProgress`, `cancelled`, `unknown`).
    *
-   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/build-summaries`
+   * The official API exposes build statistics per commit, so this method first
+   * fetches the pull request commits (up to 100) and then requests their build
+   * statistics in a single batch call (two requests). Commits without any
+   * associated builds are not present in the response.
+   *
+   * `POST /rest/build-status/latest/commits/stats`
    *
    * @returns A record keyed by commit SHA with aggregated build counts
    */
   async buildSummaries(): Promise<BitbucketBuildSummaries> {
-    return this.request<BitbucketBuildSummaries>(`${this.basePath}/build-summaries`);
+    const commits = await this.commits({ limit: 100 });
+    const commitIds = commits.values.map((commit) => commit.id);
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketBuildSummaries>('/commits/stats', commitIds, {
+      apiPath: 'rest/build-status/latest',
+    });
   }
 
   /**
    * Fetches the Jira issues linked to this pull request.
    *
-   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/issues`
+   * `GET /rest/jira/latest/projects/{key}/repos/{slug}/pull-requests/{id}/issues`
    *
    * @returns An array of linked Jira issues
    */
   async issues(): Promise<BitbucketIssue[]> {
-    return this.request<BitbucketIssue[]>(`${this.basePath}/issues`);
+    return this.request<BitbucketIssue[]>(`${this.basePath}/issues`, undefined, {
+      apiPath: 'rest/jira/latest',
+    });
   }
 }
