@@ -1,3 +1,11 @@
+# [1.15.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.14.0...v1.15.0) (2026-07-14)
+
+
+### Features
+
+* add repos() method to fetch repositories with optional filters and update related types ([2c791fe](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/2c791fe315ea1f5c9681b8424e8cb2eb7a4e93c6))
+* update Bitbucket API interactions and improve user fetching ([dd6640a](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/dd6640a508236e3e17a791a2a6386ac2e55a7cf9))
+
 # [1.14.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.13.1...v1.14.0) (2026-04-30)
 
 
