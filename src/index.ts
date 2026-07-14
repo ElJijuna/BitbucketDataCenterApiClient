@@ -1,8 +1,3 @@
-export type {
-  BitbucketClientEvents,
-  BitbucketClientOptions,
-  RequestEvent,
-} from './BitbucketClient';
 export { BitbucketClient } from './BitbucketClient';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
 export type {
@@ -19,6 +14,8 @@ export type {
   ChangesParams,
   ChangeType,
 } from './domain/Change';
+export type { BitbucketClientEvents, RequestEvent } from './domain/ClientEvents';
+export type { BitbucketClientOptions, RetryOptions } from './domain/ClientOptions';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type {
   BitbucketDiff,

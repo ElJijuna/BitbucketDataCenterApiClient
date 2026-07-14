@@ -1,3 +1,5 @@
+import type { BitbucketClientEvents } from './domain/ClientEvents';
+import type { BitbucketClientOptions } from './domain/ClientOptions';
 import type { PagedResponse } from './domain/Pagination';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
 import type {
@@ -14,60 +16,7 @@ import {
   type RequestTextFn,
 } from './resources/ProjectResource';
 import { UserResource } from './resources/UserResource';
-import { type AuthType, Security } from './security/Security';
-
-/**
- * Payload emitted on every HTTP request made by {@link BitbucketClient}.
- */
-export interface RequestEvent {
-  /** Full URL that was requested */
-  url: string;
-  /** HTTP method used */
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  /** Timestamp when the request started */
-  startedAt: Date;
-  /** Timestamp when the request finished (success or error) */
-  finishedAt: Date;
-  /** Total duration in milliseconds */
-  durationMs: number;
-  /** HTTP status code returned by the server, if a response was received */
-  statusCode?: number;
-  /** Error thrown, if the request failed */
-  error?: Error;
-}
-
-/** Map of supported client events to their callback signatures */
-export interface BitbucketClientEvents {
-  request: (event: RequestEvent) => void;
-}
-
-/**
- * Configures adaptive retry/backoff behaviour for `429 Too Many Requests` responses.
- */
-export interface RetryOptions {
-  /** Maximum number of retry attempts on `429` responses. Defaults to `0` (retries disabled). */
-  maxRetries?: number;
-  /** Upper bound, in milliseconds, applied to the delay derived from the `Retry-After` header. Defaults to `30000`. */
-  maxDelayMs?: number;
-}
-
-/**
- * Constructor options for {@link BitbucketClient}.
- */
-export interface BitbucketClientOptions {
-  /** The host URL of the Bitbucket Data Center instance (e.g., `https://bitbucket.example.com`) */
-  apiUrl: string;
-  /** The API path to prepend to every request (e.g., `'rest/api/latest'`) */
-  apiPath: string;
-  /** The username to authenticate with. Required when `authType` is `'basic'` (the default). */
-  user?: string;
-  /** The personal access token or password to authenticate with */
-  token: string;
-  /** The authentication scheme to use. Defaults to `'basic'`; use `'bearer'` for HTTP access tokens. */
-  authType?: AuthType;
-  /** Retry/backoff behaviour applied when the API responds with `429 Too Many Requests`. */
-  retry?: RetryOptions;
-}
+import { Security } from './security/Security';
 
 /**
  * Main entry point for the Bitbucket Data Center REST API client.
