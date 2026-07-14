@@ -4,7 +4,17 @@ import type { BitbucketCommit } from '../domain/Commit';
 import type { BitbucketDiff, DiffParams } from '../domain/Diff';
 import type { BitbucketIssue } from '../domain/Issue';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
-import type { BitbucketParticipant, BitbucketPullRequest } from '../domain/PullRequest';
+import type {
+  AddReviewerData,
+  BitbucketParticipant,
+  BitbucketPullRequest,
+  CanMergeResult,
+  DeletePullRequestData,
+  MergePullRequestData,
+  SetParticipantStatusData,
+  TransitionPullRequestData,
+  UpdatePullRequestData,
+} from '../domain/PullRequest';
 import type {
   ActivitiesParams,
   BitbucketPullRequestActivity,
@@ -84,6 +94,153 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
    */
   async get(): Promise<BitbucketPullRequest> {
     return this.request<BitbucketPullRequest>(this.basePath);
+  }
+
+  /**
+   * Updates the pull request's title, description, target branch, or reviewers.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}`
+   *
+   * @param data - `version` (must match the pull request's current version) plus any fields to change
+   * @returns The updated pull request
+   */
+  async update(data: UpdatePullRequestData): Promise<BitbucketPullRequest> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequest>(this.basePath, data, { method: 'PUT' });
+  }
+
+  /**
+   * Deletes the pull request.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}`
+   *
+   * @param data - `version` (must match the pull request's current version)
+   */
+  async delete(data: DeletePullRequestData): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(this.basePath, data, { method: 'DELETE' });
+  }
+
+  /**
+   * Merges the pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/merge?version={version}`
+   *
+   * @param data - `version` (must match the pull request's current version) plus optional merge options
+   * @returns The merged pull request
+   */
+  async merge(data: MergePullRequestData): Promise<BitbucketPullRequest> {
+    const { version, ...body } = data;
+    const path = `${this.basePath}/merge?${new URLSearchParams({ version: String(version) })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequest>(path, body);
+  }
+
+  /**
+   * Checks whether the pull request can currently be merged.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/merge`
+   *
+   * @returns Whether the pull request can merge, and any vetoes blocking it
+   */
+  async canMerge(): Promise<CanMergeResult> {
+    return this.request<CanMergeResult>(`${this.basePath}/merge`);
+  }
+
+  /**
+   * Declines the pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/decline?version={version}`
+   *
+   * @param data - `version` (must match the pull request's current version)
+   * @returns The declined pull request
+   */
+  async decline(data: TransitionPullRequestData): Promise<BitbucketPullRequest> {
+    const path = `${this.basePath}/decline?${new URLSearchParams({ version: String(data.version) })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequest>(path);
+  }
+
+  /**
+   * Reopens a previously declined pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/reopen?version={version}`
+   *
+   * @param data - `version` (must match the pull request's current version)
+   * @returns The reopened pull request
+   */
+  async reopen(data: TransitionPullRequestData): Promise<BitbucketPullRequest> {
+    const path = `${this.basePath}/reopen?${new URLSearchParams({ version: String(data.version) })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequest>(path);
+  }
+
+  /**
+   * Approves the pull request on behalf of a participant.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants/{userSlug}`
+   *
+   * @param userSlug - Slug of the user approving (typically the authenticated user)
+   * @returns The updated participant
+   */
+  async approve(userSlug: string): Promise<BitbucketParticipant> {
+    return this.setParticipantStatus(userSlug, { approved: true, status: 'APPROVED' });
+  }
+
+  /**
+   * Withdraws a participant's approval, without removing them as a reviewer.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants/{userSlug}`
+   *
+   * @param userSlug - Slug of the user withdrawing their approval
+   * @returns The updated participant
+   */
+  async unapprove(userSlug: string): Promise<BitbucketParticipant> {
+    return this.setParticipantStatus(userSlug, { approved: false, status: 'UNAPPROVED' });
+  }
+
+  private async setParticipantStatus(
+    userSlug: string,
+    status: Pick<SetParticipantStatusData, 'approved' | 'status'>,
+  ): Promise<BitbucketParticipant> {
+    const data: SetParticipantStatusData = { user: { name: userSlug }, ...status };
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketParticipant>(
+      `${this.basePath}/participants/${userSlug}`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Adds a reviewer to the pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants`
+   *
+   * @param data - The user to add as a reviewer
+   * @returns The newly added participant
+   */
+  async addReviewer(data: AddReviewerData): Promise<BitbucketParticipant> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketParticipant>(`${this.basePath}/participants`, data);
+  }
+
+  /**
+   * Removes a reviewer (or any participant) from the pull request entirely.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants/{userSlug}`
+   *
+   * @param userSlug - Slug of the user to remove
+   */
+  async removeReviewer(userSlug: string): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/participants/${userSlug}`, undefined, {
+      method: 'DELETE',
+    });
   }
 
   /**

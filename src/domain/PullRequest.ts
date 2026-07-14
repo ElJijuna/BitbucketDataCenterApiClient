@@ -53,6 +53,77 @@ export interface BitbucketPullRequest {
 }
 
 /**
+ * Payload for `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants/{userSlug}`,
+ * used to approve, unapprove, or request changes on behalf of a participant.
+ */
+export interface SetParticipantStatusData {
+  user: { name: string };
+  approved: boolean;
+  status: 'APPROVED' | 'UNAPPROVED' | 'NEEDS_WORK';
+}
+
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/participants`.
+ */
+export interface AddReviewerData {
+  user: { name: string };
+}
+
+/**
+ * Payload for `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}`.
+ *
+ * `version` must match the pull request's current version (optimistic locking);
+ * Bitbucket rejects the request with a `409 Conflict` otherwise.
+ */
+export interface UpdatePullRequestData {
+  version: number;
+  title?: string;
+  description?: string;
+  toRef?: { id: string };
+  reviewers?: { user: { name: string } }[];
+}
+
+/**
+ * Payload for `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}`.
+ */
+export interface DeletePullRequestData {
+  version: number;
+}
+
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/merge`.
+ */
+export interface MergePullRequestData {
+  version: number;
+  message?: string;
+  strategyId?: string;
+  autoSubject?: boolean;
+}
+
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/decline`
+ * and `POST …/pull-requests/{id}/reopen`.
+ */
+export interface TransitionPullRequestData {
+  version: number;
+}
+
+/** A reason the pull request currently cannot be merged. */
+export interface MergeVeto {
+  summaryMessage: string;
+  detailedMessage: string;
+}
+
+/**
+ * Response for `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/merge`.
+ */
+export interface CanMergeResult {
+  canMerge: boolean;
+  conflicted: boolean;
+  vetoes: MergeVeto[];
+}
+
+/**
  * Query parameters accepted by `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests`.
  *
  * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-get}
