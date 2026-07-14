@@ -165,38 +165,38 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 | Method | Endpoint | Status |
 | --- | --- | --- |
 | `get()` | `GET …/pull-requests/{id}` | ✅ |
-| `update(data)` | `PUT …/pull-requests/{id}` | ⬜ |
-| `delete()` | `DELETE …/pull-requests/{id}` | ⬜ |
-| `merge(data?)` | `POST …/pull-requests/{id}/merge` | ⬜ |
-| `canMerge()` | `GET …/pull-requests/{id}/merge` | ⬜ |
-| `decline(data?)` | `POST …/pull-requests/{id}/decline` | ⬜ |
-| `reopen()` | `POST …/pull-requests/{id}/reopen` | ⬜ |
-| `approve()` / `unapprove()` | `PUT/DELETE …/pull-requests/{id}/participants/{userSlug}` (the `/approve` endpoints are **deprecated**) | ⬜ |
+| `update(data)` | `PUT …/pull-requests/{id}` | ✅ |
+| `delete(data)` | `DELETE …/pull-requests/{id}` | ✅ |
+| `merge(data)` | `POST …/pull-requests/{id}/merge?version={version}` | ✅ |
+| `canMerge()` | `GET …/pull-requests/{id}/merge` | ✅ |
+| `decline(data)` | `POST …/pull-requests/{id}/decline?version={version}` | ✅ |
+| `reopen(data)` | `POST …/pull-requests/{id}/reopen?version={version}` | ✅ |
+| `approve()` / `unapprove()` | `PUT …/pull-requests/{id}/participants/{userSlug}` with `status: 'APPROVED' \| 'UNAPPROVED'` (the `/approve` endpoints are **deprecated**) | ✅ |
 | `activities(params?)` | `GET …/pull-requests/{id}/activities` | ✅ |
 | `tasks(params?)` | `GET …/pull-requests/{id}/blocker-comments` (legacy `/tasks` endpoint was removed in Bitbucket 8.0) | ✅ |
-| `createTask(data)` | `POST …/pull-requests/{id}/blocker-comments` | ⬜ |
-| `updateTask(taskId, data)` | `PUT …/pull-requests/{id}/blocker-comments/{commentId}` | ⬜ |
-| `deleteTask(taskId)` | `DELETE …/pull-requests/{id}/blocker-comments/{commentId}` | ⬜ |
+| `createTask(data)` | `POST …/pull-requests/{id}/blocker-comments` | ✅ |
+| `updateTask(taskId, data)` | `PUT …/pull-requests/{id}/blocker-comments/{commentId}` | ✅ |
+| `deleteTask(taskId, version)` | `DELETE …/pull-requests/{id}/blocker-comments/{commentId}?version={version}` | ✅ |
 | `commits(params?)` | `GET …/pull-requests/{id}/commits` | ✅ |
 | `changes(params?)` | `GET …/pull-requests/{id}/changes` | ✅ |
 | `diff(params?)` | `GET …/pull-requests/{id}/diff/{path}` (`path` optional) | ✅ |
-| `rawDiff()` / `patch()` | `GET …/pull-requests/{id}.diff` / `.patch` | ⬜ |
-| `diffStatsSummary(path)` | `GET …/pull-requests/{id}/diff-stats-summary/{path}` | ⬜ |
+| `rawDiff()` / `patch()` | `GET …/pull-requests/{id}.diff` / `.patch` | ✅ |
+| `diffStatsSummary(path)` | `GET …/pull-requests/{id}/diff-stats-summary/{path}` | ✅ |
 | `comments(params?)` | `GET …/pull-requests/{id}/comments` | ✅ |
-| `addComment(data)` | `POST …/pull-requests/{id}/comments` | ⬜ |
-| `updateComment(commentId, data)` | `PUT …/pull-requests/{id}/comments/{commentId}` | ⬜ |
-| `deleteComment(commentId)` | `DELETE …/pull-requests/{id}/comments/{commentId}` | ⬜ |
-| `applySuggestion(commentId, data)` | `POST …/pull-requests/{id}/comments/{commentId}/apply-suggestion` | ⬜ |
-| `react(commentId, emoticon)` / `unreact(...)` | `PUT/DELETE /rest/comment-likes/latest/…/comments/{commentId}/reactions/{emoticon}` | ⬜ |
+| `addComment(data)` | `POST …/pull-requests/{id}/comments` | ✅ |
+| `updateComment(commentId, data)` | `PUT …/pull-requests/{id}/comments/{commentId}` | ✅ |
+| `deleteComment(commentId, version)` | `DELETE …/pull-requests/{id}/comments/{commentId}?version={version}` | ✅ |
+| `applySuggestion(commentId, data)` | `POST …/pull-requests/{id}/comments/{commentId}/apply-suggestion` | ✅ |
+| `react(commentId, emoticon)` / `unreact(...)` | `PUT/DELETE /rest/comment-likes/latest/…/comments/{commentId}/reactions/{emoticon}` | ✅ |
 | `reviewers(params?)` | `GET …/pull-requests/{id}/participants` | ✅ |
-| `addReviewer(data)` | `POST …/pull-requests/{id}/participants` | ⬜ |
-| `removeReviewer(userSlug)` | `DELETE …/pull-requests/{id}/participants/{userSlug}` | ⬜ |
-| `review()` / `completeReview(data)` / `discardReview()` | `GET/PUT/DELETE …/pull-requests/{id}/review` | ⬜ |
-| `autoMerge()` / `requestAutoMerge()` / `cancelAutoMerge()` | `GET/POST/DELETE …/pull-requests/{id}/auto-merge` | ⬜ |
-| `watch()` / `unwatch()` | `POST/DELETE …/pull-requests/{id}/watch` | ⬜ |
-| `rebase()` / `canRebase()` | `POST/GET /rest/git/latest/…/pull-requests/{id}/rebase` | ⬜ |
-| `mergeBase()` | `GET …/pull-requests/{id}/merge-base` | ⬜ |
-| `commitMessageSuggestion()` | `GET …/pull-requests/{id}/commit-message-suggestion` | ⬜ |
+| `addReviewer(data)` | `POST …/pull-requests/{id}/participants` | ✅ |
+| `removeReviewer(userSlug)` | `DELETE …/pull-requests/{id}/participants/{userSlug}` | ✅ |
+| `review()` / `completeReview(data)` / `discardReview()` | `GET/PUT/DELETE …/pull-requests/{id}/review` — sparsely documented by Atlassian; response shape is typed defensively (`@remarks` on `PullRequestReview`) | ✅ |
+| `autoMerge()` / `requestAutoMerge()` / `cancelAutoMerge()` | `GET/POST/DELETE …/pull-requests/{id}/auto-merge` | ✅ |
+| `watch()` / `unwatch()` | `POST/DELETE …/pull-requests/{id}/watch` | ✅ |
+| `rebase()` / `canRebase()` | `POST/GET /rest/git/latest/…/pull-requests/{id}/rebase` | ✅ |
+| `mergeBase()` | `GET …/pull-requests/{id}/merge-base` | ✅ |
+| `commitMessageSuggestion()` | `GET …/pull-requests/{id}/commit-message-suggestion` | ✅ |
 | `reports(params?)` | `GET /rest/insights/latest/…/commits/{latestCommit}/reports` (resolves the latest source commit first; the PR-level `/reports` endpoint is UI-internal) | ✅ |
 | `buildSummaries()` | `GET …/commits` + `POST /rest/build-status/latest/commits/stats` (the PR-level `/build-summaries` endpoint is UI-internal) | ✅ |
 | `issues()` | `GET /rest/jira/latest/…/pull-requests/{id}/issues` | ✅ |

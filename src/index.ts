@@ -1,4 +1,5 @@
 export { BitbucketClient } from './BitbucketClient';
+export type { AutoMergeRequest, RequestAutoMergeData } from './domain/AutoMerge';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
 export type {
   BitbucketBrowseChild,
@@ -17,6 +18,7 @@ export type {
 export type { BitbucketClientEvents, RequestEvent } from './domain/ClientEvents';
 export type { BitbucketClientOptions, RetryOptions } from './domain/ClientOptions';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
+export type { CommitMessageSuggestion } from './domain/CommitMessageSuggestion';
 export type {
   BitbucketDiff,
   BitbucketDiffEntry,
@@ -27,32 +29,49 @@ export type {
   DiffParams,
   DiffSegmentType,
 } from './domain/Diff';
+export type { BitbucketDiffStatsSummary } from './domain/DiffStatsSummary';
 export type { EditFilePayload } from './domain/EditFile';
 export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
 export type { PagedResponse, PaginationParams } from './domain/Pagination';
 export type { BitbucketProject, ProjectsParams } from './domain/Project';
 export type {
+  AddReviewerData,
   BitbucketParticipant,
   BitbucketPullRequest,
   BitbucketRef,
+  CanMergeResult,
+  DeletePullRequestData,
+  MergePullRequestData,
+  MergeVeto,
   PullRequestsParams,
+  SetParticipantStatusData,
+  TransitionPullRequestData,
+  UpdatePullRequestData,
 } from './domain/PullRequest';
 export type {
   ActivitiesParams,
+  AddPullRequestCommentData,
+  ApplySuggestionData,
+  ApplySuggestionResult,
   BitbucketActivityUser,
   BitbucketPullRequestActivity,
   BitbucketPullRequestComment,
   PullRequestActivityAction,
+  UpdatePullRequestCommentData,
 } from './domain/PullRequestActivity';
+export type { CompleteReviewData, PullRequestReview } from './domain/PullRequestReview';
 export type {
   BitbucketPullRequestTask,
+  CreateTaskData,
   PullRequestTaskAnchor,
   PullRequestTaskPermittedOperations,
   PullRequestTaskState,
   TasksParams,
+  UpdateTaskData,
 } from './domain/PullRequestTask';
 export type { RawFileParams } from './domain/RawFile';
+export type { CanRebaseResult, RebaseResult, RebaseVeto } from './domain/Rebase';
 export type {
   BitbucketReport,
   BitbucketReportData,

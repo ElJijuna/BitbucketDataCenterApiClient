@@ -567,6 +567,149 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   }
 
   /**
+   * Fetches the authenticated user's file-review progress on this pull request.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/review`
+   *
+   * @returns Which files the authenticated user has marked as reviewed
+   */
+  async review(): Promise<PullRequestReview> {
+    return this.request<PullRequestReview>(`${this.basePath}/review`);
+  }
+
+  /**
+   * Marks the given files as reviewed by the authenticated user.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/review`
+   *
+   * @param data - The files to mark as reviewed
+   * @returns The updated review progress
+   */
+  async completeReview(data: CompleteReviewData): Promise<PullRequestReview> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<PullRequestReview>(`${this.basePath}/review`, data, {
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Discards the authenticated user's file-review progress on this pull request.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/review`
+   */
+  async discardReview(): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/review`, undefined, { method: 'DELETE' });
+  }
+
+  /**
+   * Fetches the pending auto-merge request on this pull request, if any.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/auto-merge`
+   *
+   * @returns The pending auto-merge request
+   * @throws {BitbucketApiError} With `status` `404` if no auto-merge request is pending
+   */
+  async autoMerge(): Promise<AutoMergeRequest> {
+    return this.request<AutoMergeRequest>(`${this.basePath}/auto-merge`);
+  }
+
+  /**
+   * Requests that the pull request be merged automatically once it becomes mergeable
+   * (required builds pass, approvals met, etc.).
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/auto-merge`
+   *
+   * @param data - Optional merge message, source-branch deletion, and merge strategy
+   * @returns The created auto-merge request
+   */
+  async requestAutoMerge(data?: RequestAutoMergeData): Promise<AutoMergeRequest> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<AutoMergeRequest>(`${this.basePath}/auto-merge`, data);
+  }
+
+  /**
+   * Cancels a pending auto-merge request.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/auto-merge`
+   */
+  async cancelAutoMerge(): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/auto-merge`, undefined, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Adds the authenticated user as a watcher of this pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/watch`
+   */
+  async watch(): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/watch`, undefined);
+  }
+
+  /**
+   * Removes the authenticated user as a watcher of this pull request.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/watch`
+   */
+  async unwatch(): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/watch`, undefined, { method: 'DELETE' });
+  }
+
+  /**
+   * Checks whether the pull request's source branch can be rebased onto its target branch.
+   *
+   * `GET /rest/git/latest/projects/{key}/repos/{slug}/pull-requests/{id}/rebase`
+   *
+   * @returns Whether a rebase is possible, and any vetoes blocking it
+   */
+  async canRebase(): Promise<CanRebaseResult> {
+    return this.request<CanRebaseResult>(`${this.basePath}/rebase`, undefined, {
+      apiPath: 'rest/git/latest',
+    });
+  }
+
+  /**
+   * Rebases the pull request's source branch onto its target branch.
+   *
+   * `POST /rest/git/latest/projects/{key}/repos/{slug}/pull-requests/{id}/rebase`
+   *
+   * @returns The result of the rebase
+   */
+  async rebase(): Promise<RebaseResult> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<RebaseResult>(`${this.basePath}/rebase`, undefined, {
+      apiPath: 'rest/git/latest',
+    });
+  }
+
+  /**
+   * Fetches the common ancestor commit between the pull request's source and target branches.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/merge-base`
+   *
+   * @returns The merge-base commit
+   */
+  async mergeBase(): Promise<BitbucketCommit> {
+    return this.request<BitbucketCommit>(`${this.basePath}/merge-base`);
+  }
+
+  /**
+   * Fetches a suggested commit message for merging this pull request (e.g. for squash merges).
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/commit-message-suggestion`
+   *
+   * @returns The suggested commit message
+   */
+  async commitMessageSuggestion(): Promise<CommitMessageSuggestion> {
+    return this.request<CommitMessageSuggestion>(`${this.basePath}/commit-message-suggestion`);
+  }
+
+  /**
    * Fetches the Code Insights reports for this pull request.
    *
    * Code Insights reports are attached to commits, so this method first fetches
