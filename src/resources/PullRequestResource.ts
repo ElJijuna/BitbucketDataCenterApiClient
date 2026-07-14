@@ -291,6 +291,52 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
   }
 
   /**
+   * Creates a task (blocker comment) on this pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments`
+   *
+   * @param data - The task text, and an optional anchor to a specific file/line
+   * @returns The created task
+   */
+  async createTask(data: CreateTaskData): Promise<BitbucketPullRequestTask> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequestTask>(`${this.basePath}/blocker-comments`, data);
+  }
+
+  /**
+   * Updates a task's text or resolution state.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments/{commentId}`
+   *
+   * @param taskId - The task's comment id
+   * @param data - `version` (must match the task's current version) plus the fields to change
+   * @returns The updated task
+   */
+  async updateTask(taskId: number, data: UpdateTaskData): Promise<BitbucketPullRequestTask> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequestTask>(
+      `${this.basePath}/blocker-comments/${taskId}`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes a task.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments/{commentId}`
+   *
+   * @param taskId - The task's comment id
+   * @param version - Must match the task's current version
+   */
+  async deleteTask(taskId: number, version: number): Promise<void> {
+    const path = `${this.basePath}/blocker-comments/${taskId}?${new URLSearchParams({ version: String(version) })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(path, undefined, { method: 'DELETE' });
+  }
+
+  /**
    * Fetches the commits included in this pull request.
    *
    * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/commits`
@@ -317,6 +363,112 @@ export class PullRequestResource implements PromiseLike<BitbucketPullRequest> {
     return this.request<PagedResponse<BitbucketPullRequestComment>>(
       `${this.basePath}/comments`,
       params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Posts a comment on this pull request.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments`
+   *
+   * @param data - The comment text, and an optional anchor or parent for replies
+   * @returns The created comment
+   */
+  async addComment(data: AddPullRequestCommentData): Promise<BitbucketPullRequestComment> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequestComment>(`${this.basePath}/comments`, data);
+  }
+
+  /**
+   * Updates an existing comment's text.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}`
+   *
+   * @param commentId - The comment id
+   * @param data - `version` (must match the comment's current version) and the new text
+   * @returns The updated comment
+   */
+  async updateComment(
+    commentId: number,
+    data: UpdatePullRequestCommentData,
+  ): Promise<BitbucketPullRequestComment> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequestComment>(
+      `${this.basePath}/comments/${commentId}`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes a comment.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}`
+   *
+   * @param commentId - The comment id
+   * @param version - Must match the comment's current version
+   */
+  async deleteComment(commentId: number, version: number): Promise<void> {
+    const path = `${this.basePath}/comments/${commentId}?${new URLSearchParams({ version: String(version) })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(path, undefined, { method: 'DELETE' });
+  }
+
+  /**
+   * Applies a suggested change from a comment as a new commit.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}/apply-suggestion`
+   *
+   * @param commentId - The comment id containing the suggestion
+   * @param data - The suggestion index to apply, and an optional commit summary/description
+   * @returns The commit created by applying the suggestion
+   */
+  async applySuggestion(
+    commentId: number,
+    data: ApplySuggestionData,
+  ): Promise<ApplySuggestionResult> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<ApplySuggestionResult>(
+      `${this.basePath}/comments/${commentId}/apply-suggestion`,
+      data,
+    );
+  }
+
+  /**
+   * Reacts to a comment with an emoticon (e.g. `':+1:'`).
+   *
+   * `PUT /rest/comment-likes/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}/reactions/{emoticon}`
+   *
+   * @remarks Implemented against the `comment-likes` API module, which backs the
+   * reactions feature in the Bitbucket UI.
+   *
+   * @param commentId - The comment id
+   * @param emoticon - The emoticon identifier (e.g. `'+1'`, `'heart'`)
+   */
+  async react(commentId: number, emoticon: string): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(
+      `${this.basePath}/comments/${commentId}/reactions/${emoticon}`,
+      undefined,
+      { method: 'PUT', apiPath: 'rest/comment-likes/latest' },
+    );
+  }
+
+  /**
+   * Removes a reaction from a comment.
+   *
+   * `DELETE /rest/comment-likes/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}/reactions/{emoticon}`
+   *
+   * @param commentId - The comment id
+   * @param emoticon - The emoticon identifier (e.g. `'+1'`, `'heart'`)
+   */
+  async unreact(commentId: number, emoticon: string): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(
+      `${this.basePath}/comments/${commentId}/reactions/${emoticon}`,
+      undefined,
+      { method: 'DELETE', apiPath: 'rest/comment-likes/latest' },
     );
   }
 
