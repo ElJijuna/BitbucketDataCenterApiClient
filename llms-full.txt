@@ -1,0 +1,237 @@
+# bitbucket-datacenter-api-client — full reference
+
+> TypeScript client for the Bitbucket Data Center REST API v10.3 (`/rest/api/latest`). Isomorphic (Node.js + browser), fully typed, zero runtime dependencies. This file inlines the full API reference in one place; see README.md and ROADMAP.md in the package/repo root for the canonical, most up-to-date versions.
+
+## Install
+
+```bash
+npm install bitbucket-datacenter-api-client
+```
+
+## Quick start
+
+```typescript
+import { BitbucketClient } from 'bitbucket-datacenter-api-client';
+
+const bb = new BitbucketClient({
+  apiUrl:  'https://bitbucket.example.com',
+  apiPath: 'rest/api/latest',
+  user:    'your-username',
+  token:   'your-personal-access-token',
+});
+
+const projects = await bb.projects({ limit: 50 });
+const project  = await bb.project('PROJ');
+const repos    = await bb.project('PROJ').repos({ name: 'api' });
+const repo     = await bb.project('PROJ').repo('my-repo');
+const prs      = await bb.project('PROJ').repo('my-repo').pullRequests({ state: 'OPEN' });
+```
+
+## Authentication
+
+Two schemes, selected via `authType` (default `'basic'`):
+
+```typescript
+// Basic — username + Personal Access Token or password. `user` is required.
+const bb = new BitbucketClient({
+  apiUrl: 'https://bitbucket.example.com', apiPath: 'rest/api/latest',
+  user: 'your-username', token: 'your-personal-access-token',
+});
+
+// Bearer — HTTP access token, sent as `Authorization: Bearer <token>`. No `user` needed.
+const bb = new BitbucketClient({
+  apiUrl: 'https://bitbucket.example.com', apiPath: 'rest/api/latest',
+  token: 'your-http-access-token', authType: 'bearer',
+});
+```
+
+## Chainable resource pattern
+
+Every resource mapping to a single entity (`ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, `UserResource`) implements `PromiseLike<T>`:
+
+```typescript
+const project = await bb.project('PROJ');                    // await directly → fetches the entity
+const repos   = await bb.project('PROJ').repos({ limit: 10 }); // chain → fetches a list / sub-resource
+const diff    = await bb.project('PROJ').repo('my-repo').commit('abc123').diff();
+```
+
+## Method reference
+
+All endpoints below are relative to `/rest/api/latest` unless a full path is shown. Methods marked `⚠️` hit a well-known but *unofficial* endpoint (no documented equivalent exists) and may break between Bitbucket versions.
+
+### BitbucketClient (entry point)
+
+| Method | Endpoint |
+| --- | --- |
+| `projects(params?)` | `GET /projects` |
+| `project(key)` | chainable → `ProjectResource` |
+| `repos(params?)` | `GET /repos` (documented params 1:1: `name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `archived`) |
+| `search(params?)` | `GET /repos` (legacy variant, prefixes `%` to `name` for a contains-match) |
+| `users(params?)` | `GET /users` |
+| `user(slug)` | chainable → `UserResource` |
+| `currentUser()` | `X-AUSERNAME` response header + `GET /users?filter={name}` (two requests; no official whoami endpoint) |
+
+### ProjectResource — `bb.project(key)`
+
+| Method | Endpoint |
+| --- | --- |
+| `get()` | `GET /projects/{key}` |
+| `repos(params?)` | `GET /projects/{key}/repos` |
+| `repo(slug)` | chainable → `RepositoryResource` |
+| `users(params?)` | `GET /projects/{key}/permissions/users` |
+| `groups(params?)` | `GET /projects/{key}/permissions/groups` |
+| `webhooks(params?)` | `GET /projects/{key}/webhooks` |
+
+### RepositoryResource — `bb.project(key).repo(slug)`
+
+| Method | Endpoint |
+| --- | --- |
+| `get()` | `GET /projects/{key}/repos/{slug}` |
+| `forks(params?)` | `GET /projects/{key}/repos/{slug}/forks` |
+| `pullRequests(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests` |
+| `pullRequest(id)` | chainable → `PullRequestResource` |
+| `commits(params?)` | `GET /projects/{key}/repos/{slug}/commits` |
+| `commit(commitId)` | chainable → `CommitResource` |
+| `branches(params?)` | `GET /projects/{key}/repos/{slug}/branches` |
+| `defaultBranch()` | `GET /projects/{key}/repos/{slug}/branches/default` |
+| `tags(params?)` | `GET /projects/{key}/repos/{slug}/tags` |
+| `tagsByCommits(commits, opts?)` | `POST /projects/{key}/repos/{slug}/tags` |
+| `lastModified(params?)` | `GET /projects/{key}/repos/{slug}/last-modified` |
+| `size()` ⚠️ | `GET /projects/{key}/repos/{slug}/sizes` (unofficial UI endpoint) |
+| `raw(filePath, params?)` | `GET /projects/{key}/repos/{slug}/raw/{path}` → plain text |
+| `browse(srcPath?, params?)` | `GET /projects/{key}/repos/{slug}/browse/{srcPath}` |
+| `editFile(filePath, payload)` | `PUT /projects/{key}/repos/{slug}/browse/{path}` (form-encoded) |
+| `webhooks(params?)` | `GET /projects/{key}/repos/{slug}/webhooks/search` |
+| `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` |
+
+### PullRequestResource — `bb.project(key).repo(slug).pullRequest(id)`
+
+| Method | Endpoint |
+| --- | --- |
+| `get()` | `GET …/pull-requests/{id}` |
+| `update(data)` | `PUT …/pull-requests/{id}` — `data: { version, title?, description?, toRef?, reviewers? }` |
+| `delete(data)` | `DELETE …/pull-requests/{id}` — `data: { version }` |
+| `merge(data)` | `POST …/pull-requests/{id}/merge?version={version}` — `data: { version, message?, strategyId?, autoSubject? }` |
+| `canMerge()` | `GET …/pull-requests/{id}/merge` → `{ canMerge, conflicted, vetoes[] }` |
+| `decline(data)` | `POST …/pull-requests/{id}/decline?version={version}` |
+| `reopen(data)` | `POST …/pull-requests/{id}/reopen?version={version}` |
+| `approve(userSlug)` | `PUT …/pull-requests/{id}/participants/{userSlug}` with `status: 'APPROVED'` |
+| `unapprove(userSlug)` | same endpoint, `status: 'UNAPPROVED'` |
+| `addReviewer(data)` | `POST …/pull-requests/{id}/participants` — `data: { user: { name } }` |
+| `removeReviewer(userSlug)` | `DELETE …/pull-requests/{id}/participants/{userSlug}` |
+| `activities(params?)` | `GET …/pull-requests/{id}/activities` |
+| `tasks(params?)` | `GET …/pull-requests/{id}/blocker-comments` (tasks are blocker comments since Bitbucket 7.2; legacy `/tasks` was removed in 8.0) |
+| `createTask(data)` | `POST …/pull-requests/{id}/blocker-comments` |
+| `updateTask(taskId, data)` | `PUT …/pull-requests/{id}/blocker-comments/{commentId}` |
+| `deleteTask(taskId, version)` | `DELETE …/pull-requests/{id}/blocker-comments/{commentId}?version={version}` |
+| `commits(params?)` | `GET …/pull-requests/{id}/commits` |
+| `changes(params?)` | `GET …/pull-requests/{id}/changes` |
+| `diff(params?)` | `GET …/pull-requests/{id}/diff/{path}` (`path` optional; `srcPath` selects a previous path for renames) |
+| `rawDiff()` | `GET …/pull-requests/{id}.diff` → plain text |
+| `patch()` | `GET …/pull-requests/{id}.patch` → plain text |
+| `diffStatsSummary(path)` | `GET …/pull-requests/{id}/diff-stats-summary/{path}` |
+| `comments(params?)` | `GET …/pull-requests/{id}/comments` |
+| `addComment(data)` | `POST …/pull-requests/{id}/comments` |
+| `updateComment(commentId, data)` | `PUT …/pull-requests/{id}/comments/{commentId}` |
+| `deleteComment(commentId, version)` | `DELETE …/pull-requests/{id}/comments/{commentId}?version={version}` |
+| `applySuggestion(commentId, data)` | `POST …/pull-requests/{id}/comments/{commentId}/apply-suggestion` |
+| `react(commentId, emoticon)` | `PUT /rest/comment-likes/latest/…/comments/{commentId}/reactions/{emoticon}` |
+| `unreact(commentId, emoticon)` | `DELETE` same endpoint |
+| `reviewers(params?)` | `GET …/pull-requests/{id}/participants` |
+| `review()` | `GET …/pull-requests/{id}/review` (sparsely documented; response typed defensively) |
+| `completeReview(data)` | `PUT …/pull-requests/{id}/review` — `data: { reviewedFiles }` |
+| `discardReview()` | `DELETE …/pull-requests/{id}/review` |
+| `autoMerge()` | `GET …/pull-requests/{id}/auto-merge` (404 if none pending) |
+| `requestAutoMerge(data?)` | `POST …/pull-requests/{id}/auto-merge` |
+| `cancelAutoMerge()` | `DELETE …/pull-requests/{id}/auto-merge` |
+| `watch()` | `POST …/pull-requests/{id}/watch` |
+| `unwatch()` | `DELETE …/pull-requests/{id}/watch` |
+| `canRebase()` | `GET /rest/git/latest/…/pull-requests/{id}/rebase` |
+| `rebase()` | `POST /rest/git/latest/…/pull-requests/{id}/rebase` |
+| `mergeBase()` | `GET …/pull-requests/{id}/merge-base` |
+| `commitMessageSuggestion()` | `GET …/pull-requests/{id}/commit-message-suggestion` |
+| `reports(params?)` | resolves the PR's latest source commit, then `GET /rest/insights/latest/…/commits/{commitId}/reports` (two requests; PR-level `/reports` is UI-internal) |
+| `buildSummaries()` | fetches PR commits, then `POST /rest/build-status/latest/commits/stats` (two requests; PR-level `/build-summaries` is UI-internal) |
+| `issues()` | `GET /rest/jira/latest/…/pull-requests/{id}/issues` |
+
+### CommitResource — `bb.project(key).repo(slug).commit(id)`
+
+| Method | Endpoint |
+| --- | --- |
+| `get()` | `GET …/commits/{id}` |
+| `changes(params?)` | `GET …/commits/{id}/changes` |
+| `diff(params?)` | `GET …/commits/{id}/diff/{path}` (`path` optional) |
+| `comments(params?)` | `GET …/commits/{id}/comments` |
+| `addComment(data)` | `POST …/commits/{id}/comments` |
+| `buildStatuses(params?)` | `GET /rest/build-status/latest/commits/{id}` |
+| `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` |
+
+### UserResource — `bb.user(slug)`
+
+| Method | Endpoint |
+| --- | --- |
+| `get()` | `GET /users/{slug}` |
+| `repos(params?)` | `GET /projects/~{slug}/repos` (personal project convention) |
+| `repo(slug)` | chainable → `RepositoryResource`, via `/projects/~{slug}/repos/{repoSlug}` |
+| `sshKeys(params?)` | `GET /rest/ssh/latest/keys?user={slug}` |
+| `settings()` | `GET /users/{slug}/settings` |
+
+## Not yet implemented
+
+Most `create*`/`update*`/`delete*` operations on `ProjectResource`/`RepositoryResource` (webhooks CRUD, branch/tag creation & deletion, permissions CRUD, project/repo settings), all `CommitResource` write operations besides comments/build-status, `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and dashboard-level `BitbucketClient` methods are still pending. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
+
+## Pagination
+
+Every list method returns `PagedResponse<T>`: `{ values, size, limit, isLastPage, start, nextPageStart? }`.
+
+```typescript
+// Manual paging
+let start: number | undefined;
+const all: BitbucketRepository[] = [];
+do {
+  const page = await bb.project('PROJ').repos({ limit: 100, start });
+  all.push(...page.values);
+  start = page.nextPageStart;
+} while (start !== undefined);
+
+// Auto-pagination
+import { paginate } from 'bitbucket-datacenter-api-client';
+for await (const repo of paginate((params) => bb.project('PROJ').repos(params), { limit: 100 })) {
+  console.log(repo.slug);
+}
+```
+
+## Error handling
+
+Non-2xx responses throw `BitbucketApiError`: `{ status, statusText, message, errors: BitbucketErrorDetail[] }`. `errors` is `[]` when the response had no structured error body (Bitbucket's `{ errors: [{ context, message, exceptionName }] }` shape).
+
+```typescript
+import { BitbucketApiError } from 'bitbucket-datacenter-api-client';
+try {
+  await bb.project('NONEXISTENT');
+} catch (err) {
+  if (err instanceof BitbucketApiError) {
+    console.log(err.status, err.statusText, err.message, err.errors);
+  }
+}
+```
+
+## Rate limiting
+
+`429` responses are thrown as `BitbucketApiError` by default. Opt into retries via the `retry` constructor option; the client honours `Retry-After` (seconds or HTTP date):
+
+```typescript
+new BitbucketClient({ apiUrl, apiPath, user, token, retry: { maxRetries: 3, maxDelayMs: 30000 } });
+```
+
+## Request events
+
+```typescript
+bb.on('request', (event) => {
+  // event: { url, method, startedAt, finishedAt, durationMs, statusCode?, error? }
+});
+```
+
+## Key exported types
+
+`BitbucketClient`, `BitbucketClientOptions`, `RetryOptions`, `RequestEvent`, `BitbucketClientEvents`, `AuthType`, `Security`, `BitbucketApiError`, `BitbucketErrorDetail`, `paginate`, `PagedResponse`, `PaginationParams`, `ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, `UserResource`, plus one domain type module per resource (`BitbucketProject`, `BitbucketRepository`, `BitbucketPullRequest`, `BitbucketCommit`, `BitbucketUser`, `BitbucketWebhook`, `BitbucketBranch`, `BitbucketTag`, `BitbucketDiff`, `BitbucketChange`, etc.) — see README.md's "TypeScript types" section for the full import list.
