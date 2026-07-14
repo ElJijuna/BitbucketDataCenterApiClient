@@ -4,8 +4,10 @@
 [![npm version](https://img.shields.io/npm/v/bitbucket-datacenter-api-client)](https://www.npmjs.com/package/bitbucket-datacenter-api-client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-TypeScript client for the [Bitbucket Data Center REST API](https://developer.atlassian.com/server/bitbucket/rest/v819/intro/).
+TypeScript client for the [Bitbucket Data Center REST API v10.3](https://developer.atlassian.com/server/bitbucket/rest/v1003/) (`/rest/api/latest`).
 Works in **Node.js** and the **browser** (isomorphic). Fully typed, zero runtime dependencies.
+
+See [ROADMAP.md](ROADMAP.md) for the full list of implemented and pending endpoints.
 
 ---
 
@@ -213,6 +215,44 @@ page.limit         // number
 page.start         // number
 ```
 
+### Manual paging
+
+Follow `nextPageStart` yourself when you need control over when the next page is fetched:
+
+```typescript
+let start: number | undefined;
+const allRepos: BitbucketRepository[] = [];
+
+do {
+  const page = await bb.project('PROJ').repos({ limit: 100, start });
+
+  allRepos.push(...page.values);
+  start = page.nextPageStart;
+} while (start !== undefined);
+```
+
+### Auto-pagination with `paginate()`
+
+For the common case — iterate over every item across all pages — use the `paginate()` async generator instead:
+
+```typescript
+import { paginate } from 'bitbucket-datacenter-api-client';
+
+for await (const repo of paginate((params) => bb.project('PROJ').repos(params), { limit: 100 })) {
+  console.log(repo.slug);
+}
+
+// Works with any paginated method, including nested resources:
+for await (const pr of paginate(
+  (params) => bb.project('PROJ').repo('my-repo').pullRequests(params),
+  { state: 'OPEN' },
+)) {
+  console.log(pr.id, pr.title);
+}
+```
+
+`paginate()` fetches lazily — one page at a time as you iterate — and stops once `isLastPage` is `true` or `nextPageStart` is `undefined`.
+
 ---
 
 ## Request events
@@ -233,7 +273,7 @@ The `event` object contains:
 | Field | Type | Description |
 |---|---|---|
 | `url` | `string` | Full URL that was requested |
-| `method` | `'GET' \| 'POST'` | HTTP method used |
+| `method` | `'GET' \| 'POST' \| 'PUT' \| 'DELETE'` | HTTP method used |
 | `startedAt` | `Date` | When the request started |
 | `finishedAt` | `Date` | When the request finished |
 | `durationMs` | `number` | Duration in milliseconds |
@@ -246,7 +286,8 @@ The event is always emitted after the request completes, whether it succeeded or
 
 ## Error handling
 
-Non-2xx responses throw a `BitbucketApiError` with the HTTP status code and status text:
+Non-2xx responses throw a `BitbucketApiError` with the HTTP status code, status text, and — when Bitbucket
+returns one — the structured error body (`{ errors: [{ context, message, exceptionName }] }`):
 
 ```typescript
 import { BitbucketApiError } from 'bitbucket-datacenter-api-client';
@@ -257,10 +298,33 @@ try {
   if (err instanceof BitbucketApiError) {
     console.log(err.status);     // 404
     console.log(err.statusText); // 'Not Found'
-    console.log(err.message);    // 'Bitbucket API error: 404 Not Found'
+    console.log(err.message);    // 'Bitbucket API error: 404 Not Found' (or '... - <first error message>')
+    console.log(err.errors);     // BitbucketErrorDetail[] — [] if the response had no error body
     console.log(err.stack);      // full stack trace
   }
 }
+```
+
+`err.errors` is always an array (empty when the response body was missing, empty, or not in the expected shape),
+so it's safe to read `err.errors[0]?.message` without a null check on `errors` itself.
+
+### Rate limiting
+
+By default, a `429 Too Many Requests` response is thrown as a regular `BitbucketApiError`. Opt into automatic
+retries with the `retry` option — the client honours the `Retry-After` header (seconds or an HTTP date) between
+attempts:
+
+```typescript
+const bb = new BitbucketClient({
+  apiUrl:  'https://bitbucket.example.com',
+  apiPath: 'rest/api/latest',
+  user:    'your-username',
+  token:   'your-personal-access-token',
+  retry: {
+    maxRetries: 3,     // default: 0 (disabled)
+    maxDelayMs: 30000, // ceiling applied to the Retry-After delay, default: 30000
+  },
+});
 ```
 
 ---
@@ -285,17 +349,53 @@ const diff       = await bb.project('PROJ').repo('my-repo').commit('abc123').dif
 
 ## Authentication
 
-The client uses **HTTP Basic Authentication** with a Personal Access Token (PAT).
-Generate one in Bitbucket under **Profile → Manage account → Personal access tokens**.
+Two schemes are supported via the `authType` option:
+
+### Basic (default)
+
+**HTTP Basic Authentication** with a username and a Personal Access Token (PAT) or password.
+Generate a PAT in Bitbucket under **Profile → Manage account → Personal access tokens**.
 
 ```typescript
 const bb = new BitbucketClient({
-  apiUrl:  'https://bitbucket.example.com',
-  apiPath: 'rest/api/latest',
-  user:    'your-username',
-  token:   'your-personal-access-token',
+  apiUrl:   'https://bitbucket.example.com',
+  apiPath:  'rest/api/latest',
+  user:     'your-username',
+  token:    'your-personal-access-token',
+  // authType: 'basic', // default, can be omitted
 });
 ```
+
+`user` is required when `authType` is `'basic'`; the constructor throws a `TypeError` if it's missing.
+
+### Bearer
+
+HTTP access tokens are sent as `Authorization: Bearer <token>` and don't require a username:
+
+```typescript
+const bb = new BitbucketClient({
+  apiUrl:   'https://bitbucket.example.com',
+  apiPath:  'rest/api/latest',
+  token:    'your-http-access-token',
+  authType: 'bearer',
+});
+```
+
+---
+
+## Migration notes
+
+Endpoint migrations from earlier versions that changed observable behaviour:
+
+| Change | Before | Now |
+| --- | --- | --- |
+| `pullRequest(id).tasks()` | Read from the legacy `/tasks` endpoint | Reads from `/blocker-comments` (the legacy endpoint was removed in Bitbucket 8.0); the returned shape reflects a blocker comment, not a task |
+| `commit(id).diff()` / `pullRequest(id).diff()` path parameter | `srcPath` selected the file | `path` selects the file; `srcPath` is now only used to diff against a *different* source path (e.g. after a rename) |
+| Personal repositories | Accessed via an undocumented `/users/{slug}/repos` shape | Accessed via the documented personal-project convention `/projects/~{slug}/repos[/...]` |
+| Whitespace-insensitive diffs | — | `diff({ whitespace: 'ignore-all' })` is now a supported param |
+| `currentUser()` | — | Issues two requests: resolves the username from the `X-AUSERNAME` header, then looks it up via `GET /users?filter={name}` (no official "whoami" endpoint exists) |
+| `pullRequest(id).reports()` | — | Issues two requests: resolves the PR's latest source commit, then calls the Code Insights API for that commit (the PR-level `/reports` endpoint is UI-internal) |
+| `pullRequest(id).buildSummaries()` | — | Issues two requests: fetches the PR's commits, then posts their IDs to the build-status stats API (the PR-level `/build-summaries` endpoint is UI-internal) |
 
 ---
 
@@ -307,8 +407,10 @@ All domain types are exported:
 import type {
   // Core
   PagedResponse, PaginationParams,
-  BitbucketApiError,
+  BitbucketApiError, BitbucketErrorDetail,
   RequestEvent, BitbucketClientEvents,
+  BitbucketClientOptions, RetryOptions,
+  AuthType,
   // Projects
   BitbucketProject, ProjectsParams,
   // Repositories

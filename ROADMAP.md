@@ -33,11 +33,11 @@ Prerequisites for most pending write operations.
 | --- | --- | --- |
 | Mark unofficial endpoints with `@remarks` in TSDoc | Done for `size()`; keep the policy for any future unofficial endpoint | ✅ |
 | Document methods that issue more than one request | `currentUser()`, `pullRequest().reports()`, `pullRequest().buildSummaries()` document it in TSDoc | ✅ |
-| README: API version coverage | State that the client targets Bitbucket Data Center REST API v10.3 (`/rest/api/latest`) | ⬜ |
-| README: supported authentication | Basic (user + token) today; Bearer once implemented | ⬜ |
-| README: error handling behaviour | `BitbucketApiError` semantics, and error-body parsing once implemented | ⬜ |
-| README: pagination guide | `PagedResponse` fields (`isLastPage`, `nextPageStart`) and manual paging example | ⬜ |
-| Release notes for the endpoint migration | Breaking changes: `tasks()` shape (blocker comments), `diff()` `srcPath`→`path` semantics, personal-repo URLs (`/projects/~slug/…`), `whitespace: 'ignore-all'`, `currentUser()`/`reports()`/`buildSummaries()` now issue two requests | ⬜ |
+| README: API version coverage | States the client targets Bitbucket Data Center REST API v10.3 (`/rest/api/latest`), links to `ROADMAP.md` | ✅ |
+| README: supported authentication | Basic (default) and Bearer (`authType: 'bearer'`), documented with examples | ✅ |
+| README: error handling behaviour | `BitbucketApiError` semantics, `errors` array from error-body parsing, and rate-limit `retry` option | ✅ |
+| README: pagination guide | `PagedResponse` fields, manual paging example, and the `paginate()` auto-pagination helper | ✅ |
+| Release notes for the endpoint migration | Documented as a "Migration notes" table in the README: `tasks()` shape (blocker comments), `diff()` `srcPath`→`path` semantics, personal-repo URLs (`/projects/~slug/…`), `whitespace: 'ignore-all'`, `currentUser()`/`reports()`/`buildSummaries()` now issue two requests | ✅ |
 
 ---
 
