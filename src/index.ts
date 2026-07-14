@@ -63,7 +63,12 @@ export type {
   ReportResult,
   ReportsParams,
 } from './domain/Report';
-export type { BitbucketRepository, ReposParams, SearchReposParams } from './domain/Repository';
+export type {
+  BitbucketRepository,
+  GlobalReposParams,
+  ReposParams,
+  SearchReposParams,
+} from './domain/Repository';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
 export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type {

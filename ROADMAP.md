@@ -17,7 +17,7 @@ Unless stated otherwise, endpoint paths below are relative to `/rest/api/latest`
 Prerequisites for most pending write operations.
 
 | Task | Notes | Status |
-|------|-------|--------|
+| --- | --- | --- |
 | `DELETE` support in the HTTP layer | `requestPost` only accepts `POST`/`PUT` | ⬜ |
 | Handle `204 No Content` / `202 Accepted` responses | `request()` always calls `response.json()`, which throws on empty bodies | ⬜ |
 | Parse Bitbucket error bodies | `{ errors: [{ context, message, exceptionName }] }` should be surfaced on `BitbucketApiError` | ⬜ |
@@ -33,7 +33,7 @@ Prerequisites for most pending write operations.
 Endpoints kept deliberately even though they are not part of the official REST documentation. They are marked with `@remarks` in the TSDoc.
 
 | Method | Endpoint | Reason |
-|--------|----------|--------|
+| --- | --- | --- |
 | `RepositoryResource.size()` | `GET /projects/{key}/repos/{slug}/sizes` | Well-known UI endpoint; no official equivalent exists |
 
 All other previously unofficial endpoints were migrated to documented ones in v1.14 (see `tasks()`, `issues()`, `reports()`, `buildSummaries()`, `sshKeys()`, `repos()` on users, and `currentUser()`).
@@ -43,11 +43,12 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 ## BitbucketClient (entry point)
 
 | Method | Endpoint | Status |
-|--------|----------|--------|
+| --- | --- | --- |
 | `projects(params?)` | `GET /projects` | ✅ |
 | `project(key)` | — chainable | ✅ |
 | `createProject(data)` | `POST /projects` | ⬜ |
-| `search(params?)` | `GET /repos` | ✅ |
+| `repos(params?)` | `GET /repos` — documented params 1:1 (`name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `archived`) | ✅ |
+| `search(params?)` | `GET /repos` — legacy variant that prefixes `%` to `name` (contains-match hack) | ✅ |
 | `users(params?)` | `GET /users` | ✅ |
 | `user(slug)` | — chainable | ✅ |
 | `currentUser()` | `X-AUSERNAME` header + `GET /users?filter={name}` (no official whoami endpoint exists) | ✅ |
@@ -61,7 +62,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 ## ProjectResource
 
 | Method | Endpoint | Status |
-|--------|----------|--------|
+| --- | --- | --- |
 | `get()` | `GET /projects/{key}` | ✅ |
 | `update(data)` | `PUT /projects/{key}` | ⬜ |
 | `delete()` | `DELETE /projects/{key}` | ⬜ |
@@ -96,7 +97,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 ## RepositoryResource
 
 | Method | Endpoint | Status |
-|--------|----------|--------|
+| --- | --- | --- |
 | `get()` | `GET /projects/{key}/repos/{slug}` | ✅ |
 | `update(data)` | `PUT /projects/{key}/repos/{slug}` | ⬜ |
 | `delete()` | `DELETE /projects/{key}/repos/{slug}` | ⬜ |
@@ -149,7 +150,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 ## PullRequestResource
 
 | Method | Endpoint | Status |
-|--------|----------|--------|
+| --- | --- | --- |
 | `get()` | `GET …/pull-requests/{id}` | ✅ |
 | `update(data)` | `PUT …/pull-requests/{id}` | ⬜ |
 | `delete()` | `DELETE …/pull-requests/{id}` | ⬜ |
@@ -192,7 +193,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 ## CommitResource
 
 | Method | Endpoint | Status |
-|--------|----------|--------|
+| --- | --- | --- |
 | `get()` | `GET …/commits/{id}` | ✅ |
 | `changes(params?)` | `GET …/commits/{id}/changes` | ✅ |
 | `diff(params?)` | `GET …/commits/{id}/diff/{path}` (`path` optional) | ✅ |
@@ -216,7 +217,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 ## UserResource
 
 | Method | Endpoint | Status |
-|--------|----------|--------|
+| --- | --- | --- |
 | `get()` | `GET /users/{slug}` | ✅ |
 | `repos(params?)` | `GET /projects/~{slug}/repos` (personal project; `/users/{slug}/repos` is undocumented) | ✅ |
 | `repo(slug)` | — chainable via `/projects/~{slug}/repos/{repoSlug}` | ✅ |
@@ -235,7 +236,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 Whole API groups deliberately not planned for this client (admin/ops-oriented; open an issue if you need one of them):
 
 | API group | Ops | Notes |
-|-----------|-----|-------|
+| --- | --- | --- |
 | System Maintenance | 81 | Logging, rate-limit admin config, cluster, ... |
 | Authentication (admin) | ~50 | IdP/SSO config, 2SV enrollment, CAPTCHA. Personal/project/repo access tokens and user SSH/GPG keys **are** in scope (see UserResource) |
 | Permission Management (global admin) | 39 | `admin/users`, `admin/groups`, global permissions. Project/repo-level permissions **are** in scope |

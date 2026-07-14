@@ -37,7 +37,42 @@ export interface ReposParams extends PaginationParams {
 /**
  * Query parameters accepted by `GET /rest/api/latest/repos` (global repository search).
  *
- * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v819/api-group-repository/#api-api-latest-repos-get}
+ * All filters are optional and sent verbatim to the API.
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-repository/#api-api-latest-repos-get}
+ */
+export interface GlobalReposParams extends PaginationParams {
+  /** Filter by repository name (case-insensitive, partial match) */
+  name?: string;
+  /** Filter by project key (case-insensitive match on the project key) */
+  projectkey?: string;
+  /**
+   * Filter by project name (case-insensitive, **partial** match on the project
+   * name — not its key). Projects with similar names can match more than
+   * expected; prefer {@link GlobalReposParams.projectkey} or validate
+   * `project.key` on each returned repository before processing.
+   */
+  projectname?: string;
+  /**
+   * Filter by the permission the authenticated user has on the repository
+   * (e.g. `'REPO_READ'`, `'REPO_WRITE'`, `'REPO_ADMIN'`). When omitted, an
+   * implicit 'read' permission (lower than `REPO_READ`) is assumed.
+   */
+  permission?: string;
+  /** Filter by visibility: `'public'` or `'private'` */
+  visibility?: 'public' | 'private';
+  /** Filter by repository state */
+  state?: 'AVAILABLE' | 'INITIALISING' | 'INITIALISATION_FAILED';
+  /** Filter by archived status (default: `'ACTIVE'`) */
+  archived?: 'ACTIVE' | 'ARCHIVED' | 'ALL';
+}
+
+/**
+ * Query parameters accepted by {@link BitbucketClient.search}, which applies a
+ * `%` contains-match prefix to `name` before calling `GET /rest/api/latest/repos`.
+ *
+ * For a 1:1 mapping of the documented endpoint parameters use
+ * {@link GlobalReposParams} with `BitbucketClient.repos()` instead.
  */
 export interface SearchReposParams extends PaginationParams {
   /**

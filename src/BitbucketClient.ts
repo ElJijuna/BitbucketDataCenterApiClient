@@ -1,6 +1,10 @@
 import type { PagedResponse } from './domain/Pagination';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
-import type { BitbucketRepository, SearchReposParams } from './domain/Repository';
+import type {
+  BitbucketRepository,
+  GlobalReposParams,
+  SearchReposParams,
+} from './domain/Repository';
 import type { BitbucketUser, UsersParams } from './domain/User';
 import { BitbucketApiError } from './errors/BitbucketApiError';
 import {
@@ -469,12 +473,41 @@ export class BitbucketClient {
   }
 
   /**
+   * Fetches repositories across all projects, mapping the documented
+   * `GET /rest/api/latest/repos` parameters 1:1 (no transformation is applied).
+   *
+   * The response is paginated (`isLastPage`, `nextPageStart`, `values[]`) and
+   * every repository embeds its `project`, so results spanning several projects
+   * can be filtered or grouped client-side by `project.key`.
+   *
+   * Note that `projectname` matches the project *name* partially and
+   * case-insensitively (not its key); when syncing across projects prefer
+   * `projectkey` or validate `project.key` on each result.
+   *
+   * @param params - Optional filters: `name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `archived`, `limit`, `start`
+   * @returns A paged response of repositories
+   *
+   * @example
+   * ```typescript
+   * const page = await bb.repos({ name: 'orchestrator', permission: 'REPO_READ', limit: 100 });
+   * const byProject = Object.groupBy(page.values, (repo) => repo.project.key);
+   * ```
+   */
+  async repos(params?: GlobalReposParams): Promise<PagedResponse<BitbucketRepository>> {
+    return this.request<PagedResponse<BitbucketRepository>>(
+      '/repos',
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
    * Searches for repositories across all projects.
    *
    * `GET /rest/api/latest/repos`
    *
    * The `name` parameter is automatically prefixed with `%` to perform a
-   * contains-style match rather than a prefix match.
+   * contains-style match rather than a prefix match. For a 1:1 mapping of the
+   * documented endpoint parameters use {@link BitbucketClient.repos} instead.
    *
    * @param params - Optional filters: `name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `limit`, `start`
    * @returns A paged response of repositories

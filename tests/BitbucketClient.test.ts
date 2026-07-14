@@ -180,6 +180,40 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('repos()', () => {
+    it('calls GET /repos', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.repos();
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/repos`, expect.any(Object));
+    });
+
+    it('returns the paged response with repositories', async () => {
+      mockOk(pagedOf(mockRepo));
+      expect(await client.repos()).toEqual(pagedOf(mockRepo));
+    });
+
+    it('passes filters verbatim as query params (no % prefix on name)', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.repos({ name: 'orchestrator', permission: 'REPO_READ', limit: 100 });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/repos?name=orchestrator&permission=REPO_READ&limit=100`);
+    });
+
+    it('supports projectkey and archived filters', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.repos({ projectkey: 'PROJ', archived: 'ALL' });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/repos?projectkey=PROJ&archived=ALL`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.repos()).rejects.toThrow('Bitbucket API error: 401 Unauthorized');
+    });
+  });
+
   describe('project(key)', () => {
     it('resolves to project info when awaited', async () => {
       mockOk(mockProject);
