@@ -17,10 +17,19 @@ import type {
 } from '../domain/PullRequest';
 import type {
   ActivitiesParams,
+  AddPullRequestCommentData,
+  ApplySuggestionData,
+  ApplySuggestionResult,
   BitbucketPullRequestActivity,
   BitbucketPullRequestComment,
+  UpdatePullRequestCommentData,
 } from '../domain/PullRequestActivity';
-import type { BitbucketPullRequestTask, TasksParams } from '../domain/PullRequestTask';
+import type {
+  BitbucketPullRequestTask,
+  CreateTaskData,
+  TasksParams,
+  UpdateTaskData,
+} from '../domain/PullRequestTask';
 import type { BitbucketReport, ReportsParams } from '../domain/Report';
 import type { RequestBodyFn, RequestFn } from './ProjectResource';
 

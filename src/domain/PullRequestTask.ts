@@ -50,6 +50,31 @@ export interface BitbucketPullRequestTask {
 }
 
 /**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments`.
+ */
+export interface CreateTaskData {
+  text: string;
+  /** Anchor the task to a specific file/line, mirroring a regular comment anchor. */
+  anchor?: {
+    line?: number;
+    lineType?: 'CONTEXT' | 'ADDED' | 'REMOVED';
+    fileType?: 'FROM' | 'TO';
+    path?: string;
+    srcPath?: string;
+  };
+}
+
+/**
+ * Payload for
+ * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments/{commentId}`.
+ */
+export interface UpdateTaskData {
+  version: number;
+  text?: string;
+  state?: PullRequestTaskState;
+}
+
+/**
  * Query parameters accepted by
  * `GET /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/blocker-comments`.
  *

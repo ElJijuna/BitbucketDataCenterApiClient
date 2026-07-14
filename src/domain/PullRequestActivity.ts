@@ -30,6 +30,54 @@ export interface AddCommitCommentData {
   parent?: { id: number };
 }
 
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments`.
+ */
+export interface AddPullRequestCommentData {
+  text: string;
+  /** Anchor the comment to a specific file/line of the pull request diff. */
+  anchor?: {
+    line?: number;
+    lineType?: 'CONTEXT' | 'ADDED' | 'REMOVED';
+    fileType?: 'FROM' | 'TO';
+    path?: string;
+    srcPath?: string;
+    diffType?: 'COMMIT' | 'EFFECTIVE' | 'RANGE';
+    fromHash?: string;
+    toHash?: string;
+  };
+  /** Parent comment id for reply threads. */
+  parent?: { id: number };
+}
+
+/**
+ * Payload for
+ * `PUT /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}`.
+ */
+export interface UpdatePullRequestCommentData {
+  version: number;
+  text: string;
+}
+
+/**
+ * Payload for
+ * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}/apply-suggestion`.
+ */
+export interface ApplySuggestionData {
+  /** Index of the suggested change to apply, when the comment contains multiple suggestion blocks. */
+  suggestionIndex: number;
+  /** Commit summary for the applied suggestion. */
+  summary?: string;
+  /** Commit description for the applied suggestion. */
+  description?: string;
+}
+
+/** The commit created by applying a suggested change from a comment. */
+export interface ApplySuggestionResult {
+  id: string;
+  displayId: string;
+}
+
 /** A comment posted on a pull request. */
 export interface BitbucketPullRequestComment {
   id: number;
