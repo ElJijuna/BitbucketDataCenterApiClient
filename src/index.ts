@@ -20,6 +20,11 @@ export type { BitbucketClientOptions, RetryOptions } from './domain/ClientOption
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { CommitMessageSuggestion } from './domain/CommitMessageSuggestion';
 export type {
+  DashboardPullRequestsParams,
+  InboxPullRequestsCount,
+  InboxPullRequestsParams,
+} from './domain/Dashboard';
+export type {
   BitbucketDiff,
   BitbucketDiffEntry,
   BitbucketDiffHunk,

@@ -214,6 +214,100 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('dashboardPullRequests()', () => {
+    it('calls GET /dashboard/pull-requests', async () => {
+      mockOk(pagedOf(mockPullRequest));
+      await client.dashboardPullRequests();
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/dashboard/pull-requests`, expect.any(Object));
+    });
+
+    it('returns the paged response with pull requests', async () => {
+      mockOk(pagedOf(mockPullRequest));
+      expect(await client.dashboardPullRequests()).toEqual(pagedOf(mockPullRequest));
+    });
+
+    it('appends state, role, participantStatus and closedSince as query params', async () => {
+      mockOk(pagedOf(mockPullRequest));
+      await client.dashboardPullRequests({
+        state: 'OPEN',
+        role: 'REVIEWER',
+        participantStatus: 'UNAPPROVED',
+        closedSince: 1700000000,
+      });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(
+        `${BASE}/dashboard/pull-requests?state=OPEN&role=REVIEWER&participantStatus=UNAPPROVED&closedSince=1700000000`,
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.dashboardPullRequests()).rejects.toThrow(
+        'Bitbucket API error: 401 Unauthorized',
+      );
+    });
+  });
+
+  describe('inboxPullRequests()', () => {
+    it('calls GET /inbox/pull-requests', async () => {
+      mockOk(pagedOf(mockPullRequest));
+      await client.inboxPullRequests();
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/inbox/pull-requests`, expect.any(Object));
+    });
+
+    it('returns the paged response with pull requests', async () => {
+      mockOk(pagedOf(mockPullRequest));
+      expect(await client.inboxPullRequests()).toEqual(pagedOf(mockPullRequest));
+    });
+
+    it('appends role and filterText as query params', async () => {
+      mockOk(pagedOf(mockPullRequest));
+      await client.inboxPullRequests({ role: 'AUTHOR', filterText: 'feature' });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/inbox/pull-requests?role=AUTHOR&filterText=feature`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.inboxPullRequests()).rejects.toThrow(
+        'Bitbucket API error: 401 Unauthorized',
+      );
+    });
+  });
+
+  describe('inboxPullRequestsCount()', () => {
+    it('calls GET /inbox/pull-requests/count', async () => {
+      mockOk({ count: 3 });
+      await client.inboxPullRequestsCount();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/inbox/pull-requests/count`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the count', async () => {
+      mockOk({ count: 3 });
+      expect(await client.inboxPullRequestsCount()).toEqual({ count: 3 });
+    });
+
+    it('appends role and filterText as query params', async () => {
+      mockOk({ count: 1 });
+      await client.inboxPullRequestsCount({ role: 'REVIEWER' });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/inbox/pull-requests/count?role=REVIEWER`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.inboxPullRequestsCount()).rejects.toThrow(
+        'Bitbucket API error: 401 Unauthorized',
+      );
+    });
+  });
+
   describe('project(key)', () => {
     it('resolves to project info when awaited', async () => {
       mockOk(mockProject);

@@ -65,7 +65,9 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 | `users(params?)` | `GET /users` | ✅ |
 | `user(slug)` | — chainable | ✅ |
 | `currentUser()` | `X-AUSERNAME` header + `GET /users?filter={name}` (no official whoami endpoint exists) | ✅ |
-| `dashboardPullRequests(params?)` | `GET /dashboard/pull-requests` | ⬜ |
+| `dashboardPullRequests(params?)` | `GET /dashboard/pull-requests` — PRs where the authenticated user participates (author, reviewer, etc.) across all repos | ✅ |
+| `inboxPullRequests(params?)` | `GET /inbox/pull-requests` — PRs requiring the authenticated user's attention | ✅ |
+| `inboxPullRequestsCount(params?)` | `GET /inbox/pull-requests/count` | ✅ |
 | `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` | ⬜ |
 | `markupPreview(markdown)` | `POST /markup/preview` | ⬜ |
 | `groups(params?)` | `GET /groups` | ⬜ |

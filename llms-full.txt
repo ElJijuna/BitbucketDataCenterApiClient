@@ -70,6 +70,9 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `users(params?)` | `GET /users` |
 | `user(slug)` | chainable → `UserResource` |
 | `currentUser()` | `X-AUSERNAME` response header + `GET /users?filter={name}` (two requests; no official whoami endpoint) |
+| `dashboardPullRequests(params?)` | `GET /dashboard/pull-requests` — PRs where the authenticated user participates (author, reviewer, etc.) across all repos |
+| `inboxPullRequests(params?)` | `GET /inbox/pull-requests` — PRs requiring the authenticated user's attention |
+| `inboxPullRequestsCount(params?)` | `GET /inbox/pull-requests/count` |
 
 ### ProjectResource — `bb.project(key)`
 
@@ -178,7 +181,7 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 
 ## Not yet implemented
 
-Most `create*`/`update*`/`delete*` operations on `ProjectResource`/`RepositoryResource` (webhooks CRUD, branch/tag creation & deletion, permissions CRUD, project/repo settings), all `CommitResource` write operations besides comments/build-status, `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and dashboard-level `BitbucketClient` methods are still pending. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
+Most `create*`/`update*`/`delete*` operations on `ProjectResource`/`RepositoryResource` (webhooks CRUD, branch/tag creation & deletion, permissions CRUD, project/repo settings), all `CommitResource` write operations besides comments/build-status, `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()` are still pending. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
 
 ## Pagination
 

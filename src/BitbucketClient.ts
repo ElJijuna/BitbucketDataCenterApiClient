@@ -1,7 +1,13 @@
 import type { BitbucketClientEvents } from './domain/ClientEvents';
 import type { BitbucketClientOptions } from './domain/ClientOptions';
+import type {
+  DashboardPullRequestsParams,
+  InboxPullRequestsCount,
+  InboxPullRequestsParams,
+} from './domain/Dashboard';
 import type { PagedResponse } from './domain/Pagination';
 import type { BitbucketProject, ProjectsParams } from './domain/Project';
+import type { BitbucketPullRequest } from './domain/PullRequest';
 import type {
   BitbucketRepository,
   GlobalReposParams,
@@ -537,6 +543,64 @@ export class BitbucketClient {
     }
 
     return this.request<PagedResponse<BitbucketRepository>>('/repos', query);
+  }
+
+  /**
+   * Fetches pull requests across all repositories where the authenticated user
+   * participates (as author, reviewer, etc.).
+   *
+   * `GET /rest/api/latest/dashboard/pull-requests`
+   *
+   * @param params - Optional filters: `state`, `role`, `participantStatus`, `closedSince`, `limit`, `start`
+   * @returns A paged response of pull requests
+   *
+   * @example
+   * ```typescript
+   * const mine = await bb.dashboardPullRequests({ role: 'REVIEWER', state: 'OPEN' });
+   * ```
+   */
+  async dashboardPullRequests(
+    params?: DashboardPullRequestsParams,
+  ): Promise<PagedResponse<BitbucketPullRequest>> {
+    return this.request<PagedResponse<BitbucketPullRequest>>(
+      '/dashboard/pull-requests',
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches pull requests that require the authenticated user's attention
+   * (e.g. awaiting their review, or theirs and blocked/needing changes).
+   *
+   * `GET /rest/api/latest/inbox/pull-requests`
+   *
+   * @param params - Optional filters: `role`, `filterText`, `limit`, `start`
+   * @returns A paged response of pull requests
+   */
+  async inboxPullRequests(
+    params?: InboxPullRequestsParams,
+  ): Promise<PagedResponse<BitbucketPullRequest>> {
+    return this.request<PagedResponse<BitbucketPullRequest>>(
+      '/inbox/pull-requests',
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches the count of pull requests in the authenticated user's inbox.
+   *
+   * `GET /rest/api/latest/inbox/pull-requests/count`
+   *
+   * @param params - Optional filters: `role`, `filterText`
+   * @returns The inbox pull request count
+   */
+  async inboxPullRequestsCount(
+    params?: Pick<InboxPullRequestsParams, 'role' | 'filterText'>,
+  ): Promise<InboxPullRequestsCount> {
+    return this.request<InboxPullRequestsCount>(
+      '/inbox/pull-requests/count',
+      params as Record<string, string | number | boolean>,
+    );
   }
 }
 

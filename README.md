@@ -166,6 +166,21 @@ const summaries  = await bb.project('PROJ').repo('my-repo').pullRequest(42).buil
 const issues     = await bb.project('PROJ').repo('my-repo').pullRequest(42).issues();
 ```
 
+### Dashboard & inbox
+
+```typescript
+// Pull requests where the authenticated user participates, across all repos
+const dashboard = await bb.dashboardPullRequests();
+const dashboard = await bb.dashboardPullRequests({ role: 'REVIEWER', state: 'OPEN' });
+
+// Pull requests requiring the authenticated user's attention
+const inbox = await bb.inboxPullRequests();
+const inbox = await bb.inboxPullRequests({ role: 'REVIEWER', filterText: 'feature' });
+
+// Just the count (e.g. for a notification badge)
+const { count } = await bb.inboxPullRequestsCount();
+```
+
 ### Repository search
 
 ```typescript
@@ -411,6 +426,7 @@ import type {
   RequestEvent, BitbucketClientEvents,
   BitbucketClientOptions, RetryOptions,
   AuthType,
+  DashboardPullRequestsParams, InboxPullRequestsParams, InboxPullRequestsCount,
   // Projects
   BitbucketProject, ProjectsParams,
   // Repositories
