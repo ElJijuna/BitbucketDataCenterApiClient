@@ -179,6 +179,45 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `sshKeys(params?)` | `GET /rest/ssh/latest/keys?user={slug}` |
 | `settings()` | `GET /users/{slug}/settings` |
 
+## Webhook event parsing
+
+`parseWebhookEvent(headers, body)` — a receiving-side utility (not a REST call) that parses an incoming Bitbucket webhook delivery into a typed, discriminated `{ event, payload }` pair. It reads the `X-Event-Key` header Bitbucket sends with every delivery (case-insensitive; falls back to the body's `eventKey` field, which is absent only on `diagnostics:ping`), then narrows `payload` to the matching type via a TS discriminated union — `switch (event) { case 'pr:opened': payload.pullRequest... }` type-checks correctly. `headers` accepts a Fetch `Headers`, a plain object (array values supported for repeated headers), or anything with `get(name)`.
+
+No signature verification or runtime schema validation is performed — `payload` is trusted as-is, same as this client trusts JSON REST responses elsewhere. Also exported: `getWebhookEventKey(headers)` (just the header extraction), and `isWebhookEventKey(key)` (a type guard, useful to detect event keys Bitbucket adds in future versions that aren't in the table below — `parseWebhookEvent` still returns those at runtime with the raw string/body, just without static narrowing).
+
+```typescript
+import { parseWebhookEvent } from 'bitbucket-datacenter-api-client';
+
+app.post('/webhooks/bitbucket', (req, res) => {
+  const { event, payload } = parseWebhookEvent(req.headers, req.body);
+  if (event === 'pr:opened') console.log(payload.pullRequest.title);
+  res.sendStatus(204);
+});
+```
+
+| Event key | Payload type |
+| --- | --- |
+| `diagnostics:ping` | `DiagnosticsPingPayload` — `{ test: true }`, no actor |
+| `repo:refs_changed` | `RepoRefsChangedPayload` — `{ actor, repository, changes: WebhookRefChange[] }` |
+| `repo:modified` | `RepoModifiedPayload` — `{ actor, old, new }` (both `BitbucketRepository`) |
+| `repo:forked` | `RepoForkedPayload` — `{ actor, repository }` |
+| `repo:comment:added` | `RepoCommentAddedPayload` — `{ actor, repository, commit, comment, commentParentId? }` |
+| `repo:comment:edited` | `RepoCommentEditedPayload` — adds `previousComment` |
+| `repo:comment:deleted` | `RepoCommentDeletedPayload` |
+| `mirror:repo_synchronized` | `MirrorRepoSynchronizedPayload` — `{ repository }`, no actor |
+| `pr:opened` | `PrOpenedPayload` — `{ actor, pullRequest }` |
+| `pr:from_ref_updated` | `PrFromRefUpdatedPayload` — adds `previousFromHash` |
+| `pr:modified` | `PrModifiedPayload` — adds `previousTitle?`, `previousDescription?`, `previousTarget?` |
+| `pr:reviewer:approved` | `PrReviewerApprovedPayload` — `{ actor, pullRequest, participant, previousStatus }` |
+| `pr:reviewer:unapproved` | `PrReviewerUnapprovedPayload` |
+| `pr:reviewer:needs_work` | `PrReviewerNeedsWorkPayload` |
+| `pr:merged` | `PrMergedPayload` — `{ actor, pullRequest }` |
+| `pr:declined` | `PrDeclinedPayload` |
+| `pr:deleted` | `PrDeletedPayload` |
+| `pr:comment:added` | `PrCommentAddedPayload` — `{ actor, pullRequest, comment, commentParentId? }` |
+| `pr:comment:edited` | `PrCommentEditedPayload` — adds `previousComment` |
+| `pr:comment:deleted` | `PrCommentDeletedPayload` |
+
 ## Not yet implemented
 
 Most `create*`/`update*`/`delete*` operations on `ProjectResource`/`RepositoryResource` (webhooks CRUD, branch/tag creation & deletion, permissions CRUD, project/repo settings), all `CommitResource` write operations besides comments/build-status, `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()` are still pending. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
@@ -237,4 +276,4 @@ bb.on('request', (event) => {
 
 ## Key exported types
 
-`BitbucketClient`, `BitbucketClientOptions`, `RetryOptions`, `RequestEvent`, `BitbucketClientEvents`, `AuthType`, `Security`, `BitbucketApiError`, `BitbucketErrorDetail`, `paginate`, `PagedResponse`, `PaginationParams`, `ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, `UserResource`, plus one domain type module per resource (`BitbucketProject`, `BitbucketRepository`, `BitbucketPullRequest`, `BitbucketCommit`, `BitbucketUser`, `BitbucketWebhook`, `BitbucketBranch`, `BitbucketTag`, `BitbucketDiff`, `BitbucketChange`, etc.) — see README.md's "TypeScript types" section for the full import list.
+`BitbucketClient`, `BitbucketClientOptions`, `RetryOptions`, `RequestEvent`, `BitbucketClientEvents`, `AuthType`, `Security`, `BitbucketApiError`, `BitbucketErrorDetail`, `paginate`, `PagedResponse`, `PaginationParams`, `ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, `UserResource`, `parseWebhookEvent`, `getWebhookEventKey`, `isWebhookEventKey`, `BitbucketWebhookEvent`, `WebhookEventKey`, plus one domain type module per resource (`BitbucketProject`, `BitbucketRepository`, `BitbucketPullRequest`, `BitbucketCommit`, `BitbucketUser`, `BitbucketWebhook`, `BitbucketBranch`, `BitbucketTag`, `BitbucketDiff`, `BitbucketChange`, etc.) — see README.md's "TypeScript types" section for the full import list.

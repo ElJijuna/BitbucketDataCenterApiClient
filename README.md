@@ -344,6 +344,40 @@ const bb = new BitbucketClient({
 
 ---
 
+## Webhooks
+
+`parseWebhookEvent()` parses an incoming webhook delivery into a typed, discriminated `{ event, payload }` pair. It detects the event from the `X-Event-Key` header Bitbucket sends with every delivery (falling back to the body's `eventKey` field), so there's no manual `if/else` chain over the payload shape:
+
+```typescript
+import { parseWebhookEvent } from 'bitbucket-datacenter-api-client';
+
+app.post('/webhooks/bitbucket', (req, res) => {
+  const { event, payload } = parseWebhookEvent(req.headers, req.body);
+
+  switch (event) {
+    case 'pr:opened':
+      console.log('New PR:', payload.pullRequest.title);
+      break;
+    case 'repo:refs_changed':
+      console.log('Pushed refs:', payload.changes.map((c) => c.ref.displayId));
+      break;
+    case 'pr:merged':
+      console.log('Merged:', payload.pullRequest.id);
+      break;
+    default:
+      console.log('Unhandled event:', event);
+  }
+
+  res.sendStatus(204);
+});
+```
+
+`headers` accepts a Fetch `Headers` instance, a plain object (Express/Node-style, case-insensitive, array values for repeated headers supported), or anything exposing `get(name)`. All 20 documented event keys are typed — `diagnostics:ping`, `repo:refs_changed`, `repo:modified`, `repo:forked`, `repo:comment:added/edited/deleted`, `mirror:repo_synchronized`, `pr:opened`, `pr:from_ref_updated`, `pr:modified`, `pr:reviewer:approved/unapproved/needs_work`, `pr:merged`, `pr:declined`, `pr:deleted`, `pr:comment:added/edited/deleted` — see [ROADMAP.md](ROADMAP.md#webhook-event-parsing) for the full event → payload type table.
+
+`parseWebhookEvent()` performs no signature verification and no runtime schema validation — the payload is trusted as-is, the same way this client trusts JSON REST responses. Verify your webhook's shared secret yourself if you configured one. A future Bitbucket event key not yet known to this client still comes through at runtime (raw `event` string, raw `payload`); use the exported `isWebhookEventKey()` guard if you need to detect that case.
+
+---
+
 ## Chainable resource pattern
 
 Every resource that maps to a single entity implements `PromiseLike`, so you can **await it directly** or **chain methods** to access sub-resources:
@@ -455,6 +489,17 @@ import type {
   // Webhooks
   BitbucketWebhook, BitbucketWebhookStatistics, BitbucketWebhookDelivery,
   WebhooksParams, WebhookEvent, WebhookScopeType,
+  // Webhook event parsing
+  BitbucketWebhookEvent, WebhookEventKey, WebhookEventPayloadMap, WebhookActor,
+  PrOpenedPayload, PrMergedPayload, PrDeclinedPayload, PrDeletedPayload,
+  PrFromRefUpdatedPayload, PrModifiedPayload, PreviousPullRequestTarget,
+  PrReviewerApprovedPayload, PrReviewerUnapprovedPayload, PrReviewerNeedsWorkPayload,
+  WebhookReviewerParticipant,
+  PrCommentAddedPayload, PrCommentEditedPayload, PrCommentDeletedPayload,
+  RepoRefsChangedPayload, WebhookRef, WebhookRefChange,
+  RepoModifiedPayload, RepoForkedPayload,
+  RepoCommentAddedPayload, RepoCommentEditedPayload, RepoCommentDeletedPayload,
+  MirrorRepoSynchronizedPayload, DiagnosticsPingPayload, WebhookHeadersInput,
 } from 'bitbucket-datacenter-api-client';
 ```
 

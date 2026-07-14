@@ -110,6 +110,36 @@ export type {
   WebhookScopeType,
   WebhooksParams,
 } from './domain/Webhook';
+export type {
+  BitbucketWebhookEvent,
+  DiagnosticsPingPayload,
+  MirrorRepoSynchronizedPayload,
+  PrCommentAddedPayload,
+  PrCommentDeletedPayload,
+  PrCommentEditedPayload,
+  PrDeclinedPayload,
+  PrDeletedPayload,
+  PreviousPullRequestTarget,
+  PrFromRefUpdatedPayload,
+  PrMergedPayload,
+  PrModifiedPayload,
+  PrOpenedPayload,
+  PrReviewerApprovedPayload,
+  PrReviewerNeedsWorkPayload,
+  PrReviewerUnapprovedPayload,
+  RepoCommentAddedPayload,
+  RepoCommentDeletedPayload,
+  RepoCommentEditedPayload,
+  RepoForkedPayload,
+  RepoModifiedPayload,
+  RepoRefsChangedPayload,
+  WebhookActor,
+  WebhookEventKey,
+  WebhookEventPayloadMap,
+  WebhookRef,
+  WebhookRefChange,
+  WebhookReviewerParticipant,
+} from './domain/WebhookEvents';
 export type { BitbucketErrorDetail } from './errors/BitbucketApiError';
 export { BitbucketApiError } from './errors/BitbucketApiError';
 export { paginate } from './pagination';
@@ -120,3 +150,9 @@ export { RepositoryResource } from './resources/RepositoryResource';
 export { UserResource } from './resources/UserResource';
 export type { AuthType } from './security/Security';
 export { Security } from './security/Security';
+export {
+  getWebhookEventKey,
+  isWebhookEventKey,
+  parseWebhookEvent,
+  type WebhookHeadersInput,
+} from './webhooks';
