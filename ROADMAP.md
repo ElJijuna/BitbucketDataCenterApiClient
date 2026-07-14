@@ -71,6 +71,7 @@ All other previously unofficial endpoints were migrated to documented ones in v1
 | `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` | ⬜ |
 | `markupPreview(markdown)` | `POST /markup/preview` | ⬜ |
 | `groups(params?)` | `GET /groups` | ⬜ |
+| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — global code/file/commit search (new `Search` API group in v10.3 docs; naming avoids clashing with the existing repo-name `search()`) | ⬜ |
 
 ---
 
