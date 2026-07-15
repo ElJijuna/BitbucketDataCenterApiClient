@@ -1,3 +1,11 @@
+# [1.17.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.16.0...v1.17.0) (2026-07-14)
+
+
+### Features
+
+* add dashboard and inbox pull request methods with corresponding types and tests ([dfec509](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/dfec509d1b51e2420c57f0b560531710b3591e19))
+* implement webhook event parsing with typed payloads and utility functions; add tests for parsing logic ([7c94ef2](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/7c94ef2671bd5d4856bcd05124a78ca462f54e2e))
+
 # [1.15.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.14.0...v1.15.0) (2026-07-14)
 
 
