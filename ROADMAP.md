@@ -251,8 +251,8 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `deleteComment(commentId, version)` | `DELETE …/commits/{id}/comments/{commentId}?version={version}` | ✅ |
 | `buildStatuses(params?)` | `GET /rest/build-status/latest/commits/{id}` | ✅ |
 | `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` | ✅ |
-| `builds(params?)` / `addBuild(data)` / `deleteBuild(key)` | `GET/POST/DELETE …/commits/{id}/builds` (modern replacement for build-status) | ⬜ |
-| `deployments(params?)` / `addDeployment(data)` / `deleteDeployment(...)` | `GET/POST/DELETE …/commits/{id}/deployments` | ⬜ |
+| `getBuild(key)` / `addBuild(data)` / `deleteBuild(key)` | `GET/POST/DELETE …/commits/{id}/builds?key={key}` (modern replacement for build-status; `GET` returns a single build, not a list) | ✅ |
+| `getDeployment(params)` / `addDeployment(data)` / `deleteDeployment(params)` | `GET/POST/DELETE …/commits/{id}/deployments` — `params: { deploymentSequenceNumber, key, environmentKey }` identify a single deployment | ✅ |
 | `insightReports(params?)` | `GET /rest/insights/latest/…/commits/{id}/reports` | ⬜ |
 | `insightReport(key)` / CRUD + annotations | `GET/PUT/DELETE /rest/insights/latest/…/commits/{id}/reports/{key}[/annotations]` | ⬜ |
 | `pullRequests(params?)` | `GET …/commits/{id}/pull-requests` | ✅ |

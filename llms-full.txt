@@ -178,8 +178,14 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `addComment(data)` | `POST …/commits/{id}/comments` |
 | `updateComment(commentId, data)` | `PUT …/commits/{id}/comments/{commentId}` — `data: { version, text }` |
 | `deleteComment(commentId, version)` | `DELETE …/commits/{id}/comments/{commentId}?version={version}` |
-| `buildStatuses(params?)` | `GET /rest/build-status/latest/commits/{id}` |
-| `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` |
+| `buildStatuses(params?)` | `GET /rest/build-status/latest/commits/{id}` (legacy) |
+| `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` (legacy) |
+| `getBuild(key)` | `GET …/commits/{id}/builds?key={key}` — modern replacement for `buildStatuses`; returns a single build, not a list |
+| `addBuild(data)` | `POST …/commits/{id}/builds` — modern replacement for `addBuildStatus` |
+| `deleteBuild(key)` | `DELETE …/commits/{id}/builds?key={key}` |
+| `getDeployment(params)` | `GET …/commits/{id}/deployments` — `params: { deploymentSequenceNumber, key, environmentKey }` identify a single deployment |
+| `addDeployment(data)` | `POST …/commits/{id}/deployments` — creates or updates a deployment |
+| `deleteDeployment(params)` | `DELETE …/commits/{id}/deployments` — same lookup params as `getDeployment` |
 | `pullRequests(params?)` | `GET …/commits/{id}/pull-requests` — pull requests containing this commit |
 | `mergeBase(otherCommitId)` | `GET …/commits/{id}/merge-base/{otherCommitId}` — best common ancestor of the two commits |
 | `watch()` | `POST …/commits/{id}/watch` |
@@ -236,7 +242,7 @@ app.post('/webhooks/bitbucket', (req, res) => {
 
 ## Not yet implemented
 
-`RepositoryResource` now covers its core CRUD (`update`/`delete`/`fork`) and branch/tag writes (`createBranch`/`deleteBranch`/`createTag`/`deleteTag`/`setDefaultBranch`) plus `updateSettings`. Still pending on it: webhooks CRUD, archive download, file listing, compare endpoints, labels, readme/license/contributing, watch, permissions CRUD, branch restrictions, default-reviewer/required-build conditions, auto-decline/auto-merge settings, hooks, default tasks, sync. `CommitResource` now covers comment writes (`updateComment`/`deleteComment`), `pullRequests`, `mergeBase`, and `watch`/`unwatch`, in addition to comments/build-status. Still pending on it: the modern `builds`/`deployments` APIs (replacements for build-status) and insight reports (list + CRUD + annotations). Most `create*`/`update*`/`delete*` operations on `ProjectResource` (webhooks CRUD, permissions CRUD, project settings) are still pending, as are `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()`. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
+`RepositoryResource` now covers its core CRUD (`update`/`delete`/`fork`) and branch/tag writes (`createBranch`/`deleteBranch`/`createTag`/`deleteTag`/`setDefaultBranch`) plus `updateSettings`. Still pending on it: webhooks CRUD, archive download, file listing, compare endpoints, labels, readme/license/contributing, watch, permissions CRUD, branch restrictions, default-reviewer/required-build conditions, auto-decline/auto-merge settings, hooks, default tasks, sync. `CommitResource` now covers comment writes (`updateComment`/`deleteComment`), `pullRequests`, `mergeBase`, `watch`/`unwatch`, and the modern `builds`/`deployments` APIs, in addition to comments/build-status. Still pending on it: insight reports (list + CRUD + annotations). Most `create*`/`update*`/`delete*` operations on `ProjectResource` (webhooks CRUD, permissions CRUD, project settings) are still pending, as are `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()`. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
 
 ## Pagination
 

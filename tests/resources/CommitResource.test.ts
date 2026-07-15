@@ -147,4 +147,88 @@ describe('CommitResource write/read operations', () => {
       expect(init.body).toBeUndefined();
     });
   });
+
+  describe('getBuild() / addBuild() / deleteBuild()', () => {
+    const mockBuild = {
+      key: 'BUILD-1',
+      state: 'SUCCESSFUL' as const,
+      url: 'https://ci.example.com/build/1',
+    };
+
+    it('getBuild() calls GET .../builds with the key as a query param', async () => {
+      mockOk(mockBuild);
+      const result = await commit().getBuild('BUILD-1');
+      const [url] = lastCall();
+
+      expect(url).toBe(`${COMMIT_BASE}/builds?key=BUILD-1`);
+      expect(result).toEqual(mockBuild);
+    });
+
+    it('addBuild() sends POST with the payload', async () => {
+      mockNoContent();
+      await commit().addBuild(mockBuild);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${COMMIT_BASE}/builds`);
+      expect(init.method).toBe('POST');
+      expect(init.body).toBe(JSON.stringify(mockBuild));
+    });
+
+    it('deleteBuild() sends DELETE with the key as a query param', async () => {
+      mockNoContent();
+      await commit().deleteBuild('BUILD-1');
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${COMMIT_BASE}/builds?key=BUILD-1`);
+      expect(init.method).toBe('DELETE');
+      expect(init.body).toBeUndefined();
+    });
+  });
+
+  describe('getDeployment() / addDeployment() / deleteDeployment()', () => {
+    const lookup = { deploymentSequenceNumber: 1, key: 'DEPLOY-1', environmentKey: 'prod' };
+    const mockDeployment = {
+      deploymentSequenceNumber: 1,
+      description: 'Deploy to prod',
+      displayName: 'Deploy #1',
+      environment: { key: 'prod', displayName: 'Production' },
+      key: 'DEPLOY-1',
+      state: 'SUCCESSFUL',
+      url: 'https://ci.example.com/deploy/1',
+    };
+
+    it('getDeployment() calls GET .../deployments with lookup params', async () => {
+      mockOk(mockDeployment);
+      const result = await commit().getDeployment(lookup);
+      const [url] = lastCall();
+
+      expect(url).toBe(
+        `${COMMIT_BASE}/deployments?deploymentSequenceNumber=1&key=DEPLOY-1&environmentKey=prod`,
+      );
+      expect(result).toEqual(mockDeployment);
+    });
+
+    it('addDeployment() sends POST with the payload', async () => {
+      mockOk(mockDeployment);
+      const result = await commit().addDeployment(mockDeployment);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${COMMIT_BASE}/deployments`);
+      expect(init.method).toBe('POST');
+      expect(init.body).toBe(JSON.stringify(mockDeployment));
+      expect(result).toEqual(mockDeployment);
+    });
+
+    it('deleteDeployment() sends DELETE with lookup params as query', async () => {
+      mockNoContent();
+      await commit().deleteDeployment(lookup);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(
+        `${COMMIT_BASE}/deployments?deploymentSequenceNumber=1&key=DEPLOY-1&environmentKey=prod`,
+      );
+      expect(init.method).toBe('DELETE');
+      expect(init.body).toBeUndefined();
+    });
+  });
 });

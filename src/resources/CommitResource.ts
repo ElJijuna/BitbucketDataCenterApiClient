@@ -1,3 +1,4 @@
+import type { AddBuildData, BitbucketBuild } from '../domain/Build';
 import type {
   AddBuildStatusData,
   BitbucketBuildStatus,
@@ -5,6 +6,11 @@ import type {
 } from '../domain/BuildStatus';
 import type { BitbucketChange } from '../domain/Change';
 import type { BitbucketCommit, CommitPullRequestsParams } from '../domain/Commit';
+import type {
+  AddDeploymentData,
+  BitbucketDeployment,
+  DeploymentLookupParams,
+} from '../domain/Deployment';
 import type { BitbucketDiff, CommitChangesParams, DiffParams } from '../domain/Diff';
 import type { BitbucketDiffStatsSummary } from '../domain/DiffStatsSummary';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
@@ -215,6 +221,96 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     return this.requestBody!<BitbucketBuildStatus>(`/commits/${this.commitId}`, data, {
       apiPath: 'rest/build-status/latest',
     });
+  }
+
+  /**
+   * Fetches a single build status for this commit, identified by its build key.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/builds?key={key}`
+   *
+   * This is the modern replacement for {@link CommitResource.buildStatuses}; unlike it,
+   * this endpoint returns a single build rather than a paged list.
+   *
+   * @param key - The build key to look up
+   * @returns The build status matching the given key
+   */
+  async getBuild(key: string): Promise<BitbucketBuild> {
+    return this.request<BitbucketBuild>(`${this.basePath}/builds`, { key });
+  }
+
+  /**
+   * Stores a build status for this commit via the modern builds API.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/builds`
+   *
+   * This is the modern replacement for {@link CommitResource.addBuildStatus}.
+   *
+   * @param data - Build state, key, url and optional metadata
+   */
+  async addBuild(data: AddBuildData): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/builds`, data);
+  }
+
+  /**
+   * Deletes a build status from this commit, identified by its build key.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/builds?key={key}`
+   *
+   * @param key - The build key to delete
+   */
+  async deleteBuild(key: string): Promise<void> {
+    const path = `${this.basePath}/builds?${new URLSearchParams({ key })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(path, undefined, { method: 'DELETE' });
+  }
+
+  /**
+   * Fetches a single deployment for this commit, identified by key, environment, and sequence number.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/deployments`
+   *
+   * @param params - `deploymentSequenceNumber`, `key`, and `environmentKey` — together identify one deployment
+   * @returns The matching deployment
+   */
+  async getDeployment(params: DeploymentLookupParams): Promise<BitbucketDeployment> {
+    return this.request<BitbucketDeployment>(
+      `${this.basePath}/deployments`,
+      params as unknown as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Creates or updates a deployment for this commit.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/deployments`
+   *
+   * @param data - Deployment details: `key`, `environment`, `state`, `url`, `displayName`,
+   * `description`, `deploymentSequenceNumber`
+   * @returns The created or updated deployment
+   */
+  async addDeployment(data: AddDeploymentData): Promise<BitbucketDeployment> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketDeployment>(`${this.basePath}/deployments`, data);
+  }
+
+  /**
+   * Deletes a deployment from this commit, identified by key, environment, and sequence number.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/deployments`
+   *
+   * @param params - `deploymentSequenceNumber`, `key`, and `environmentKey` — together identify one deployment
+   */
+  async deleteDeployment(params: DeploymentLookupParams): Promise<void> {
+    const path = `${this.basePath}/deployments?${new URLSearchParams({
+      deploymentSequenceNumber: String(params.deploymentSequenceNumber),
+      key: params.key,
+      environmentKey: params.environmentKey,
+    })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(path, undefined, { method: 'DELETE' });
   }
 
   /**
