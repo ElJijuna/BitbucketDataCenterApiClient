@@ -146,9 +146,9 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | Method | Endpoint | Status |
 | --- | --- | --- |
 | `get()` | `GET /projects/{key}/repos/{slug}` | ✅ |
-| `update(data)` | `PUT /projects/{key}/repos/{slug}` | ⬜ |
-| `delete()` | `DELETE /projects/{key}/repos/{slug}` | ⬜ |
-| `fork(data)` | `POST /projects/{key}/repos/{slug}` | ⬜ |
+| `update(data)` | `PUT /projects/{key}/repos/{slug}` | ✅ |
+| `delete()` | `DELETE /projects/{key}/repos/{slug}` | ✅ |
+| `fork(data)` | `POST /projects/{key}/repos/{slug}` | ✅ |
 | `forks(params?)` | `GET /projects/{key}/repos/{slug}/forks` | ✅ |
 | `pullRequests(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests` | ✅ |
 | `pullRequest(id)` | — chainable | ✅ |
@@ -157,13 +157,13 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `commit(commitId)` | — chainable | ✅ |
 | `branches(params?)` | `GET /projects/{key}/repos/{slug}/branches` | ✅ |
 | `defaultBranch()` | `GET /projects/{key}/repos/{slug}/branches/default` | ✅ |
-| `setDefaultBranch(branch)` | `PUT /projects/{key}/repos/{slug}/default-branch` (the `branches/default` variant is **deprecated**) | ⬜ |
-| `createBranch(data)` | `POST /projects/{key}/repos/{slug}/branches` | ⬜ |
-| `deleteBranch(data)` | `DELETE /rest/branch-utils/latest/projects/{key}/repos/{slug}/branches` | ⬜ |
+| `setDefaultBranch(branch)` | `PUT /projects/{key}/repos/{slug}/default-branch` (the `branches/default` variant is **deprecated**) | ✅ |
+| `createBranch(data)` | `POST /projects/{key}/repos/{slug}/branches` | ✅ |
+| `deleteBranch(data)` | `DELETE /rest/branch-utils/latest/projects/{key}/repos/{slug}/branches` | ✅ |
 | `tags(params?)` | `GET /projects/{key}/repos/{slug}/tags` | ✅ |
 | `tagsByCommits(commits)` | `POST /projects/{key}/repos/{slug}/tags` | ✅ |
-| `createTag(data)` | `POST /rest/git/latest/projects/{key}/repos/{slug}/tags` | ⬜ |
-| `deleteTag(tagName)` | `DELETE /rest/git/latest/projects/{key}/repos/{slug}/tags/{name}` | ⬜ |
+| `createTag(data)` | `POST /rest/git/latest/projects/{key}/repos/{slug}/tags` | ✅ |
+| `deleteTag(tagName)` | `DELETE /rest/git/latest/projects/{key}/repos/{slug}/tags/{name}` | ✅ |
 | `lastModified(params?)` | `GET /projects/{key}/repos/{slug}/last-modified` | ✅ |
 | `size()` | `GET /projects/{key}/repos/{slug}/sizes` | ⚠️ |
 | `raw(filePath, params?)` | `GET /projects/{key}/repos/{slug}/raw/{path}` | ✅ |
@@ -175,7 +175,7 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `deleteWebhook(webhookId)` | `DELETE /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ⬜ |
 | `testWebhook(data)` | `POST /projects/{key}/repos/{slug}/webhooks/test` | ⬜ |
 | `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
-| `updateSettings(data)` | `POST /projects/{key}/repos/{slug}/settings/pull-requests` | ⬜ |
+| `updateSettings(data)` | `POST /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
 | `archive(params?)` | `GET /projects/{key}/repos/{slug}/archive` (tar/zip download) | ⬜ |
 | `files(path?, params?)` | `GET /projects/{key}/repos/{slug}/files[/{path}]` | ⬜ |
 | `compareChanges(params)` | `GET /projects/{key}/repos/{slug}/compare/changes` | ⬜ |

@@ -28,3 +28,15 @@ export interface TagsParams extends PaginationParams {
   /** Sort order of results */
   orderBy?: 'ALPHABETICAL' | 'MODIFICATION';
 }
+
+/**
+ * Payload for `POST /rest/git/latest/projects/{key}/repos/{slug}/tags`.
+ */
+export interface CreateTagData {
+  /** Short name for the new tag (e.g., `'v1.0.0'`) */
+  name: string;
+  /** SHA or ref of the commit to tag */
+  startPoint: string;
+  /** Optional annotation message; producing an annotated tag instead of a lightweight one */
+  message?: string;
+}

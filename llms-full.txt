@@ -90,6 +90,9 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | Method | Endpoint |
 | --- | --- |
 | `get()` | `GET /projects/{key}/repos/{slug}` |
+| `update(data)` | `PUT /projects/{key}/repos/{slug}` — `data`: any of `name?`, `description?`, `forkable?`, `public?`, `project?: { key }` (moves the repo) |
+| `delete()` | `DELETE /projects/{key}/repos/{slug}` |
+| `fork(data?)` | `POST /projects/{key}/repos/{slug}` — `data?`: `name?`, `project?: { key }`, `defaultBranch?`; omit to fork as-is |
 | `forks(params?)` | `GET /projects/{key}/repos/{slug}/forks` |
 | `pullRequests(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests` |
 | `pullRequest(id)` | chainable → `PullRequestResource` |
@@ -97,8 +100,13 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `commit(commitId)` | chainable → `CommitResource` |
 | `branches(params?)` | `GET /projects/{key}/repos/{slug}/branches` |
 | `defaultBranch()` | `GET /projects/{key}/repos/{slug}/branches/default` |
+| `setDefaultBranch(branch)` | `PUT /projects/{key}/repos/{slug}/default-branch` — `branch: { id }` (full ref, e.g. `'refs/heads/main'`); the `branches/default` GET variant stays read-only, this is the write path |
+| `createBranch(data)` | `POST /projects/{key}/repos/{slug}/branches` — `data: { name, startPoint, message? }` |
+| `deleteBranch(data)` | `DELETE /rest/branch-utils/latest/projects/{key}/repos/{slug}/branches` — `data: { name, dryRun? }` |
 | `tags(params?)` | `GET /projects/{key}/repos/{slug}/tags` |
 | `tagsByCommits(commits, opts?)` | `POST /projects/{key}/repos/{slug}/tags` |
+| `createTag(data)` | `POST /rest/git/latest/projects/{key}/repos/{slug}/tags` — `data: { name, startPoint, message? }` (annotated tag if `message` set) |
+| `deleteTag(tagName)` | `DELETE /rest/git/latest/projects/{key}/repos/{slug}/tags/{name}` |
 | `lastModified(params?)` | `GET /projects/{key}/repos/{slug}/last-modified` |
 | `size()` ⚠️ | `GET /projects/{key}/repos/{slug}/sizes` (unofficial UI endpoint) |
 | `raw(filePath, params?)` | `GET /projects/{key}/repos/{slug}/raw/{path}` → plain text |
@@ -106,6 +114,7 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `editFile(filePath, payload)` | `PUT /projects/{key}/repos/{slug}/browse/{path}` (form-encoded) |
 | `webhooks(params?)` | `GET /projects/{key}/repos/{slug}/webhooks/search` |
 | `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` |
+| `updateSettings(data)` | `POST /projects/{key}/repos/{slug}/settings/pull-requests` — partial `BitbucketRepositorySettings`-shaped payload |
 
 ### PullRequestResource — `bb.project(key).repo(slug).pullRequest(id)`
 
@@ -220,7 +229,7 @@ app.post('/webhooks/bitbucket', (req, res) => {
 
 ## Not yet implemented
 
-Most `create*`/`update*`/`delete*` operations on `ProjectResource`/`RepositoryResource` (webhooks CRUD, branch/tag creation & deletion, permissions CRUD, project/repo settings), all `CommitResource` write operations besides comments/build-status, `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()` are still pending. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
+`RepositoryResource` now covers its core CRUD (`update`/`delete`/`fork`) and branch/tag writes (`createBranch`/`deleteBranch`/`createTag`/`deleteTag`/`setDefaultBranch`) plus `updateSettings`. Still pending on it: webhooks CRUD, archive download, file listing, compare endpoints, labels, readme/license/contributing, watch, permissions CRUD, branch restrictions, default-reviewer/required-build conditions, auto-decline/auto-merge settings, hooks, default tasks, sync. Most `create*`/`update*`/`delete*` operations on `ProjectResource` (webhooks CRUD, permissions CRUD, project settings) are still pending, as are all `CommitResource` write operations besides comments/build-status, `UserResource` write operations (SSH keys, settings, access tokens, GPG keys), and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()`. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
 
 ## Pagination
 

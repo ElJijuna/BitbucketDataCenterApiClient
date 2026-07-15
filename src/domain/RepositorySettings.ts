@@ -27,3 +27,20 @@ export interface BitbucketRepositorySettings {
   requiredSuccessfulBuilds: number;
   pullRequestsEnabled: boolean;
 }
+
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/settings/pull-requests`.
+ *
+ * Only the fields to change need to be supplied.
+ */
+export interface UpdateRepositorySettingsData {
+  mergeConfig?: {
+    defaultStrategy?: { id: BitbucketMergeStrategy['id'] };
+    strategies?: { id: BitbucketMergeStrategy['id'] }[];
+    commitSummaries?: number;
+    type?: string;
+  };
+  requiredApprovals?: number;
+  requiredAllApprovals?: boolean;
+  requiredSuccessfulBuilds?: number;
+}

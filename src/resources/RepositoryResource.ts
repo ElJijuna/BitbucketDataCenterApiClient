@@ -1,4 +1,10 @@
-import type { BitbucketBranch, BranchesParams } from '../domain/Branch';
+import type {
+  BitbucketBranch,
+  BranchesParams,
+  CreateBranchData,
+  DeleteBranchData,
+  SetDefaultBranchData,
+} from '../domain/Branch';
 import type { BitbucketBrowseResponse, BrowseParams } from '../domain/Browse';
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { EditFilePayload } from '../domain/EditFile';
@@ -6,10 +12,17 @@ import type { BitbucketLastModifiedEntry, LastModifiedParams } from '../domain/L
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
 import type { BitbucketPullRequest, PullRequestsParams } from '../domain/PullRequest';
 import type { RawFileParams } from '../domain/RawFile';
-import type { BitbucketRepository } from '../domain/Repository';
-import type { BitbucketRepositorySettings } from '../domain/RepositorySettings';
+import type {
+  BitbucketRepository,
+  ForkRepositoryData,
+  UpdateRepositoryData,
+} from '../domain/Repository';
+import type {
+  BitbucketRepositorySettings,
+  UpdateRepositorySettingsData,
+} from '../domain/RepositorySettings';
 import type { BitbucketRepositorySize } from '../domain/RepositorySize';
-import type { BitbucketTag, TagsParams } from '../domain/Tag';
+import type { BitbucketTag, CreateTagData, TagsParams } from '../domain/Tag';
 import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
 import { CommitResource } from './CommitResource';
 import type { RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
@@ -71,6 +84,40 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    */
   async get(): Promise<BitbucketRepository> {
     return this.request<BitbucketRepository>(this.basePath);
+  }
+
+  /**
+   * Updates this repository's name, description, visibility, or moves it to another project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}`
+   *
+   * @param data - Fields to change; only supplied fields are updated
+   * @returns The updated repository
+   */
+  async update(data: UpdateRepositoryData): Promise<BitbucketRepository> {
+    return this.requestBody<BitbucketRepository>(this.basePath, data, { method: 'PUT' });
+  }
+
+  /**
+   * Deletes this repository.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}`
+   */
+  async delete(): Promise<void> {
+    return this.requestBody<void>(this.basePath, undefined, { method: 'DELETE' });
+  }
+
+  /**
+   * Forks this repository.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}`
+   *
+   * @param data - Optional overrides: target `name`, `project`, or `defaultBranch`. Omit to fork
+   * with the same name into the same project.
+   * @returns The newly created fork
+   */
+  async fork(data?: ForkRepositoryData): Promise<BitbucketRepository> {
+    return this.requestBody<BitbucketRepository>(this.basePath, data);
   }
 
   /**
@@ -162,6 +209,43 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   }
 
   /**
+   * Sets the default branch of this repository.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/default-branch`
+   *
+   * @param branch - The full ref ID to set as default (e.g., `{ id: 'refs/heads/main' }`)
+   */
+  async setDefaultBranch(branch: SetDefaultBranchData): Promise<void> {
+    return this.requestBody<void>(`${this.basePath}/default-branch`, branch, { method: 'PUT' });
+  }
+
+  /**
+   * Creates a new branch in this repository.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/branches`
+   *
+   * @param data - `name` and `startPoint` (commit SHA or ref), plus an optional `message`
+   * @returns The created branch
+   */
+  async createBranch(data: CreateBranchData): Promise<BitbucketBranch> {
+    return this.requestBody<BitbucketBranch>(`${this.basePath}/branches`, data);
+  }
+
+  /**
+   * Deletes a branch from this repository.
+   *
+   * `DELETE /rest/branch-utils/latest/projects/{key}/repos/{slug}/branches`
+   *
+   * @param data - `name` of the branch to delete, plus an optional `dryRun` flag
+   */
+  async deleteBranch(data: DeleteBranchData): Promise<void> {
+    return this.requestBody<void>(`${this.basePath}/branches`, data, {
+      method: 'DELETE',
+      apiPath: 'rest/branch-utils/latest',
+    });
+  }
+
+  /**
    * Fetches the forks of this repository.
    *
    * `GET /rest/api/latest/projects/{key}/repos/{slug}/forks`
@@ -205,6 +289,34 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
       `${this.basePath}/tags`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Creates a new tag in this repository.
+   *
+   * `POST /rest/git/latest/projects/{key}/repos/{slug}/tags`
+   *
+   * @param data - `name` and `startPoint` (commit SHA or ref); include `message` for an annotated tag
+   * @returns The created tag
+   */
+  async createTag(data: CreateTagData): Promise<BitbucketTag> {
+    return this.requestBody<BitbucketTag>(`${this.basePath}/tags`, data, {
+      apiPath: 'rest/git/latest',
+    });
+  }
+
+  /**
+   * Deletes a tag from this repository.
+   *
+   * `DELETE /rest/git/latest/projects/{key}/repos/{slug}/tags/{name}`
+   *
+   * @param tagName - Short name of the tag to delete (e.g., `'v1.0.0'`)
+   */
+  async deleteTag(tagName: string): Promise<void> {
+    return this.requestBody<void>(`${this.basePath}/tags/${tagName}`, undefined, {
+      method: 'DELETE',
+      apiPath: 'rest/git/latest',
+    });
   }
 
   /**
@@ -298,6 +410,21 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    */
   async settings(): Promise<BitbucketRepositorySettings> {
     return this.request<BitbucketRepositorySettings>(`${this.basePath}/settings/pull-requests`);
+  }
+
+  /**
+   * Updates the pull-request settings for this repository.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/settings/pull-requests`
+   *
+   * @param data - Fields to change; only supplied fields are updated
+   * @returns The updated repository pull-request settings object
+   */
+  async updateSettings(data: UpdateRepositorySettingsData): Promise<BitbucketRepositorySettings> {
+    return this.requestBody<BitbucketRepositorySettings>(
+      `${this.basePath}/settings/pull-requests`,
+      data,
+    );
   }
 
   /**

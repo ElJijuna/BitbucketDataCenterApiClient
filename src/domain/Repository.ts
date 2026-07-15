@@ -35,6 +35,33 @@ export interface ReposParams extends PaginationParams {
 }
 
 /**
+ * Payload for `PUT /rest/api/latest/projects/{key}/repos/{slug}`.
+ *
+ * Only the fields to change need to be supplied; the server merges them with
+ * the repository's current state. Set `project.key` to move the repository
+ * to a different project.
+ */
+export interface UpdateRepositoryData {
+  name?: string;
+  description?: string;
+  forkable?: boolean;
+  public?: boolean;
+  project?: { key: string };
+}
+
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}` (fork).
+ *
+ * All fields are optional; omit them to fork with the same name into the
+ * same project.
+ */
+export interface ForkRepositoryData {
+  name?: string;
+  project?: { key: string };
+  defaultBranch?: string;
+}
+
+/**
  * Query parameters accepted by `GET /rest/api/latest/repos` (global repository search).
  *
  * All filters are optional and sent verbatim to the API.
