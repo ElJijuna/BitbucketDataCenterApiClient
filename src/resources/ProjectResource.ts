@@ -1,10 +1,19 @@
 import type { BitbucketGroupPermission, ProjectGroupsParams } from '../domain/Group';
 import type { PagedResponse } from '../domain/Pagination';
-import type { BitbucketProject } from '../domain/Project';
+import type { BitbucketProject, UpdateProjectData } from '../domain/Project';
 import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { BitbucketUserPermission, ProjectUsersParams } from '../domain/User';
-import type { BitbucketWebhook, WebhooksParams } from '../domain/Webhook';
+import type {
+  BitbucketWebhook,
+  TestWebhookParams,
+  WebhookPayload,
+  WebhooksParams,
+  WebhookTestResult,
+} from '../domain/Webhook';
 import { RepositoryResource } from './RepositoryResource';
+
+/** A project-level permission grant. */
+export type ProjectPermission = 'PROJECT_READ' | 'PROJECT_WRITE' | 'PROJECT_ADMIN';
 
 /** @internal */
 export type RequestFn = <T>(
@@ -81,6 +90,30 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
   }
 
   /**
+   * Updates this project's avatar (and, nominally, its key).
+   *
+   * `PUT /rest/api/latest/projects/{key}`
+   *
+   * @remarks `name`, `public`, and `type` are read-only on this endpoint and
+   * cannot be changed here — see {@link UpdateProjectData}.
+   *
+   * @param data - Fields to change; only supplied fields are updated
+   * @returns The updated project
+   */
+  async update(data: UpdateProjectData): Promise<BitbucketProject> {
+    return this.requestBody<BitbucketProject>(`/projects/${this.key}`, data, { method: 'PUT' });
+  }
+
+  /**
+   * Deletes this project.
+   *
+   * `DELETE /rest/api/latest/projects/{key}`
+   */
+  async delete(): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}`, undefined, { method: 'DELETE' });
+  }
+
+  /**
    * Fetches repositories belonging to this project.
    *
    * `GET /rest/api/latest/projects/{key}/repos`
@@ -137,6 +170,33 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
   }
 
   /**
+   * Grants or changes a user's permission level on this project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/permissions/users?name={name}&permission={permission}`
+   *
+   * @param name - The user's username/slug
+   * @param permission - `'PROJECT_READ'`, `'PROJECT_WRITE'`, or `'PROJECT_ADMIN'`
+   */
+  async setUserPermission(name: string, permission: ProjectPermission): Promise<void> {
+    const path = `/projects/${this.key}/permissions/users?${new URLSearchParams({ name, permission })}`;
+
+    return this.requestBody<void>(path, undefined, { method: 'PUT' });
+  }
+
+  /**
+   * Revokes all of a user's permissions on this project.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/permissions/users?name={name}`
+   *
+   * @param name - The user's username/slug
+   */
+  async removeUserPermission(name: string): Promise<void> {
+    const path = `/projects/${this.key}/permissions/users?${new URLSearchParams({ name })}`;
+
+    return this.requestBody<void>(path, undefined, { method: 'DELETE' });
+  }
+
+  /**
    * Fetches groups with explicit permissions on this project.
    *
    * `GET /rest/api/latest/projects/{key}/permissions/groups`
@@ -152,6 +212,33 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
   }
 
   /**
+   * Grants or changes a group's permission level on this project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/permissions/groups?name={name}&permission={permission}`
+   *
+   * @param name - The group's name
+   * @param permission - `'PROJECT_READ'`, `'PROJECT_WRITE'`, or `'PROJECT_ADMIN'`
+   */
+  async setGroupPermission(name: string, permission: ProjectPermission): Promise<void> {
+    const path = `/projects/${this.key}/permissions/groups?${new URLSearchParams({ name, permission })}`;
+
+    return this.requestBody<void>(path, undefined, { method: 'PUT' });
+  }
+
+  /**
+   * Revokes all of a group's permissions on this project.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/permissions/groups?name={name}`
+   *
+   * @param name - The group's name
+   */
+  async removeGroupPermission(name: string): Promise<void> {
+    const path = `/projects/${this.key}/permissions/groups?${new URLSearchParams({ name })}`;
+
+    return this.requestBody<void>(path, undefined, { method: 'DELETE' });
+  }
+
+  /**
    * Fetches webhooks configured on this project.
    *
    * `GET /rest/api/latest/projects/{key}/webhooks`
@@ -164,5 +251,78 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
       `/projects/${this.key}/webhooks`,
       params as Record<string, string | number | boolean>,
     );
+  }
+
+  /**
+   * Creates a webhook on this project.
+   *
+   * `POST /rest/api/latest/projects/{key}/webhooks`
+   *
+   * @param data - `name`, `events`, and `url`, plus optional `active`, `sslVerificationRequired`,
+   * `configuration`, and `credentials`
+   * @returns The created webhook
+   */
+  async createWebhook(data: WebhookPayload): Promise<BitbucketWebhook> {
+    return this.requestBody<BitbucketWebhook>(`/projects/${this.key}/webhooks`, data);
+  }
+
+  /**
+   * Updates a webhook on this project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/webhooks/{webhookId}`
+   *
+   * @param webhookId - The webhook's numeric id
+   * @param data - The full replacement webhook definition
+   * @returns The updated webhook
+   */
+  async updateWebhook(webhookId: number, data: WebhookPayload): Promise<BitbucketWebhook> {
+    return this.requestBody<BitbucketWebhook>(`/projects/${this.key}/webhooks/${webhookId}`, data, {
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Deletes a webhook from this project.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/webhooks/{webhookId}`
+   *
+   * @param webhookId - The webhook's numeric id
+   */
+  async deleteWebhook(webhookId: number): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/webhooks/${webhookId}`, undefined, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Tests connectivity to a webhook target, either an existing webhook (`webhookId`) or a
+   * candidate URL (`url`) before creating one.
+   *
+   * `POST /rest/api/latest/projects/{key}/webhooks/test`
+   *
+   * @param params - `webhookId` or `url` (query), `sslVerificationRequired` (query), and optional
+   * `username`/`password` Basic auth credentials (body)
+   * @returns The result of the connectivity test
+   */
+  async testWebhook(params: TestWebhookParams): Promise<WebhookTestResult> {
+    const { webhookId, url, sslVerificationRequired, username, password } = params;
+    const query: Record<string, string> = {};
+
+    if (webhookId !== undefined) {
+      query.webhookId = String(webhookId);
+    }
+
+    if (url !== undefined) {
+      query.url = url;
+    }
+
+    if (sslVerificationRequired !== undefined) {
+      query.sslVerificationRequired = String(sslVerificationRequired);
+    }
+
+    const qs = new URLSearchParams(query).toString();
+    const path = `/projects/${this.key}/webhooks/test${qs ? `?${qs}` : ''}`;
+
+    return this.requestBody<WebhookTestResult>(path, { username, password });
   }
 }

@@ -87,3 +87,48 @@ export interface WebhooksParams extends PaginationParams {
   /** Filter by event type (e.g. `'pr:opened'`) */
   event?: WebhookEvent;
 }
+
+/** Basic auth credentials used to authenticate webhook deliveries to `url`. */
+export interface WebhookCredentials {
+  username?: string;
+  password?: string;
+}
+
+/**
+ * Payload shared by `POST /webhooks` (create) and `PUT /webhooks/{webhookId}` (update).
+ */
+export interface WebhookPayload {
+  name: string;
+  events: WebhookEvent[];
+  url: string;
+  active?: boolean;
+  sslVerificationRequired?: boolean;
+  configuration?: Record<string, unknown>;
+  credentials?: WebhookCredentials;
+}
+
+/**
+ * Query and body parameters accepted by `POST /webhooks/test`.
+ *
+ * Either `webhookId` (test an existing webhook) or `url` (test a candidate
+ * target before creating a webhook) should be supplied.
+ */
+export interface TestWebhookParams {
+  webhookId?: number;
+  url?: string;
+  sslVerificationRequired?: boolean;
+  username?: string;
+  password?: string;
+}
+
+/**
+ * Result of a webhook connectivity test.
+ *
+ * @remarks Sparsely documented by Atlassian (the `RestWebhookRequestResponse`
+ * schema isn't expanded in the REST API reference); typed defensively based
+ * on the shape of {@link BitbucketWebhookDelivery}.
+ */
+export interface WebhookTestResult {
+  request?: BitbucketWebhookRequest;
+  response?: BitbucketWebhookResult;
+}

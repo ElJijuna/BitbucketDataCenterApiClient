@@ -111,23 +111,23 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | Method | Endpoint | Status |
 | --- | --- | --- |
 | `get()` | `GET /projects/{key}` | ✅ |
-| `update(data)` | `PUT /projects/{key}` | ⬜ |
-| `delete()` | `DELETE /projects/{key}` | ⬜ |
+| `update(data)` | `PUT /projects/{key}` — only `avatar`/`avatarUrl`/`key`/`links` are writable; `name`/`public`/`type` are read-only on this endpoint | ✅ |
+| `delete()` | `DELETE /projects/{key}` | ✅ |
 | `repos(params?)` | `GET /projects/{key}/repos` | ✅ |
 | `repo(slug)` | — chainable | ✅ |
 | `createRepo(data)` | `POST /projects/{key}/repos` | ⬜ |
 | `users(params?)` | `GET /projects/{key}/permissions/users` | ✅ |
-| `setUserPermission(slug, permission)` | `PUT /projects/{key}/permissions/users` | ⬜ |
-| `removeUserPermission(slug)` | `DELETE /projects/{key}/permissions/users` | ⬜ |
+| `setUserPermission(name, permission)` | `PUT /projects/{key}/permissions/users?name={name}&permission={permission}` (query params, no body) | ✅ |
+| `removeUserPermission(name)` | `DELETE /projects/{key}/permissions/users?name={name}` | ✅ |
 | `groups(params?)` | `GET /projects/{key}/permissions/groups` | ✅ |
-| `setGroupPermission(group, permission)` | `PUT /projects/{key}/permissions/groups` | ⬜ |
-| `removeGroupPermission(group)` | `DELETE /projects/{key}/permissions/groups` | ⬜ |
+| `setGroupPermission(name, permission)` | `PUT /projects/{key}/permissions/groups?name={name}&permission={permission}` (query params, no body) | ✅ |
+| `removeGroupPermission(name)` | `DELETE /projects/{key}/permissions/groups?name={name}` | ✅ |
 | `searchPermissions(params?)` | `GET /projects/{key}/permissions/search` | ⬜ |
 | `webhooks(params?)` | `GET /projects/{key}/webhooks` | ✅ |
-| `createWebhook(data)` | `POST /projects/{key}/webhooks` | ⬜ |
-| `updateWebhook(webhookId, data)` | `PUT /projects/{key}/webhooks/{webhookId}` | ⬜ |
-| `deleteWebhook(webhookId)` | `DELETE /projects/{key}/webhooks/{webhookId}` | ⬜ |
-| `testWebhook(data)` | `POST /projects/{key}/webhooks/test` | ⬜ |
+| `createWebhook(data)` | `POST /projects/{key}/webhooks` | ✅ |
+| `updateWebhook(webhookId, data)` | `PUT /projects/{key}/webhooks/{webhookId}` | ✅ |
+| `deleteWebhook(webhookId)` | `DELETE /projects/{key}/webhooks/{webhookId}` | ✅ |
+| `testWebhook(params)` | `POST /projects/{key}/webhooks/test` — `webhookId`/`url`/`sslVerificationRequired` as query params, `username`/`password` as body | ✅ |
 | `defaultReviewerConditions()` | `GET /rest/default-reviewers/latest/projects/{key}/conditions` | ⬜ |
 | `createDefaultReviewerCondition(data)` | `POST /rest/default-reviewers/latest/projects/{key}/condition` | ⬜ |
 | `deleteDefaultReviewerCondition(id)` | `DELETE /rest/default-reviewers/latest/projects/{key}/condition/{id}` | ⬜ |
