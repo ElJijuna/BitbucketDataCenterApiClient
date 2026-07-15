@@ -46,3 +46,14 @@ export interface CommitsParams extends PaginationParams {
   /** Silently ignore missing commits referenced by `since` or `until` */
   ignoreMissing?: boolean;
 }
+
+/**
+ * Query parameters accepted by
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/pull-requests`.
+ */
+export interface CommitPullRequestsParams extends PaginationParams {
+  /** Include extra attributes on each pull request (default `true`) */
+  withAttributes?: boolean;
+  /** Include stored properties on each pull request (default `true`) */
+  withProperties?: boolean;
+}

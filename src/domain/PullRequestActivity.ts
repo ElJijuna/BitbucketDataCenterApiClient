@@ -61,6 +61,15 @@ export interface UpdatePullRequestCommentData {
 
 /**
  * Payload for
+ * `PUT /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/comments/{commentId}`.
+ */
+export interface UpdateCommitCommentData {
+  version: number;
+  text: string;
+}
+
+/**
+ * Payload for
  * `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests/{id}/comments/{commentId}/apply-suggestion`.
  */
 export interface ApplySuggestionData {

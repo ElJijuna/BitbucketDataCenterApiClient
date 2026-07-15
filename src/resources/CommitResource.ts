@@ -4,12 +4,15 @@ import type {
   BuildStatusesParams,
 } from '../domain/BuildStatus';
 import type { BitbucketChange } from '../domain/Change';
-import type { BitbucketCommit } from '../domain/Commit';
+import type { BitbucketCommit, CommitPullRequestsParams } from '../domain/Commit';
 import type { BitbucketDiff, CommitChangesParams, DiffParams } from '../domain/Diff';
+import type { BitbucketDiffStatsSummary } from '../domain/DiffStatsSummary';
 import type { PagedResponse, PaginationParams } from '../domain/Pagination';
+import type { BitbucketPullRequest } from '../domain/PullRequest';
 import type {
   AddCommitCommentData,
   BitbucketPullRequestComment,
+  UpdateCommitCommentData,
 } from '../domain/PullRequestActivity';
 import type { RequestBodyFn, RequestFn } from './ProjectResource';
 
@@ -139,6 +142,18 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
   }
 
   /**
+   * Fetches a summary of added/removed/modified line counts for a file changed by this commit.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/diff-stats-summary/{path}`
+   *
+   * @param path - Path to the file
+   * @returns The diff stats summary
+   */
+  async diffStatsSummary(path: string): Promise<BitbucketDiffStatsSummary> {
+    return this.request<BitbucketDiffStatsSummary>(`${this.basePath}/diff-stats-summary/${path}`);
+  }
+
+  /**
    * Posts a comment on this commit.
    *
    * `POST /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/comments`
@@ -149,6 +164,42 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
   async addComment(data: AddCommitCommentData): Promise<BitbucketPullRequestComment> {
     // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
     return this.requestBody!<BitbucketPullRequestComment>(`${this.basePath}/comments`, data);
+  }
+
+  /**
+   * Updates a comment on this commit.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/comments/{commentId}`
+   *
+   * @param commentId - The comment id
+   * @param data - `version` (must match the comment's current version) and the new `text`
+   * @returns The updated comment
+   */
+  async updateComment(
+    commentId: number,
+    data: UpdateCommitCommentData,
+  ): Promise<BitbucketPullRequestComment> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketPullRequestComment>(
+      `${this.basePath}/comments/${commentId}`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes a comment from this commit.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/comments/{commentId}`
+   *
+   * @param commentId - The comment id
+   * @param version - Must match the comment's current version
+   */
+  async deleteComment(commentId: number, version: number): Promise<void> {
+    const path = `${this.basePath}/comments/${commentId}?${new URLSearchParams({ version: String(version) })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(path, undefined, { method: 'DELETE' });
   }
 
   /**
@@ -164,5 +215,54 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
     return this.requestBody!<BitbucketBuildStatus>(`/commits/${this.commitId}`, data, {
       apiPath: 'rest/build-status/latest',
     });
+  }
+
+  /**
+   * Fetches the pull requests that contain this commit.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/pull-requests`
+   *
+   * @param params - Optional filters: `limit`, `start`, `withAttributes`, `withProperties`
+   * @returns A paged response of pull requests
+   */
+  async pullRequests(
+    params?: CommitPullRequestsParams,
+  ): Promise<PagedResponse<BitbucketPullRequest>> {
+    return this.request<PagedResponse<BitbucketPullRequest>>(
+      `${this.basePath}/pull-requests`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches the best common ancestor between this commit and another.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/merge-base/{otherCommitId}`
+   *
+   * @param otherCommitId - SHA of the commit to compare against
+   * @returns The merge-base commit
+   */
+  async mergeBase(otherCommitId: string): Promise<BitbucketCommit> {
+    return this.request<BitbucketCommit>(`${this.basePath}/merge-base/${otherCommitId}`);
+  }
+
+  /**
+   * Adds the authenticated user as a watcher of this commit.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/watch`
+   */
+  async watch(): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/watch`, undefined);
+  }
+
+  /**
+   * Removes the authenticated user as a watcher of this commit.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/commits/{id}/watch`
+   */
+  async unwatch(): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/watch`, undefined, { method: 'DELETE' });
   }
 }

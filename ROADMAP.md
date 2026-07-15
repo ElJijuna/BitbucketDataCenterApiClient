@@ -244,20 +244,20 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `get()` | `GET …/commits/{id}` | ✅ |
 | `changes(params?)` | `GET …/commits/{id}/changes` | ✅ |
 | `diff(params?)` | `GET …/commits/{id}/diff/{path}` (`path` optional) | ✅ |
-| `diffStatsSummary(path)` | `GET …/commits/{id}/diff-stats-summary/{path}` | ⬜ |
+| `diffStatsSummary(path)` | `GET …/commits/{id}/diff-stats-summary/{path}` | ✅ |
 | `comments(params?)` | `GET …/commits/{id}/comments` | ✅ |
 | `addComment(data)` | `POST …/commits/{id}/comments` | ✅ |
-| `updateComment(commentId, data)` | `PUT …/commits/{id}/comments/{commentId}` | ⬜ |
-| `deleteComment(commentId)` | `DELETE …/commits/{id}/comments/{commentId}` | ⬜ |
+| `updateComment(commentId, data)` | `PUT …/commits/{id}/comments/{commentId}` | ✅ |
+| `deleteComment(commentId, version)` | `DELETE …/commits/{id}/comments/{commentId}?version={version}` | ✅ |
 | `buildStatuses(params?)` | `GET /rest/build-status/latest/commits/{id}` | ✅ |
 | `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` | ✅ |
 | `builds(params?)` / `addBuild(data)` / `deleteBuild(key)` | `GET/POST/DELETE …/commits/{id}/builds` (modern replacement for build-status) | ⬜ |
 | `deployments(params?)` / `addDeployment(data)` / `deleteDeployment(...)` | `GET/POST/DELETE …/commits/{id}/deployments` | ⬜ |
 | `insightReports(params?)` | `GET /rest/insights/latest/…/commits/{id}/reports` | ⬜ |
 | `insightReport(key)` / CRUD + annotations | `GET/PUT/DELETE /rest/insights/latest/…/commits/{id}/reports/{key}[/annotations]` | ⬜ |
-| `pullRequests(params?)` | `GET …/commits/{id}/pull-requests` | ⬜ |
-| `mergeBase(otherCommitId)` | `GET …/commits/{id}/merge-base` | ⬜ |
-| `watch()` / `unwatch()` | `POST/DELETE …/commits/{id}/watch` | ⬜ |
+| `pullRequests(params?)` | `GET …/commits/{id}/pull-requests` | ✅ |
+| `mergeBase(otherCommitId)` | `GET …/commits/{id}/merge-base/{otherCommitId}` | ✅ |
+| `watch()` / `unwatch()` | `POST/DELETE …/commits/{id}/watch` | ✅ |
 
 ---
 
