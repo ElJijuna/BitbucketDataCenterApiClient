@@ -1,3 +1,12 @@
+# [1.20.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.19.0...v1.20.0) (2026-07-16)
+
+
+### Features
+
+* add support for pull request suggestions, markup preview, groups retrieval, and code search; include tests for new functionalities ([790083f](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/790083fb4b761b31c9f12670abf4b96433eb8288))
+* add support for SSH and GPG key management, including add, delete, and retrieval methods; implement access token management with create, update, and delete functionalities; include tests for new features ([bf36b3b](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/bf36b3b774f308df81377da370af93c76ae31f01))
+* enhance API documentation and typings for project, repository, and user management; add support for build and deployment functionalities ([1540a2e](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/1540a2e55f7bdcbdfadd1d5afbf679564a50ed33))
+
 # [1.19.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.18.0...v1.19.0) (2026-07-16)
 
 
