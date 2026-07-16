@@ -1,3 +1,13 @@
+# [1.19.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.18.0...v1.19.0) (2026-07-16)
+
+
+### Features
+
+* add Code Insights report and annotation management to CommitResource; include tests for new functionality ([55acaec](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/55acaec3207a106d22b8b186a5e9321bb74b796d))
+* add comprehensive tests for repository resource operations ([f0c0ca9](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/f0c0ca99cff05fed24f9ee64612c8aea7b3638fa))
+* add default tasks, hooks, permissions search, and reviewer groups to ProjectResource ([54892c1](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/54892c10b61c5aed419b3c33593cf70ed494380c))
+* implement binary response support and add archive functionality to RepositoryResource; include tests for new method ([1648902](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/164890277de159f1c132be82e259adb6fba37dda))
+
 # [1.18.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.17.0...v1.18.0) (2026-07-15)
 
 
