@@ -80,6 +80,15 @@ export interface ForkRepositoryData {
 }
 
 /**
+ * Query parameters accepted by
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/files[/{path}]`.
+ */
+export interface FilesParams extends PaginationParams {
+  /** Branch, tag, or commit to list files at; defaults to the default branch */
+  at?: string;
+}
+
+/**
  * Query parameters accepted by `GET /rest/api/latest/repos` (global repository search).
  *
  * All filters are optional and sent verbatim to the API.

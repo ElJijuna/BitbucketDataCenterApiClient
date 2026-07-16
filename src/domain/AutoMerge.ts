@@ -52,3 +52,10 @@ export interface AutoMergeProjectSettingsRequest {
   /** Create or delete the restriction preventing repositories from overriding the project setting */
   restrictionAction?: 'CREATE' | 'DELETE' | 'NONE';
 }
+
+/**
+ * Payload for `PUT /rest/api/latest/projects/{key}/repos/{slug}/settings/auto-merge`.
+ */
+export interface AutoMergeSettingsRequest {
+  enabled?: boolean;
+}

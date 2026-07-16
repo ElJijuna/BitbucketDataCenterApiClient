@@ -5,6 +5,7 @@ export type {
   AutoMergeRequest,
   AutoMergeRestrictionState,
   AutoMergeSettings,
+  AutoMergeSettingsRequest,
   RequestAutoMergeData,
 } from './domain/AutoMerge';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
@@ -33,6 +34,7 @@ export type { BitbucketClientEvents, RequestEvent } from './domain/ClientEvents'
 export type { BitbucketClientOptions, RetryOptions } from './domain/ClientOptions';
 export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
 export type { CommitMessageSuggestion } from './domain/CommitMessageSuggestion';
+export type { CompareDiffParams, CompareParams } from './domain/Compare';
 export type {
   DashboardPullRequestsParams,
   InboxPullRequestsCount,
@@ -60,6 +62,13 @@ export type {
 export type { BitbucketDiffStatsSummary } from './domain/DiffStatsSummary';
 export type { EditFilePayload } from './domain/EditFile';
 export type {
+  BitbucketGroup,
+  BitbucketGroupPermission,
+  BitbucketRepositoryGroupPermission,
+  ProjectGroupsParams,
+  RepositoryGroupsParams,
+} from './domain/Group';
+export type {
   BitbucketRepositoryHook,
   HookSettings,
   HooksParams,
@@ -67,7 +76,9 @@ export type {
   RepositoryHookType,
 } from './domain/Hook';
 export type { BitbucketIssue } from './domain/Issue';
+export type { BitbucketLabel } from './domain/Label';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
+export type { BitbucketMarkupFile, MarkupFileParams } from './domain/MarkupFile';
 export type { PagedResponse, PaginationParams } from './domain/Pagination';
 export type { PermissionSearchParams, PermittedEntity } from './domain/PermissionSearch';
 export type { BitbucketProject, ProjectsParams, UpdateProjectData } from './domain/Project';
@@ -77,9 +88,11 @@ export type {
   BitbucketPullRequest,
   BitbucketRef,
   CanMergeResult,
+  CreatePullRequestData,
   DeletePullRequestData,
   MergePullRequestData,
   MergeVeto,
+  PullRequestRefInput,
   PullRequestsParams,
   SetParticipantStatusData,
   TransitionPullRequestData,
@@ -108,6 +121,12 @@ export type {
 } from './domain/PullRequestTask';
 export type { RawFileParams } from './domain/RawFile';
 export type { CanRebaseResult, RebaseResult, RebaseVeto } from './domain/Rebase';
+export type {
+  BitbucketRefChangeActivity,
+  RefChangeActivitiesParams,
+  RefChangeActivityChange,
+  RefChangeActivityRef,
+} from './domain/RefChangeActivity';
 export type { RefMatcher, RefMatcherTypeId } from './domain/RefMatcher';
 export type {
   AddInsightAnnotationData,
@@ -126,6 +145,7 @@ export type {
 export type {
   BitbucketRepository,
   CreateRepositoryData,
+  FilesParams,
   ForkRepositoryData,
   GlobalReposParams,
   ReposParams,
@@ -133,13 +153,21 @@ export type {
   UpdateRepositoryData,
 } from './domain/Repository';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
+export type {
+  BitbucketRequiredBuildCondition,
+  RequiredBuildConditionRequest,
+} from './domain/RequiredBuild';
 export type { BitbucketReviewerGroup, ReviewerGroupPayload } from './domain/ReviewerGroup';
 export type { BitbucketScope } from './domain/Scope';
+export type { RefSyncRequest, RefSyncStatus, SetSyncStatusData, SyncRef } from './domain/Sync';
 export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type {
+  BitbucketRepositoryUserPermission,
   BitbucketUser,
   BitbucketUserPermission,
   ProjectUsersParams,
+  RepositoryPermission,
+  RepositoryUsersParams,
   UsersParams,
 } from './domain/User';
 export type {

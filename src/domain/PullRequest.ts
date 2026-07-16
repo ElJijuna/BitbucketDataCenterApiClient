@@ -145,3 +145,33 @@ export interface PullRequestsParams extends PaginationParams {
   /** Sort order of results */
   order?: 'NEWEST' | 'OLDEST' | 'MODIFIED' | 'CLOSED_DATE';
 }
+
+/**
+ * A ref reference used when creating a pull request. `repository` is only
+ * needed for cross-fork pull requests; it defaults to the repository the
+ * pull request is created in.
+ */
+export interface PullRequestRefInput {
+  /** Full ref id (e.g. `'refs/heads/feature/x'`) */
+  id: string;
+  repository?: {
+    slug: string;
+    project: { key: string };
+  };
+}
+
+/**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos/{slug}/pull-requests`.
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-post}
+ */
+export interface CreatePullRequestData {
+  title: string;
+  description?: string;
+  fromRef: PullRequestRefInput;
+  toRef: PullRequestRefInput;
+  /** Reviewers to add, identified by username */
+  reviewers?: Array<{ user: { name: string } }>;
+  /** Create the pull request as a draft */
+  draft?: boolean;
+}

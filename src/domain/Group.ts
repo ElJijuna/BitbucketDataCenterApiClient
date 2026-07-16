@@ -16,6 +16,23 @@ export interface BitbucketGroupPermission {
 }
 
 /**
+ * A group with an explicit permission on a repository.
+ */
+export interface BitbucketRepositoryGroupPermission {
+  group: BitbucketGroup;
+  permission: 'REPO_READ' | 'REPO_WRITE' | 'REPO_ADMIN';
+}
+
+/**
+ * Query parameters accepted by
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/permissions/groups`.
+ */
+export interface RepositoryGroupsParams extends PaginationParams {
+  /** Filter results by group name (prefix match) */
+  filter?: string;
+}
+
+/**
  * Query parameters accepted by
  * `GET /rest/api/latest/projects/{key}/permissions/groups`.
  *

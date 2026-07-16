@@ -156,7 +156,7 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `forks(params?)` | `GET /projects/{key}/repos/{slug}/forks` | ✅ |
 | `pullRequests(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests` | ✅ |
 | `pullRequest(id)` | — chainable | ✅ |
-| `createPullRequest(data)` | `POST /projects/{key}/repos/{slug}/pull-requests` | ⬜ |
+| `createPullRequest(data)` | `POST /projects/{key}/repos/{slug}/pull-requests` | ✅ |
 | `commits(params?)` | `GET /projects/{key}/repos/{slug}/commits` | ✅ |
 | `commit(commitId)` | — chainable | ✅ |
 | `branches(params?)` | `GET /projects/{key}/repos/{slug}/branches` | ✅ |
@@ -174,27 +174,32 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `browse(srcPath?, params?)` | `GET /projects/{key}/repos/{slug}/browse/{srcPath}` | ✅ |
 | `editFile(...)` | `PUT /projects/{key}/repos/{slug}/browse/{path}` | ✅ |
 | `webhooks(params?)` | `GET /projects/{key}/repos/{slug}/webhooks/search` | ✅ |
-| `createWebhook(data)` | `POST /projects/{key}/repos/{slug}/webhooks` | ⬜ |
-| `updateWebhook(webhookId, data)` | `PUT /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ⬜ |
-| `deleteWebhook(webhookId)` | `DELETE /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ⬜ |
-| `testWebhook(data)` | `POST /projects/{key}/repos/{slug}/webhooks/test` | ⬜ |
+| `createWebhook(data)` | `POST /projects/{key}/repos/{slug}/webhooks` | ✅ |
+| `updateWebhook(webhookId, data)` | `PUT /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ✅ |
+| `deleteWebhook(webhookId)` | `DELETE /projects/{key}/repos/{slug}/webhooks/{webhookId}` | ✅ |
+| `testWebhook(params)` | `POST /projects/{key}/repos/{slug}/webhooks/test` | ✅ |
 | `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
 | `updateSettings(data)` | `POST /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
-| `archive(params?)` | `GET /projects/{key}/repos/{slug}/archive` (tar/zip download) | ⬜ |
-| `files(path?, params?)` | `GET /projects/{key}/repos/{slug}/files[/{path}]` | ⬜ |
-| `compareChanges(params)` | `GET /projects/{key}/repos/{slug}/compare/changes` | ⬜ |
-| `compareCommits(params)` | `GET /projects/{key}/repos/{slug}/compare/commits` | ⬜ |
-| `compareDiff(params)` | `GET /projects/{key}/repos/{slug}/compare/diff{path}` | ⬜ |
-| `labels()` / add / remove | `GET/POST/DELETE /projects/{key}/repos/{slug}/labels[/{labelName}]` | ⬜ |
-| `readme(params?)` / `license()` / `contributing()` | `GET /projects/{key}/repos/{slug}/readme` etc. | ⬜ |
-| `watch()` / `unwatch()` | `POST/DELETE /projects/{key}/repos/{slug}/watch` | ⬜ |
-| `refChangeActivities(params?)` | `GET /projects/{key}/repos/{slug}/ref-change-activities` | ⬜ |
-| `permissions` (users/groups CRUD) | `GET/PUT/DELETE /projects/{key}/repos/{slug}/permissions/…` | ⬜ |
-| `branchRestrictions(params?)` / CRUD | `GET/POST/DELETE /rest/branch-permissions/latest/projects/{key}/repos/{slug}/restrictions[/{id}]` | ⬜ |
-| `defaultReviewerConditions()` / CRUD | `GET/POST/PUT/DELETE /rest/default-reviewers/latest/projects/{key}/repos/{slug}/condition[s][/{id}]` | ⬜ |
-| `requiredBuildConditions()` / CRUD | `GET/POST/PUT/DELETE /rest/required-builds/latest/projects/{key}/repos/{slug}/condition[s][/{id}]` | ⬜ |
-| `autoDeclineSettings()` / `autoMergeSettings()` / hooks / default tasks | as in ProjectResource, repo-scoped | ⬜ |
-| `syncStatus()` / `synchronize()` | `GET/POST /rest/sync/latest/projects/{key}/repos/{slug}[/synchronize]` | ⬜ |
+| `archive(params?)` | `GET /projects/{key}/repos/{slug}/archive` (tar/zip download) — **blocked**: needs binary response support in the HTTP layer (`request()`/`requestText()` only handle JSON/text) | ⬜ |
+| `files(path?, params?)` | `GET /projects/{key}/repos/{slug}/files[/{path}]` — returns a page of path strings | ✅ |
+| `compareChanges(params?)` | `GET /projects/{key}/repos/{slug}/compare/changes` | ✅ |
+| `compareCommits(params?)` | `GET /projects/{key}/repos/{slug}/compare/commits` | ✅ |
+| `compareDiff(params?)` | `GET /projects/{key}/repos/{slug}/compare/diff{path}` (`path` optional) | ✅ |
+| `labels()` / `addLabel(name)` / `removeLabel(name)` | `GET/POST/DELETE /projects/{key}/repos/{slug}/labels[/{labelName}]` | ✅ |
+| `readme(params?)` / `license(params?)` / `contributing(params?)` | `GET /projects/{key}/repos/{slug}/readme` etc. — Atlassian publishes no response schema; typed defensively (`BitbucketMarkupFile`, `@remarks`) | ✅ |
+| `watch()` / `unwatch()` | `POST/DELETE /projects/{key}/repos/{slug}/watch` | ✅ |
+| `refChangeActivities(params?)` | `GET /projects/{key}/repos/{slug}/ref-change-activities` | ✅ |
+| `users()` / `setUserPermission` / `removeUserPermission` / `groups()` / `setGroupPermission` / `removeGroupPermission` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/permissions/{users,groups}` | ✅ |
+| `searchPermissions(params?)` | `GET /projects/{key}/repos/{slug}/permissions/search` — response typed defensively (`PermittedEntity`) | ✅ |
+| `branchRestrictions(params?)` / `branchRestriction(id)` / `createBranchRestriction(data)` / `deleteBranchRestriction(id)` | `GET/POST/DELETE /rest/branch-permissions/latest/projects/{key}/repos/{slug}/restrictions[/{id}]` — single create as `application/json`; bulk media type not wrapped | ✅ |
+| `defaultReviewerConditions()` / CRUD | `GET/POST/PUT/DELETE /rest/default-reviewers/latest/projects/{key}/repos/{slug}/condition[s][/{id}]` | ✅ |
+| `requiredBuildConditions(params?)` / CRUD | `GET/POST/PUT/DELETE /rest/required-builds/latest/projects/{key}/repos/{slug}/condition[s][/{id}]` (`createRequiredBuildCondition`, `updateRequiredBuildCondition`, `deleteRequiredBuildCondition`) | ✅ |
+| `reviewerGroups()` / `reviewerGroup(id)` / `reviewerGroupUsers(id)` / CRUD | `GET/POST/PUT/DELETE /projects/{key}/repos/{slug}/settings/reviewer-groups[/{id}][/users]` | ✅ |
+| `autoDeclineSettings()` / CRUD | `GET/PUT/DELETE /projects/{key}/repos/{slug}/settings/auto-decline` | ✅ |
+| `autoMergeSettings()` / CRUD | `GET/PUT/DELETE /projects/{key}/repos/{slug}/settings/auto-merge` | ✅ |
+| `hooks(params?)` / `hook(hookKey)` / `enableHook` / `disableHook` / `hookSettings` / `updateHookSettings` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/settings/hooks[/{hookKey}/…]` | ✅ |
+| `defaultTasks()` / CRUD | `GET/POST/PUT/DELETE /rest/default-tasks/latest/projects/{key}/repos/{slug}/tasks[/{taskId}]` (incl. `deleteAllDefaultTasks`) | ✅ |
+| `syncStatus(at?)` / `setSyncStatus(data)` / `synchronize(data)` | `GET/POST /rest/sync/latest/projects/{key}/repos/{slug}[/synchronize]` | ✅ |
 
 ---
 

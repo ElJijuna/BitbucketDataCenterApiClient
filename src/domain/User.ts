@@ -22,6 +22,26 @@ export interface BitbucketUserPermission {
   permission: 'PROJECT_READ' | 'PROJECT_WRITE' | 'PROJECT_ADMIN';
 }
 
+/** A repository-level permission grant. */
+export type RepositoryPermission = 'REPO_READ' | 'REPO_WRITE' | 'REPO_ADMIN';
+
+/**
+ * A user with an explicit permission on a repository.
+ */
+export interface BitbucketRepositoryUserPermission {
+  user: BitbucketUser;
+  permission: RepositoryPermission;
+}
+
+/**
+ * Query parameters accepted by
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/permissions/users`.
+ */
+export interface RepositoryUsersParams extends PaginationParams {
+  /** Filter results by display name or username (prefix match) */
+  filter?: string;
+}
+
 /**
  * Query parameters accepted by `GET /rest/api/latest/users`.
  *
