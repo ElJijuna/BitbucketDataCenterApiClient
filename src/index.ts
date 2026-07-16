@@ -29,6 +29,13 @@ export type {
   BitbucketBrowseResponse,
   BrowseParams,
 } from './domain/Browse';
+export type { AddBuildData, BitbucketBuild } from './domain/Build';
+export type {
+  AddBuildStatusData,
+  BitbucketBuildStatus,
+  BuildState,
+  BuildStatusesParams,
+} from './domain/BuildStatus';
 export type { BitbucketBuildCount, BitbucketBuildSummaries } from './domain/BuildSummary';
 export type {
   BitbucketChange,
@@ -58,6 +65,12 @@ export type {
   DefaultTaskRequest,
   DefaultTasksParams,
 } from './domain/DefaultTask';
+export type {
+  AddDeploymentData,
+  BitbucketDeployment,
+  BitbucketDeploymentEnvironment,
+  DeploymentLookupParams,
+} from './domain/Deployment';
 export type {
   BitbucketDiff,
   BitbucketDiffEntry,
@@ -175,6 +188,11 @@ export type {
   SearchReposParams,
   UpdateRepositoryData,
 } from './domain/Repository';
+export type {
+  BitbucketMergeStrategy,
+  BitbucketRepositorySettings,
+  UpdateRepositorySettingsData,
+} from './domain/RepositorySettings';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
 export type {
   BitbucketRequiredBuildCondition,

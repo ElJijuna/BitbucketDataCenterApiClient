@@ -65,14 +65,19 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | --- | --- |
 | `projects(params?)` | `GET /projects` |
 | `project(key)` | chainable → `ProjectResource` |
+| `createProject(data)` | `POST /projects` — `data: { key, name, description?, avatar? }` (avatar as a base64 data URI) |
 | `repos(params?)` | `GET /repos` (documented params 1:1: `name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `archived`) |
 | `search(params?)` | `GET /repos` (legacy variant, prefixes `%` to `name` for a contains-match) |
 | `users(params?)` | `GET /users` |
 | `user(slug)` | chainable → `UserResource` |
 | `currentUser()` | `X-AUSERNAME` response header + `GET /users?filter={name}` (two requests; no official whoami endpoint) |
+| `groups(params?)` | `GET /groups` — returns a page of group *names* (plain strings) |
 | `dashboardPullRequests(params?)` | `GET /dashboard/pull-requests` — PRs where the authenticated user participates (author, reviewer, etc.) across all repos |
 | `inboxPullRequests(params?)` | `GET /inbox/pull-requests` — PRs requiring the authenticated user's attention |
 | `inboxPullRequestsCount(params?)` | `GET /inbox/pull-requests/count` |
+| `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` — suggestions from the user's recent pushes; params are `changesSince?` (seconds since epoch, default last 48h) and `limit?` only (no `start` offset) |
+| `markupPreview(markup, params?)` | `POST /markup/preview` — renders markup (e.g. Markdown) to `{ html }`; the markup goes as the raw request body; `urlMode?`/`htmlEscape?`/`includeHeadingId?`/`hardwrap?` as query params |
+| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — global code search with Bitbucket's query syntax (e.g. `'jwt project:PROJ ext:ts'`); hits under `result.code.values`; response typed defensively (`CodeSearchResult`) |
 
 ### ProjectResource — `bb.project(key)`
 
@@ -83,6 +88,7 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `delete()` | `DELETE /projects/{key}` |
 | `repos(params?)` | `GET /projects/{key}/repos` |
 | `repo(slug)` | chainable → `RepositoryResource` |
+| `createRepo(data)` | `POST /projects/{key}/repos` — `data: { name, scmId?, defaultBranch?, ... }` |
 | `users(params?)` | `GET /projects/{key}/permissions/users` |
 | `setUserPermission(name, permission)` | `PUT /projects/{key}/permissions/users?name={name}&permission={permission}` — query params, no body; `permission` is one of `'PROJECT_READ'`/`'PROJECT_WRITE'`/`'PROJECT_ADMIN'` |
 | `removeUserPermission(name)` | `DELETE /projects/{key}/permissions/users?name={name}` |
@@ -94,6 +100,18 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `updateWebhook(webhookId, data)` | `PUT /projects/{key}/webhooks/{webhookId}` — same payload shape as `createWebhook` |
 | `deleteWebhook(webhookId)` | `DELETE /projects/{key}/webhooks/{webhookId}` |
 | `testWebhook(params)` | `POST /projects/{key}/webhooks/test` — `webhookId?`/`url?`/`sslVerificationRequired?` sent as query params, `username?`/`password?` as the body |
+| `searchPermissions(params?)` | `GET /projects/{key}/permissions/search` — `permission?` (one or many), `filterText?`, `type?` (`'USER'`/`'GROUP'`); entries typed defensively (`PermittedEntity`) |
+| `defaultReviewerConditions()` | `GET /rest/default-reviewers/latest/projects/{key}/conditions` |
+| `createDefaultReviewerCondition(data)` / `updateDefaultReviewerCondition(id, data)` / `deleteDefaultReviewerCondition(id)` | `POST/PUT/DELETE /rest/default-reviewers/latest/projects/{key}/condition[/{id}]` |
+| `branchRestrictions(params?)` / `branchRestriction(id)` | `GET /rest/branch-permissions/latest/projects/{key}/restrictions[/{id}]` |
+| `createBranchRestriction(data)` / `deleteBranchRestriction(id)` | `POST/DELETE /rest/branch-permissions/latest/projects/{key}/restrictions[/{id}]` — single restriction as `application/json` (the bulk media type is not wrapped) |
+| `reviewerGroups()` / `reviewerGroup(id)` / `createReviewerGroup(data)` / `updateReviewerGroup(id, data)` / `deleteReviewerGroup(id)` | `GET/POST/PUT/DELETE /projects/{key}/settings/reviewer-groups[/{id}]` |
+| `autoDeclineSettings()` / `updateAutoDeclineSettings(data)` / `deleteAutoDeclineSettings()` | `GET/PUT/DELETE /projects/{key}/settings/auto-decline` |
+| `autoMergeSettings()` / `updateAutoMergeSettings(data)` / `deleteAutoMergeSettings()` | `GET/PUT/DELETE /projects/{key}/settings/auto-merge` |
+| `hooks(params?)` / `hook(hookKey)` | `GET /projects/{key}/settings/hooks[/{hookKey}]` |
+| `enableHook(hookKey)` / `disableHook(hookKey)` | `PUT/DELETE /projects/{key}/settings/hooks/{hookKey}/enabled` |
+| `hookSettings(hookKey)` / `updateHookSettings(hookKey, settings)` | `GET/PUT /projects/{key}/settings/hooks/{hookKey}/settings` |
+| `defaultTasks(params?)` / `createDefaultTask(data)` / `updateDefaultTask(taskId, data)` / `deleteDefaultTask(taskId)` / `deleteAllDefaultTasks()` | `GET/POST/PUT/DELETE /rest/default-tasks/latest/projects/{key}/tasks[/{taskId}]` |
 
 ### RepositoryResource — `bb.project(key).repo(slug)`
 
@@ -106,6 +124,7 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `forks(params?)` | `GET /projects/{key}/repos/{slug}/forks` |
 | `pullRequests(params?)` | `GET /projects/{key}/repos/{slug}/pull-requests` |
 | `pullRequest(id)` | chainable → `PullRequestResource` |
+| `createPullRequest(data)` | `POST /projects/{key}/repos/{slug}/pull-requests` — `data: { title, fromRef, toRef, description?, reviewers? }` |
 | `commits(params?)` | `GET /projects/{key}/repos/{slug}/commits` |
 | `commit(commitId)` | chainable → `CommitResource` |
 | `branches(params?)` | `GET /projects/{key}/repos/{slug}/branches` |
@@ -122,9 +141,31 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `raw(filePath, params?)` | `GET /projects/{key}/repos/{slug}/raw/{path}` → plain text |
 | `browse(srcPath?, params?)` | `GET /projects/{key}/repos/{slug}/browse/{srcPath}` |
 | `editFile(filePath, payload)` | `PUT /projects/{key}/repos/{slug}/browse/{path}` (form-encoded) |
+| `files(path?, params?)` | `GET /projects/{key}/repos/{slug}/files[/{path}]` — recursive listing, returns a page of path strings |
+| `archive(params?)` | `GET /projects/{key}/repos/{slug}/archive` → `ArrayBuffer` — `at?`, `format?` (`'zip'` default, `'tar'`, `'tar.gz'`, `'tgz'`), `filename?`, `path?` (one or many), `prefix?` |
+| `compareChanges(params?)` / `compareCommits(params?)` | `GET /projects/{key}/repos/{slug}/compare/{changes,commits}` — `from`, `to`, `fromRepo?` (cross-fork) |
+| `compareDiff(params?)` | `GET /projects/{key}/repos/{slug}/compare/diff[/{path}]` (`path` optional) |
+| `labels()` / `addLabel(name)` / `removeLabel(name)` | `GET/POST/DELETE /projects/{key}/repos/{slug}/labels[/{labelName}]` |
+| `readme(params?)` / `license(params?)` / `contributing(params?)` | `GET /projects/{key}/repos/{slug}/{readme,license,contributing}` — response typed defensively (`BitbucketMarkupFile`) |
+| `watch()` / `unwatch()` | `POST/DELETE /projects/{key}/repos/{slug}/watch` |
+| `refChangeActivities(params?)` | `GET /projects/{key}/repos/{slug}/ref-change-activities` — push/branch/tag activity log, filterable by `ref?` |
 | `webhooks(params?)` | `GET /projects/{key}/repos/{slug}/webhooks/search` |
+| `createWebhook(data)` / `updateWebhook(webhookId, data)` / `deleteWebhook(webhookId)` | `POST/PUT/DELETE /projects/{key}/repos/{slug}/webhooks[/{webhookId}]` — same payload shape as the project-level variants |
+| `testWebhook(params)` | `POST /projects/{key}/repos/{slug}/webhooks/test` — `webhookId?`/`url?`/`sslVerificationRequired?` as query params, `username?`/`password?` as the body |
 | `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` |
 | `updateSettings(data)` | `POST /projects/{key}/repos/{slug}/settings/pull-requests` — partial `BitbucketRepositorySettings`-shaped payload |
+| `users(params?)` / `setUserPermission(name, permission)` / `removeUserPermission(name)` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/permissions/users` — `permission` is `'REPO_READ'`/`'REPO_WRITE'`/`'REPO_ADMIN'`, sent as query params |
+| `groups(params?)` / `setGroupPermission(name, permission)` / `removeGroupPermission(name)` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/permissions/groups` — same conventions |
+| `searchPermissions(params?)` | `GET /projects/{key}/repos/{slug}/permissions/search` — `permission?` (one or many), `filterText?`, `type?`; entries typed defensively (`PermittedEntity`) |
+| `branchRestrictions(params?)` / `branchRestriction(id)` / `createBranchRestriction(data)` / `deleteBranchRestriction(id)` | `GET/POST/DELETE /rest/branch-permissions/latest/projects/{key}/repos/{slug}/restrictions[/{id}]` |
+| `defaultReviewerConditions()` / `createDefaultReviewerCondition(data)` / `updateDefaultReviewerCondition(id, data)` / `deleteDefaultReviewerCondition(id)` | `GET/POST/PUT/DELETE /rest/default-reviewers/latest/projects/{key}/repos/{slug}/condition[s][/{id}]` |
+| `requiredBuildConditions(params?)` / `createRequiredBuildCondition(data)` / `updateRequiredBuildCondition(id, data)` / `deleteRequiredBuildCondition(id)` | `GET/POST/PUT/DELETE /rest/required-builds/latest/projects/{key}/repos/{slug}/condition[s][/{id}]` |
+| `reviewerGroups()` / `reviewerGroup(id)` / `reviewerGroupUsers(id)` / `createReviewerGroup(data)` / `updateReviewerGroup(id, data)` / `deleteReviewerGroup(id)` | `GET/POST/PUT/DELETE /projects/{key}/repos/{slug}/settings/reviewer-groups[/{id}][/users]` |
+| `autoDeclineSettings()` / `updateAutoDeclineSettings(data)` / `deleteAutoDeclineSettings()` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/settings/auto-decline` |
+| `autoMergeSettings()` / `updateAutoMergeSettings(data)` / `deleteAutoMergeSettings()` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/settings/auto-merge` |
+| `hooks(params?)` / `hook(hookKey)` / `enableHook(hookKey)` / `disableHook(hookKey)` / `hookSettings(hookKey)` / `updateHookSettings(hookKey, settings)` | `GET/PUT/DELETE /projects/{key}/repos/{slug}/settings/hooks[/{hookKey}/…]` — same conventions as the project-level variants |
+| `defaultTasks(params?)` / `createDefaultTask(data)` / `updateDefaultTask(taskId, data)` / `deleteDefaultTask(taskId)` / `deleteAllDefaultTasks()` | `GET/POST/PUT/DELETE /rest/default-tasks/latest/projects/{key}/repos/{slug}/tasks[/{taskId}]` |
+| `syncStatus(at?)` / `setSyncStatus(data)` / `synchronize(data)` | `GET/POST /rest/sync/latest/projects/{key}/repos/{slug}[/synchronize]` — fork synchronization |
 
 ### PullRequestResource — `bb.project(key).repo(slug).pullRequest(id)`
 
@@ -200,6 +241,12 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `mergeBase(otherCommitId)` | `GET …/commits/{id}/merge-base/{otherCommitId}` — best common ancestor of the two commits |
 | `watch()` | `POST …/commits/{id}/watch` |
 | `unwatch()` | `DELETE …/commits/{id}/watch` |
+| `insightReports(params?)` / `insightReport(key)` | `GET /rest/insights/latest/…/commits/{id}/reports[/{key}]` — Code Insights reports |
+| `setInsightReport(key, data)` / `deleteInsightReport(key)` | `PUT/DELETE /rest/insights/latest/…/commits/{id}/reports/{key}` |
+| `insightAnnotations(params?)` | `GET /rest/insights/latest/…/commits/{id}/annotations` — annotations across all reports, filterable |
+| `insightReportAnnotations(key)` / `addInsightAnnotations(key, annotations)` | `GET/POST /rest/insights/latest/…/commits/{id}/reports/{key}/annotations` |
+| `setInsightAnnotation(key, externalId, data)` | `PUT /rest/insights/latest/…/commits/{id}/reports/{key}/annotations/{externalId}` |
+| `deleteInsightAnnotations(key, externalId?)` | `DELETE /rest/insights/latest/…/commits/{id}/reports/{key}/annotations[?externalId]` — deletes all when `externalId` is omitted |
 
 ### UserResource — `bb.user(slug)`
 
@@ -209,7 +256,17 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `repos(params?)` | `GET /projects/~{slug}/repos` (personal project convention) |
 | `repo(slug)` | chainable → `RepositoryResource`, via `/projects/~{slug}/repos/{repoSlug}` |
 | `sshKeys(params?)` | `GET /rest/ssh/latest/keys?user={slug}` |
+| `addSshKey(data)` | `POST /rest/ssh/latest/keys?user={slug}` — `data: { text, label?, expiryDays? }`; adding to another user's account requires admin |
+| `deleteSshKey(keyId)` | `DELETE /rest/ssh/latest/keys/{keyId}` |
 | `settings()` | `GET /users/{slug}/settings` |
+| `updateSettings(settings)` | `PUT /users/{slug}/settings` — updates only the entries present in the body |
+| `accessTokens(params?)` / `accessToken(tokenId)` | `GET /rest/access-tokens/latest/users/{slug}[/{tokenId}]` — HTTP access tokens (never include the raw secret) |
+| `createAccessToken(data)` | `PUT /rest/access-tokens/latest/users/{slug}` — **creates with `PUT`** (Atlassian's verbs); `data: { name, permissions, expiryDays? }`; the response is the only place the raw `token` secret is returned |
+| `updateAccessToken(tokenId, data)` | `POST /rest/access-tokens/latest/users/{slug}/{tokenId}` — **updates with `POST`** |
+| `deleteAccessToken(tokenId)` | `DELETE /rest/access-tokens/latest/users/{slug}/{tokenId}` |
+| `gpgKeys(params?)` | `GET /rest/gpg/latest/keys?user={slug}` |
+| `addGpgKey(data)` | `POST /rest/gpg/latest/keys?user={slug}` — `data: { text }` (ASCII-armored public key) |
+| `deleteGpgKey(fingerprintOrId)` | `DELETE /rest/gpg/latest/keys/{fingerprintOrId}` |
 
 ## Webhook event parsing
 
@@ -250,9 +307,9 @@ app.post('/webhooks/bitbucket', (req, res) => {
 | `pr:comment:edited` | `PrCommentEditedPayload` — adds `previousComment` |
 | `pr:comment:deleted` | `PrCommentDeletedPayload` |
 
-## Not yet implemented
+## Coverage
 
-`RepositoryResource` now covers its core CRUD (`update`/`delete`/`fork`) and branch/tag writes (`createBranch`/`deleteBranch`/`createTag`/`deleteTag`/`setDefaultBranch`) plus `updateSettings`. Still pending on it: webhooks CRUD, archive download, file listing, compare endpoints, labels, readme/license/contributing, watch, permissions CRUD, branch restrictions, default-reviewer/required-build conditions, auto-decline/auto-merge settings, hooks, default tasks, sync. `CommitResource` now covers comment writes (`updateComment`/`deleteComment`), `pullRequests`, `mergeBase`, `watch`/`unwatch`, and the modern `builds`/`deployments` APIs, in addition to comments/build-status. Still pending on it: insight reports (list + CRUD + annotations). `ProjectResource` now covers `update`/`delete`, permission writes (`set*Permission`/`remove*Permission` for users and groups), and webhook CRUD + `testWebhook`. Still pending on it: `createRepo`, `searchPermissions`, branch restrictions, reviewer groups, auto-decline/auto-merge settings, hooks, and default tasks. `UserResource` write operations (SSH keys, settings, access tokens, GPG keys) and `BitbucketClient.pullRequestSuggestions()`/`markupPreview()`/`groups()`/`codeSearch()` are also still pending. See ROADMAP.md for the exhaustive, always-current list (⬜ = pending) and the explicitly out-of-scope API groups (system maintenance, global admin auth/permissions, security, mirroring, search/indexing admin).
+The roadmap is fully implemented: every planned method across `BitbucketClient`, `ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, and `UserResource` is available (the only ⚠️ is `RepositoryResource.size()`, kept deliberately on an unofficial endpoint). Whole API groups deliberately out of scope (admin/ops-oriented; open an issue if you need one): system maintenance, admin authentication (IdP/SSO), global admin permissions, security (secret scanning, X.509), mirroring, search/indexing admin, SAML/CSP. See ROADMAP.md for the method-by-endpoint matrix.
 
 ## Pagination
 
@@ -308,4 +365,4 @@ bb.on('request', (event) => {
 
 ## Key exported types
 
-`BitbucketClient`, `BitbucketClientOptions`, `RetryOptions`, `RequestEvent`, `BitbucketClientEvents`, `AuthType`, `Security`, `BitbucketApiError`, `BitbucketErrorDetail`, `paginate`, `PagedResponse`, `PaginationParams`, `ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, `UserResource`, `parseWebhookEvent`, `getWebhookEventKey`, `isWebhookEventKey`, `BitbucketWebhookEvent`, `WebhookEventKey`, plus one domain type module per resource (`BitbucketProject`, `BitbucketRepository`, `BitbucketPullRequest`, `BitbucketCommit`, `BitbucketUser`, `BitbucketWebhook`, `BitbucketBranch`, `BitbucketTag`, `BitbucketDiff`, `BitbucketChange`, etc.) — see README.md's "TypeScript types" section for the full import list.
+`BitbucketClient`, `BitbucketClientOptions`, `RetryOptions`, `RequestEvent`, `BitbucketClientEvents`, `AuthType`, `Security`, `BitbucketApiError`, `BitbucketErrorDetail`, `paginate`, `PagedResponse`, `PaginationParams`, `ProjectResource`, `RepositoryResource`, `PullRequestResource`, `CommitResource`, `UserResource`, `parseWebhookEvent`, `getWebhookEventKey`, `isWebhookEventKey`, `BitbucketWebhookEvent`, `WebhookEventKey`, plus one domain type module per resource (`BitbucketProject`, `BitbucketRepository`, `BitbucketPullRequest`, `BitbucketCommit`, `BitbucketUser`, `BitbucketWebhook`, `BitbucketBranch`, `BitbucketTag`, `BitbucketDiff`, `BitbucketChange`, `BitbucketAccessToken`/`BitbucketCreatedAccessToken`, `BitbucketSshKey`, `BitbucketGpgKey`, `BitbucketPullRequestSuggestion`, `MarkupPreviewResult`, `CodeSearchResult`, etc.) — see README.md's "TypeScript types" section for the full import list.
