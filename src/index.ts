@@ -1,4 +1,11 @@
 export { BitbucketClient } from './BitbucketClient';
+export type {
+  AccessTokensParams,
+  BitbucketAccessToken,
+  BitbucketCreatedAccessToken,
+  CreateAccessTokenData,
+  UpdateAccessTokenData,
+} from './domain/AccessToken';
 export type { AutoDeclineSettings, AutoDeclineSettingsRequest } from './domain/AutoDecline';
 export type {
   AutoMergeProjectSettingsRequest,
@@ -63,6 +70,12 @@ export type {
 } from './domain/Diff';
 export type { BitbucketDiffStatsSummary } from './domain/DiffStatsSummary';
 export type { EditFilePayload } from './domain/EditFile';
+export type {
+  AddGpgKeyData,
+  BitbucketGpgKey,
+  BitbucketGpgSubKey,
+  GpgKeysParams,
+} from './domain/GpgKey';
 export type {
   BitbucketGroup,
   BitbucketGroupPermission,
@@ -176,6 +189,7 @@ export type {
   CodeSearchParams,
   CodeSearchResult,
 } from './domain/Search';
+export type { AddSshKeyData, BitbucketSshKey, SshKeysParams } from './domain/SshKey';
 export type { RefSyncRequest, RefSyncStatus, SetSyncStatusData, SyncRef } from './domain/Sync';
 export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type {
@@ -187,6 +201,7 @@ export type {
   RepositoryUsersParams,
   UsersParams,
 } from './domain/User';
+export type { BitbucketUserSettings } from './domain/UserSettings';
 export type {
   BitbucketWebhook,
   BitbucketWebhookCounts,

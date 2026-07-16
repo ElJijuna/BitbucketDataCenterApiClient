@@ -1312,6 +1312,191 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('user(slug).addSshKey() / deleteSshKey()', () => {
+    const keyData = { text: 'ssh-ed25519 AAAA... laptop', label: 'laptop' };
+    const mockKey = { id: 7, ...keyData };
+
+    it('calls POST /rest/ssh/latest/keys?user={slug} with the key as body', async () => {
+      mockOk(mockKey);
+      await client.user('pilmee').addSshKey(keyData);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/ssh/latest/keys?user=pilmee`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(keyData),
+        }),
+      );
+    });
+
+    it('returns the created key', async () => {
+      mockOk(mockKey);
+      expect(await client.user('pilmee').addSshKey(keyData)).toEqual(mockKey);
+    });
+
+    it('calls DELETE /rest/ssh/latest/keys/{keyId}', async () => {
+      mockOk(undefined);
+      await client.user('pilmee').deleteSshKey(7);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/ssh/latest/keys/7`,
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(400, 'Bad Request');
+      await expect(client.user('pilmee').addSshKey(keyData)).rejects.toThrow(
+        'Bitbucket API error: 400 Bad Request',
+      );
+    });
+  });
+
+  describe('user(slug).updateSettings()', () => {
+    it('calls PUT /users/{slug}/settings with the settings as body', async () => {
+      mockOk(undefined);
+      await client.user('pilmee').updateSettings({ 'my-plugin.setting': true });
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/users/pilmee/settings`,
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ 'my-plugin.setting': true }),
+        }),
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(client.user('pilmee').updateSettings({})).rejects.toThrow(
+        'Bitbucket API error: 403 Forbidden',
+      );
+    });
+  });
+
+  describe('user(slug) access tokens', () => {
+    const mockToken = {
+      id: 'abc123',
+      name: 'ci-read',
+      permissions: ['REPO_READ'],
+      createdDate: 1700000000000,
+    };
+
+    it('accessTokens() calls GET /rest/access-tokens/latest/users/{slug}', async () => {
+      mockOk(pagedOf(mockToken));
+      await client.user('pilmee').accessTokens({ limit: 10 });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${API_URL}/rest/access-tokens/latest/users/pilmee?limit=10`);
+    });
+
+    it('accessTokens() returns the paged response with tokens', async () => {
+      mockOk(pagedOf(mockToken));
+      expect(await client.user('pilmee').accessTokens()).toEqual(pagedOf(mockToken));
+    });
+
+    it('accessToken(id) calls GET /rest/access-tokens/latest/users/{slug}/{tokenId}', async () => {
+      mockOk(mockToken);
+      expect(await client.user('pilmee').accessToken('abc123')).toEqual(mockToken);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/access-tokens/latest/users/pilmee/abc123`,
+        expect.any(Object),
+      );
+    });
+
+    it('createAccessToken() creates via PUT and returns the raw token secret', async () => {
+      const created = { ...mockToken, token: 'raw-secret' };
+      const createData = { name: 'ci-read', permissions: ['REPO_READ'], expiryDays: 90 };
+
+      mockOk(created);
+      expect(await client.user('pilmee').createAccessToken(createData)).toEqual(created);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/access-tokens/latest/users/pilmee`,
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify(createData),
+        }),
+      );
+    });
+
+    it('updateAccessToken() updates via POST', async () => {
+      mockOk(mockToken);
+      await client.user('pilmee').updateAccessToken('abc123', { name: 'renamed' });
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/access-tokens/latest/users/pilmee/abc123`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ name: 'renamed' }),
+        }),
+      );
+    });
+
+    it('deleteAccessToken() calls DELETE', async () => {
+      mockOk(undefined);
+      await client.user('pilmee').deleteAccessToken('abc123');
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/access-tokens/latest/users/pilmee/abc123`,
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.user('pilmee').accessTokens()).rejects.toThrow(
+        'Bitbucket API error: 401 Unauthorized',
+      );
+    });
+  });
+
+  describe('user(slug) GPG keys', () => {
+    const mockGpgKey = {
+      id: 'gpg1',
+      fingerprint: 'A1B2C3D4',
+      emailAddress: 'john@example.com',
+      text: '-----BEGIN PGP PUBLIC KEY BLOCK-----...',
+    };
+
+    it('gpgKeys() calls GET /rest/gpg/latest/keys?user={slug}', async () => {
+      mockOk(pagedOf(mockGpgKey));
+      await client.user('pilmee').gpgKeys({ limit: 10 });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${API_URL}/rest/gpg/latest/keys?user=pilmee&limit=10`);
+    });
+
+    it('gpgKeys() returns the paged response with keys', async () => {
+      mockOk(pagedOf(mockGpgKey));
+      expect(await client.user('pilmee').gpgKeys()).toEqual(pagedOf(mockGpgKey));
+    });
+
+    it('addGpgKey() calls POST /rest/gpg/latest/keys?user={slug} with the key as body', async () => {
+      const addData = { text: '-----BEGIN PGP PUBLIC KEY BLOCK-----...' };
+
+      mockOk(mockGpgKey);
+      expect(await client.user('pilmee').addGpgKey(addData)).toEqual(mockGpgKey);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/gpg/latest/keys?user=pilmee`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(addData),
+        }),
+      );
+    });
+
+    it('deleteGpgKey() calls DELETE /rest/gpg/latest/keys/{fingerprintOrId}', async () => {
+      mockOk(undefined);
+      await client.user('pilmee').deleteGpgKey('A1B2C3D4');
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/gpg/latest/keys/A1B2C3D4`,
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(403, 'Forbidden');
+      await expect(client.user('pilmee').gpgKeys()).rejects.toThrow(
+        'Bitbucket API error: 403 Forbidden',
+      );
+    });
+  });
+
   describe('user(slug).repos()', () => {
     it('calls GET /projects/~{slug}/repos', async () => {
       mockOk(pagedOf(mockRepo));

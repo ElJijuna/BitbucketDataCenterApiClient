@@ -30,6 +30,17 @@ export interface BitbucketSshKey {
 }
 
 /**
+ * Payload for `POST /rest/ssh/latest/keys`.
+ */
+export interface AddSshKeyData {
+  /** The public key material (e.g. `'ssh-ed25519 AAAA... comment'`) */
+  text: string;
+  label?: string;
+  /** Days until the key expires; omit for a non-expiring key (if the instance allows it) */
+  expiryDays?: number;
+}
+
+/**
  * Query parameters accepted by `GET /rest/ssh/latest/keys`.
  */
 export type SshKeysParams = PaginationParams;

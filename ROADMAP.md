@@ -284,12 +284,12 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `repos(params?)` | `GET /projects/~{slug}/repos` (personal project; `/users/{slug}/repos` is undocumented) | ✅ |
 | `repo(slug)` | — chainable via `/projects/~{slug}/repos/{repoSlug}` | ✅ |
 | `sshKeys(params?)` | `GET /rest/ssh/latest/keys?user={slug}` (`/users/{slug}/ssh` is undocumented) | ✅ |
-| `addSshKey(data)` | `POST /rest/ssh/latest/keys?user={slug}` | ⬜ |
-| `deleteSshKey(keyId)` | `DELETE /rest/ssh/latest/keys/{keyId}` | ⬜ |
+| `addSshKey(data)` | `POST /rest/ssh/latest/keys?user={slug}` | ✅ |
+| `deleteSshKey(keyId)` | `DELETE /rest/ssh/latest/keys/{keyId}` | ✅ |
 | `settings()` | `GET /users/{slug}/settings` | ✅ |
-| `updateSettings(data)` | `PUT /users/{slug}/settings` | ⬜ |
-| `accessTokens(params?)` / CRUD | `GET/PUT/POST/DELETE /rest/access-tokens/latest/users/{slug}[/{tokenId}]` | ⬜ |
-| `gpgKeys()` / CRUD | `GET/POST/DELETE /rest/gpg/latest/keys[/{fingerprintOrId}]` | ⬜ |
+| `updateSettings(data)` | `PUT /users/{slug}/settings` — updates only the entries present in the body | ✅ |
+| `accessTokens(params?)` / `accessToken(id)` / CRUD | `GET/PUT/POST/DELETE /rest/access-tokens/latest/users/{slug}[/{tokenId}]` (`createAccessToken` creates with `PUT`, `updateAccessToken` updates with `POST` — Atlassian's verbs; `deleteAccessToken`). The raw token secret is only returned on create (`BitbucketCreatedAccessToken`) | ✅ |
+| `gpgKeys(params?)` / CRUD | `GET/POST/DELETE /rest/gpg/latest/keys[/{fingerprintOrId}]` (`addGpgKey`, `deleteGpgKey`; list/create scoped to the user via `?user={slug}`) | ✅ |
 
 ---
 
