@@ -208,6 +208,32 @@ describe('ProjectResource write operations', () => {
 
       expect(url).toBe(`${PROJECT_BASE}/webhooks/test`);
     });
+
+    it('accepts an existing webhookId', async () => {
+      mockOk({});
+      await project().testWebhook({ webhookId: 7 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PROJECT_BASE}/webhooks/test?webhookId=7`);
+    });
+  });
+
+  describe('users() / groups()', () => {
+    it('users() sends GET with the filter', async () => {
+      mockOk({ values: [] });
+      await project().users({ filter: 'jdoe' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PROJECT_BASE}/permissions/users?filter=jdoe`);
+    });
+
+    it('groups() sends GET with filter and permission', async () => {
+      mockOk({ values: [] });
+      await project().groups({ filter: 'dev', permission: 'PROJECT_READ' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PROJECT_BASE}/permissions/groups?filter=dev&permission=PROJECT_READ`);
+    });
   });
 
   describe('createRepo()', () => {

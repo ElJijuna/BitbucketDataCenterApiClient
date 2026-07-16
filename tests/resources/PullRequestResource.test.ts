@@ -528,4 +528,47 @@ describe('PullRequestResource write operations', () => {
       expect(result).toBe('From abc123 Mon Sep 17 00:00:00 2001');
     });
   });
+
+  describe('comments() / reviewers() / diff()', () => {
+    it('comments() calls GET .../comments with pagination params', async () => {
+      mockOk({ values: [] });
+      await pr().comments({ limit: 50 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PR_BASE}/comments?limit=50`);
+    });
+
+    it('reviewers() calls GET .../participants', async () => {
+      mockOk({ values: [mockAuthorParticipant] });
+      const result = await pr().reviewers();
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PR_BASE}/participants`);
+      expect(result).toEqual({ values: [mockAuthorParticipant] });
+    });
+
+    it('diff() calls GET .../diff when no path is given', async () => {
+      mockOk({ diffs: [] });
+      await pr().diff({ contextLines: 3 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PR_BASE}/diff?contextLines=3`);
+    });
+
+    it('diff() appends the file path', async () => {
+      mockOk({ diffs: [] });
+      await pr().diff({ path: 'src/index.ts' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PR_BASE}/diff/src/index.ts`);
+    });
+
+    it('diff() works without params', async () => {
+      mockOk({ diffs: [] });
+      await pr().diff();
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PR_BASE}/diff`);
+    });
+  });
 });

@@ -77,6 +77,10 @@ describe('getWebhookEventKey', () => {
     expect(getWebhookEventKey({})).toBeUndefined();
     expect(getWebhookEventKey(undefined)).toBeUndefined();
   });
+
+  it('returns undefined when a get()-style object has no X-Event-Key header', () => {
+    expect(getWebhookEventKey({ get: () => null })).toBeUndefined();
+  });
 });
 
 describe('isWebhookEventKey', () => {

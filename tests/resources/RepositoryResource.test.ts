@@ -293,6 +293,27 @@ describe('RepositoryResource write operations', () => {
       expect(init.method).toBe('POST');
       expect(init.body).toBe(JSON.stringify({ username: 'ci-bot', password: 'secret' }));
     });
+
+    it('testWebhook() accepts a candidate url and sslVerificationRequired', async () => {
+      mockOk({});
+      await repo().testWebhook({
+        url: 'https://ci.example.com/hook',
+        sslVerificationRequired: true,
+      });
+      const [url] = lastCall();
+
+      expect(url).toBe(
+        `${REPO_BASE}/webhooks/test?url=https%3A%2F%2Fci.example.com%2Fhook&sslVerificationRequired=true`,
+      );
+    });
+
+    it('testWebhook() omits the query string when no query params are given', async () => {
+      mockOk({});
+      await repo().testWebhook({});
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/webhooks/test`);
+    });
   });
 
   describe('archive()', () => {
@@ -330,6 +351,71 @@ describe('RepositoryResource write operations', () => {
       const [url] = lastCall();
 
       expect(url).toBe(`${REPO_BASE}/archive`);
+    });
+
+    it('appends the filename param', async () => {
+      mockBinary(new Uint8Array());
+      await repo().archive({ filename: 'my-repo.zip' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/archive?filename=my-repo.zip`);
+    });
+
+    it('accepts a single path string', async () => {
+      mockBinary(new Uint8Array());
+      await repo().archive({ path: 'src' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/archive?path=src`);
+    });
+
+    it('throws a BitbucketApiError on a non-OK response', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: () => Promise.resolve({}),
+      } as Response);
+
+      await expect(repo().archive()).rejects.toThrow('Bitbucket API error: 404 Not Found');
+    });
+  });
+
+  describe('read endpoints', () => {
+    it('defaultBranch() calls GET .../branches/default', async () => {
+      const branch = { id: 'refs/heads/main', displayId: 'main', type: 'BRANCH', isDefault: true };
+
+      mockOk(branch);
+      expect(await repo().defaultBranch()).toEqual(branch);
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/branches/default`);
+    });
+
+    it('browse() lists the repository root when no path is given', async () => {
+      mockOk({ path: { toString: '' }, children: { values: [] } });
+      await repo().browse(undefined, { at: 'refs/heads/main' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/browse?at=refs%2Fheads%2Fmain`);
+    });
+
+    it('browse() appends the source path', async () => {
+      mockOk({ path: { toString: 'src' }, children: { values: [] } });
+      await repo().browse('src');
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/browse/src`);
+    });
+
+    it('settings() calls GET .../settings/pull-requests', async () => {
+      const settings = { mergeConfig: { defaultStrategy: { id: 'no-ff' } } };
+
+      mockOk(settings);
+      expect(await repo().settings()).toEqual(settings);
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/settings/pull-requests`);
     });
   });
 
@@ -382,6 +468,14 @@ describe('RepositoryResource write operations', () => {
       const [url] = lastCall();
 
       expect(url).toBe(`${REPO_BASE}/compare/diff/src/index.ts?from=feature%2Fx&to=main`);
+    });
+
+    it('compareDiff() works without params', async () => {
+      mockOk({ diffs: [] });
+      await repo().compareDiff();
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/compare/diff`);
     });
   });
 
@@ -518,6 +612,14 @@ describe('RepositoryResource write operations', () => {
       expect(init.method).toBe('DELETE');
     });
 
+    it('groups() sends GET with the filter', async () => {
+      mockOk({ values: [] });
+      await repo().groups({ filter: 'dev' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/permissions/groups?filter=dev`);
+    });
+
     it('searchPermissions() sends GET with repeated permission params', async () => {
       mockOk({ values: [] });
       await repo().searchPermissions({ permission: ['REPO_READ', 'REPO_ADMIN'], type: 'USER' });
@@ -526,6 +628,28 @@ describe('RepositoryResource write operations', () => {
       expect(url).toBe(
         `${REPO_BASE}/permissions/search?permission=REPO_READ&permission=REPO_ADMIN&type=USER`,
       );
+    });
+
+    it('searchPermissions() accepts a single permission string', async () => {
+      mockOk({ values: [] });
+      await repo().searchPermissions({ permission: 'REPO_READ' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/permissions/search?permission=REPO_READ`);
+    });
+
+    it('searchPermissions() appends filterText and omits the query string without params', async () => {
+      mockOk({ values: [] });
+      await repo().searchPermissions({ filterText: 'dev' });
+      const [firstUrl] = lastCall();
+
+      expect(firstUrl).toBe(`${REPO_BASE}/permissions/search?filterText=dev`);
+
+      mockOk({ values: [] });
+      await repo().searchPermissions();
+      const [secondUrl] = lastCall();
+
+      expect(secondUrl).toBe(`${REPO_BASE}/permissions/search`);
     });
   });
 

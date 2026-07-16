@@ -242,6 +242,34 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('search()', () => {
+    it('prefixes the name filter with % for a contains-style match', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.search({ name: 'api', projectkey: 'PROJ' });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/repos?projectkey=PROJ&name=%25api`);
+    });
+
+    it('passes no name param when name is omitted', async () => {
+      mockOk(pagedOf(mockRepo));
+      await client.search({ limit: 10 });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/repos?limit=10`);
+    });
+
+    it('returns the paged response with repositories', async () => {
+      mockOk(pagedOf(mockRepo));
+      expect(await client.search({ name: 'api' })).toEqual(pagedOf(mockRepo));
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.search()).rejects.toThrow('Bitbucket API error: 401 Unauthorized');
+    });
+  });
+
   describe('dashboardPullRequests()', () => {
     it('calls GET /dashboard/pull-requests', async () => {
       mockOk(pagedOf(mockPullRequest));
@@ -1350,6 +1378,23 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('user(slug).settings()', () => {
+    it('calls GET /users/{slug}/settings', async () => {
+      const settings = { 'my-plugin.setting': true };
+
+      mockOk(settings);
+      expect(await client.user('pilmee').settings()).toEqual(settings);
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/users/pilmee/settings`, expect.any(Object));
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(404, 'Not Found');
+      await expect(client.user('pilmee').settings()).rejects.toThrow(
+        'Bitbucket API error: 404 Not Found',
+      );
+    });
+  });
+
   describe('user(slug).updateSettings()', () => {
     it('calls PUT /users/{slug}/settings with the settings as body', async () => {
       mockOk(undefined);
@@ -1582,6 +1627,25 @@ describe('BitbucketClient', () => {
       await expect(client.user('pilmee').repo('my-repo').raw('src/index.ts')).rejects.toThrow(
         'Bitbucket API error: 404 Not Found',
       );
+    });
+  });
+
+  describe('user(slug).repo(slug).archive()', () => {
+    it('downloads the archive through the personal project path', async () => {
+      const bytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04]);
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        arrayBuffer: () => Promise.resolve(bytes.buffer),
+      } as Response);
+
+      const result = await client.user('pilmee').repo('my-repo').archive();
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/projects/~pilmee/repos/my-repo/archive`);
+      expect(new Uint8Array(result)).toEqual(bytes);
     });
   });
 
@@ -2074,6 +2138,98 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe("on('request') events", () => {
+    it('emits a request event with timing info on a successful GET', async () => {
+      const events: unknown[] = [];
+
+      client.on('request', (event) => events.push(event));
+      mockOk(pagedOf(mockProject));
+      await client.projects();
+
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({
+        url: `${BASE}/projects`,
+        method: 'GET',
+        statusCode: 200,
+      });
+      expect(events[0]).toMatchObject({
+        startedAt: expect.any(Date),
+        finishedAt: expect.any(Date),
+        durationMs: expect.any(Number),
+      });
+    });
+
+    it('emits a request event with the error on a failed request', async () => {
+      const events: { statusCode?: number; error?: Error }[] = [];
+
+      client.on('request', (event) => events.push(event));
+      mockError(404, 'Not Found');
+      await expect(client.projects()).rejects.toThrow('Bitbucket API error: 404 Not Found');
+
+      expect(events).toHaveLength(1);
+      expect(events[0].statusCode).toBe(404);
+      expect(events[0].error).toBeInstanceOf(BitbucketApiError);
+    });
+
+    it('emits request events for write requests with the method', async () => {
+      const events: { method?: string }[] = [];
+
+      client.on('request', (event) => events.push(event));
+      mockOk(mockProject);
+      await client.createProject({ key: 'PROJ', name: 'My Project' });
+
+      expect(events).toHaveLength(1);
+      expect(events[0].method).toBe('POST');
+    });
+
+    it('wraps non-Error rejections in an Error on the event, for every request kind', async () => {
+      const events: { error?: Error }[] = [];
+
+      client.on('request', (event) => events.push(event));
+
+      // GET (request), POST (requestPost), text (requestText), binary (requestBinary), whoami
+      fetchMock.mockRejectedValueOnce('boom');
+      await expect(client.projects()).rejects.toBe('boom');
+
+      fetchMock.mockRejectedValueOnce('boom');
+      await expect(client.createProject({ key: 'PROJ', name: 'P' })).rejects.toBe('boom');
+
+      fetchMock.mockRejectedValueOnce('boom');
+      await expect(client.project('PROJ').repo('my-repo').pullRequest(1).rawDiff()).rejects.toBe(
+        'boom',
+      );
+
+      fetchMock.mockRejectedValueOnce('boom');
+      await expect(client.project('PROJ').repo('my-repo').archive()).rejects.toBe('boom');
+
+      fetchMock.mockRejectedValueOnce('boom');
+      await expect(client.currentUser()).rejects.toBe('boom');
+
+      expect(events).toHaveLength(5);
+
+      for (const event of events) {
+        expect(event.error).toBeInstanceOf(Error);
+        expect(event.error?.message).toBe('boom');
+      }
+    });
+
+    it('supports multiple listeners and returns the client for chaining', async () => {
+      const first: unknown[] = [];
+      const second: unknown[] = [];
+      const returned = client
+        .on('request', (e) => first.push(e))
+        .on('request', (e) => second.push(e));
+
+      expect(returned).toBe(client);
+
+      mockOk(pagedOf(mockProject));
+      await client.projects();
+
+      expect(first).toHaveLength(1);
+      expect(second).toHaveLength(1);
+    });
+  });
+
   describe('BitbucketApiError', () => {
     it('throws a BitbucketApiError instance on non-OK response', async () => {
       mockError(404, 'Not Found');
@@ -2110,6 +2266,13 @@ describe('BitbucketClient', () => {
       await expect(
         client.project('PROJ').repo('my-repo').raw('src/index.ts'),
       ).rejects.toBeInstanceOf(BitbucketApiError);
+    });
+
+    it('defaults to an empty errors array when constructed without details', () => {
+      const error = new BitbucketApiError(404, 'Not Found');
+
+      expect(error.message).toBe('Bitbucket API error: 404 Not Found');
+      expect(error.errors).toEqual([]);
     });
   });
 
@@ -2390,6 +2553,56 @@ describe('BitbucketClient', () => {
       await expect(retryClient.projects()).rejects.toThrow(
         'Bitbucket API error: 429 Too Many Requests',
       );
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    function mock429(retryAfter: string | null): void {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
+        headers: { get: (name: string) => (name === 'Retry-After' ? retryAfter : null) },
+        json: () => Promise.resolve({}),
+      } as unknown as Response);
+    }
+
+    function retryClientWith(maxDelayMs: number): BitbucketClient {
+      return new BitbucketClient({
+        apiUrl: API_URL,
+        apiPath: API_PATH,
+        user: USER,
+        token: TOKEN,
+        retry: { maxRetries: 1, maxDelayMs },
+      });
+    }
+
+    it('falls back to a 1s delay (capped by maxDelayMs) when Retry-After is missing', async () => {
+      mock429(null);
+      mockOk(pagedOf(mockProject));
+
+      const result = await retryClientWith(5).projects();
+
+      expect(result).toEqual(pagedOf(mockProject));
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('parses an HTTP-date Retry-After header (capped by maxDelayMs)', async () => {
+      mock429(new Date(Date.now() + 60000).toUTCString());
+      mockOk(pagedOf(mockProject));
+
+      const result = await retryClientWith(5).projects();
+
+      expect(result).toEqual(pagedOf(mockProject));
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('falls back to a 1s delay (capped by maxDelayMs) on an unparseable Retry-After header', async () => {
+      mock429('not-a-date');
+      mockOk(pagedOf(mockProject));
+
+      const result = await retryClientWith(5).projects();
+
+      expect(result).toEqual(pagedOf(mockProject));
       expect(fetchMock).toHaveBeenCalledTimes(2);
     });
   });

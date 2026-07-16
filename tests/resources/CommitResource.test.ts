@@ -338,4 +338,49 @@ describe('CommitResource write/read operations', () => {
       expect(init.method).toBe('DELETE');
     });
   });
+
+  describe('comments() / addComment()', () => {
+    it('comments() calls GET .../comments with pagination params', async () => {
+      mockOk({ values: [] });
+      await commit().comments({ limit: 50 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${COMMIT_BASE}/comments?limit=50`);
+    });
+
+    it('addComment() sends POST with the payload', async () => {
+      const payload = { text: 'Nice fix' };
+
+      mockOk({ id: 1, ...payload }, 201);
+      const result = await commit().addComment(payload);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${COMMIT_BASE}/comments`);
+      expect(init.method).toBe('POST');
+      expect(init.body).toBe(JSON.stringify(payload));
+      expect(result).toEqual({ id: 1, ...payload });
+    });
+  });
+
+  describe('buildStatuses() / addBuildStatus()', () => {
+    it('buildStatuses() calls GET /rest/build-status/latest/commits/{id}', async () => {
+      mockOk({ values: [] });
+      await commit().buildStatuses({ limit: 10 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${API_URL}/rest/build-status/latest/commits/abc123?limit=10`);
+    });
+
+    it('addBuildStatus() sends POST with the payload', async () => {
+      const payload = { state: 'SUCCESSFUL', key: 'CI', url: 'https://ci.example.com/1' } as const;
+
+      mockNoContent();
+      await commit().addBuildStatus(payload);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${API_URL}/rest/build-status/latest/commits/abc123`);
+      expect(init.method).toBe('POST');
+      expect(init.body).toBe(JSON.stringify(payload));
+    });
+  });
 });
