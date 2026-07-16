@@ -3,7 +3,7 @@ import type { BitbucketRepository, ReposParams } from '../domain/Repository';
 import type { BitbucketSshKey, SshKeysParams } from '../domain/SshKey';
 import type { BitbucketUser } from '../domain/User';
 import type { BitbucketUserSettings } from '../domain/UserSettings';
-import type { RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
+import type { RequestBinaryFn, RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
 import { RepositoryResource } from './RepositoryResource';
 
 /**
@@ -27,6 +27,7 @@ export class UserResource implements PromiseLike<BitbucketUser> {
     private readonly requestText: RequestTextFn,
     private readonly requestBody: RequestBodyFn,
     readonly slug: string,
+    private readonly requestBinary?: RequestBinaryFn,
   ) {
     this.basePath = `/users/${slug}`;
   }
@@ -119,6 +120,7 @@ export class UserResource implements PromiseLike<BitbucketUser> {
       this.requestText,
       this.requestBody,
       `/projects/~${this.slug}/repos/${repoSlug}`,
+      this.requestBinary,
     );
   }
 }

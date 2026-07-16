@@ -17,6 +17,7 @@ import type { BitbucketUser, UsersParams } from './domain/User';
 import { BitbucketApiError, type BitbucketErrorDetail } from './errors/BitbucketApiError';
 import {
   ProjectResource,
+  type RequestBinaryFn,
   type RequestBodyFn,
   type RequestFn,
   type RequestTextFn,
@@ -303,6 +304,58 @@ export class BitbucketClient {
     }
   }
 
+  private async requestBinary(
+    path: string,
+    params?: Record<string, string | number | boolean>,
+  ): Promise<ArrayBuffer> {
+    const base = `${this.security.getApiUrl()}/${this.apiPath}${path}`;
+    const url = buildUrl(base, params);
+    const startedAt = new Date();
+
+    let statusCode: number | undefined;
+
+    try {
+      const response = await this.fetchWithRetry(url, { headers: this.security.getHeaders() });
+
+      statusCode = response.status;
+
+      if (!response.ok) {
+        throw new BitbucketApiError(
+          response.status,
+          response.statusText,
+          await parseErrorBody(response),
+        );
+      }
+
+      const data = await response.arrayBuffer();
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt: new Date(),
+        durationMs: Date.now() - startedAt.getTime(),
+        statusCode,
+      });
+
+      return data;
+    } catch (err) {
+      const finishedAt = new Date();
+
+      this.emit('request', {
+        url,
+        method: 'GET',
+        startedAt,
+        finishedAt,
+        durationMs: finishedAt.getTime() - startedAt.getTime(),
+        statusCode,
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
+
+      throw err;
+    }
+  }
+
   /**
    * Fetches all projects accessible to the authenticated user.
    *
@@ -347,8 +400,9 @@ export class BitbucketClient {
       body?: unknown,
       options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
     ) => this.requestPost<T>(path, body, options);
+    const requestBinary: RequestBinaryFn = (path, params) => this.requestBinary(path, params);
 
-    return new ProjectResource(request, requestText, requestBody, projectKey);
+    return new ProjectResource(request, requestText, requestBody, projectKey, requestBinary);
   }
 
   /**
@@ -392,8 +446,9 @@ export class BitbucketClient {
       body?: unknown,
       options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
     ) => this.requestPost<T>(path, body, options);
+    const requestBinary: RequestBinaryFn = (path, params) => this.requestBinary(path, params);
 
-    return new UserResource(request, requestText, requestBody, slug);
+    return new UserResource(request, requestText, requestBody, slug, requestBinary);
   }
 
   /**

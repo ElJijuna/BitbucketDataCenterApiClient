@@ -54,6 +54,12 @@ export type RequestBodyFn = <T>(
   options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
 ) => Promise<T>;
 
+/** @internal */
+export type RequestBinaryFn = (
+  path: string,
+  params?: Record<string, string | number | boolean>,
+) => Promise<ArrayBuffer>;
+
 /**
  * Represents a Bitbucket project resource with chainable async methods.
  *
@@ -82,6 +88,7 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
     private readonly requestText: RequestTextFn,
     private readonly requestBody: RequestBodyFn,
     private readonly key: string,
+    private readonly requestBinary?: RequestBinaryFn,
   ) {}
 
   /**
@@ -170,6 +177,7 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
       this.requestText,
       this.requestBody,
       `/projects/${this.key}/repos/${repoSlug}`,
+      this.requestBinary,
     );
   }
 

@@ -143,6 +143,7 @@ export type {
   SetInsightReportData,
 } from './domain/Report';
 export type {
+  ArchiveParams,
   BitbucketRepository,
   CreateRepositoryData,
   FilesParams,

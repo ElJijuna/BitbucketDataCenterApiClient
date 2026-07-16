@@ -81,6 +81,23 @@ export interface ForkRepositoryData {
 
 /**
  * Query parameters accepted by
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/archive`.
+ */
+export interface ArchiveParams {
+  /** Branch, tag, or commit to archive; defaults to the default branch */
+  at?: string;
+  /** Archive format; defaults to `'zip'` */
+  format?: 'zip' | 'tar' | 'tar.gz' | 'tgz';
+  /** Filename suggested in the `Content-Disposition` response header */
+  filename?: string;
+  /** Paths to include in the archive; omit to archive the whole repository */
+  path?: string | string[];
+  /** Prefix prepended to every entry in the archive (e.g. `'my-repo/'`) */
+  prefix?: string;
+}
+
+/**
+ * Query parameters accepted by
  * `GET /rest/api/latest/projects/{key}/repos/{slug}/files[/{path}]`.
  */
 export interface FilesParams extends PaginationParams {

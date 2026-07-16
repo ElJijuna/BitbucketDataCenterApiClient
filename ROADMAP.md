@@ -24,6 +24,7 @@ Prerequisites for most pending write operations.
 | Rate-limit handling | `429` + `Retry-After` retried with configurable `retry: { maxRetries, maxDelayMs }` | ✅ |
 | Auto-pagination helper | `paginate()` async generator, `for await…of` over `isLastPage`/`nextPageStart` | ✅ |
 | Bearer authentication | `authType: 'bearer'` sends `Authorization: Bearer <token>`; `'basic'` remains the default | ✅ |
+| Binary responses | `requestBinary()` resolves to an `ArrayBuffer` (used by `RepositoryResource.archive()`) | ✅ |
 
 ---
 
@@ -180,7 +181,7 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `testWebhook(params)` | `POST /projects/{key}/repos/{slug}/webhooks/test` | ✅ |
 | `settings()` | `GET /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
 | `updateSettings(data)` | `POST /projects/{key}/repos/{slug}/settings/pull-requests` | ✅ |
-| `archive(params?)` | `GET /projects/{key}/repos/{slug}/archive` (tar/zip download) — **blocked**: needs binary response support in the HTTP layer (`request()`/`requestText()` only handle JSON/text) | ⬜ |
+| `archive(params?)` | `GET /projects/{key}/repos/{slug}/archive` — returns the tar/zip as an `ArrayBuffer` (via the binary HTTP layer) | ✅ |
 | `files(path?, params?)` | `GET /projects/{key}/repos/{slug}/files[/{path}]` — returns a page of path strings | ✅ |
 | `compareChanges(params?)` | `GET /projects/{key}/repos/{slug}/compare/changes` | ✅ |
 | `compareCommits(params?)` | `GET /projects/{key}/repos/{slug}/compare/commits` | ✅ |

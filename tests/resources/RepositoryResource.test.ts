@@ -295,6 +295,44 @@ describe('RepositoryResource write operations', () => {
     });
   });
 
+  describe('archive()', () => {
+    function mockBinary(bytes: Uint8Array): void {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        arrayBuffer: () => Promise.resolve(bytes.buffer),
+      } as Response);
+    }
+
+    it('sends GET with format, at, and repeated path params and returns the bytes', async () => {
+      const bytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04]);
+
+      mockBinary(bytes);
+      const result = await repo().archive({
+        at: 'refs/heads/main',
+        format: 'zip',
+        path: ['src', 'README.md'],
+        prefix: 'my-repo/',
+      });
+      const [url, init] = lastCall();
+
+      expect(url).toBe(
+        `${REPO_BASE}/archive?at=refs%2Fheads%2Fmain&format=zip&path=src&path=README.md&prefix=my-repo%2F`,
+      );
+      expect(init.method ?? 'GET').toBe('GET');
+      expect(new Uint8Array(result)).toEqual(bytes);
+    });
+
+    it('omits the query string when called without params', async () => {
+      mockBinary(new Uint8Array());
+      await repo().archive();
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/archive`);
+    });
+  });
+
   describe('files()', () => {
     it('lists from the root with at param', async () => {
       mockOk({ values: ['README.md', 'src/index.ts'] });

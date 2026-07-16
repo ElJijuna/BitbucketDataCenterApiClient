@@ -45,6 +45,7 @@ import type {
   RefChangeActivitiesParams,
 } from '../domain/RefChangeActivity';
 import type {
+  ArchiveParams,
   BitbucketRepository,
   FilesParams,
   ForkRepositoryData,
@@ -76,7 +77,7 @@ import type {
   WebhookTestResult,
 } from '../domain/Webhook';
 import { CommitResource } from './CommitResource';
-import type { RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
+import type { RequestBinaryFn, RequestBodyFn, RequestFn, RequestTextFn } from './ProjectResource';
 import { PullRequestResource } from './PullRequestResource';
 
 /**
@@ -109,6 +110,7 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
     private readonly requestText: RequestTextFn,
     private readonly requestBody: RequestBodyFn,
     basePath: string,
+    private readonly requestBinary?: RequestBinaryFn,
   ) {
     this.basePath = basePath;
   }
@@ -577,6 +579,52 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
     const path = `${this.basePath}/webhooks/test${qs ? `?${qs}` : ''}`;
 
     return this.requestBody<WebhookTestResult>(path, { username, password });
+  }
+
+  /**
+   * Downloads an archive (zip/tar) of this repository's content at a given ref.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/archive`
+   *
+   * @param params - Optional: `at`, `format` (`'zip'` default, `'tar'`, `'tar.gz'`, `'tgz'`),
+   * `filename`, `path` (one or many, to archive a subset), `prefix`
+   * @returns The archive's raw bytes; wrap with `Buffer.from(...)` in Node.js to write it to disk
+   *
+   * @example
+   * ```typescript
+   * const archive = await bbClient.project('PROJ').repo('my-repo').archive({ format: 'tgz' });
+   * await fs.promises.writeFile('my-repo.tgz', Buffer.from(archive));
+   * ```
+   */
+  async archive(params?: ArchiveParams): Promise<ArrayBuffer> {
+    const query = new URLSearchParams();
+    const { at, format, filename, path, prefix } = params ?? {};
+    const paths = path === undefined ? [] : Array.isArray(path) ? path : [path];
+
+    if (at !== undefined) {
+      query.set('at', at);
+    }
+
+    if (format !== undefined) {
+      query.set('format', format);
+    }
+
+    if (filename !== undefined) {
+      query.set('filename', filename);
+    }
+
+    for (const includedPath of paths) {
+      query.append('path', includedPath);
+    }
+
+    if (prefix !== undefined) {
+      query.set('prefix', prefix);
+    }
+
+    const qs = query.toString();
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBinary is always set when this method is called
+    return this.requestBinary!(`${this.basePath}/archive${qs ? `?${qs}` : ''}`);
   }
 
   /**
