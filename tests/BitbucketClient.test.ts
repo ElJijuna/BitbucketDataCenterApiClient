@@ -180,6 +180,34 @@ describe('BitbucketClient', () => {
     });
   });
 
+  describe('createProject()', () => {
+    const createData = { key: 'PROJ', name: 'My Project', description: 'A project' };
+
+    it('calls POST /projects with the project as body', async () => {
+      mockOk(mockProject);
+      await client.createProject(createData);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/projects`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(createData),
+        }),
+      );
+    });
+
+    it('returns the created project', async () => {
+      mockOk(mockProject);
+      expect(await client.createProject(createData)).toEqual(mockProject);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(409, 'Conflict');
+      await expect(client.createProject(createData)).rejects.toThrow(
+        'Bitbucket API error: 409 Conflict',
+      );
+    });
+  });
+
   describe('repos()', () => {
     it('calls GET /repos', async () => {
       mockOk(pagedOf(mockRepo));
@@ -305,6 +333,165 @@ describe('BitbucketClient', () => {
       await expect(client.inboxPullRequestsCount()).rejects.toThrow(
         'Bitbucket API error: 401 Unauthorized',
       );
+    });
+  });
+
+  describe('pullRequestSuggestions()', () => {
+    const mockSuggestion = {
+      changeTime: 1700000000000,
+      refChange: {
+        refId: 'refs/heads/feature',
+        fromHash: 'abc123',
+        toHash: 'def456',
+        type: 'UPDATE',
+      },
+      repository: mockRepo,
+      fromRef: { id: 'refs/heads/feature', displayId: 'feature', type: 'BRANCH' },
+      toRef: { id: 'refs/heads/main', displayId: 'main', type: 'BRANCH' },
+    };
+
+    it('calls GET /dashboard/pull-request-suggestions', async () => {
+      mockOk(pagedOf(mockSuggestion));
+      await client.pullRequestSuggestions();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/dashboard/pull-request-suggestions`,
+        expect.any(Object),
+      );
+    });
+
+    it('returns the paged response with suggestions', async () => {
+      mockOk(pagedOf(mockSuggestion));
+      expect(await client.pullRequestSuggestions()).toEqual(pagedOf(mockSuggestion));
+    });
+
+    it('appends changesSince and limit as query params', async () => {
+      mockOk(pagedOf(mockSuggestion));
+      await client.pullRequestSuggestions({ changesSince: 86400, limit: 5 });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/dashboard/pull-request-suggestions?changesSince=86400&limit=5`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.pullRequestSuggestions()).rejects.toThrow(
+        'Bitbucket API error: 401 Unauthorized',
+      );
+    });
+  });
+
+  describe('markupPreview()', () => {
+    it('calls POST /markup/preview with the raw markup as body (not JSON-encoded)', async () => {
+      mockOk({ html: '<p>I am <strong>bold</strong></p>' });
+      await client.markupPreview('I am **bold**');
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${BASE}/markup/preview`,
+        expect.objectContaining({
+          method: 'POST',
+          body: 'I am **bold**',
+        }),
+      );
+    });
+
+    it('appends rendering options as query params', async () => {
+      mockOk({ html: '<p>hi</p>' });
+      await client.markupPreview('hi', { urlMode: 'ABSOLUTE', hardwrap: true, htmlEscape: true });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/markup/preview?urlMode=ABSOLUTE&hardwrap=true&htmlEscape=true`);
+    });
+
+    it('returns the rendered HTML', async () => {
+      mockOk({ html: '<p>I am <strong>bold</strong></p>' });
+      expect(await client.markupPreview('I am **bold**')).toEqual({
+        html: '<p>I am <strong>bold</strong></p>',
+      });
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(400, 'Bad Request');
+      await expect(client.markupPreview('hi')).rejects.toThrow(
+        'Bitbucket API error: 400 Bad Request',
+      );
+    });
+  });
+
+  describe('groups()', () => {
+    it('calls GET /groups', async () => {
+      mockOk(pagedOf('developers'));
+      await client.groups();
+      expect(fetchMock).toHaveBeenCalledWith(`${BASE}/groups`, expect.any(Object));
+    });
+
+    it('returns the paged response with group names', async () => {
+      mockOk(pagedOf('developers', 'devops'));
+      expect(await client.groups()).toEqual(pagedOf('developers', 'devops'));
+    });
+
+    it('appends filter as query param', async () => {
+      mockOk(pagedOf('developers'));
+      await client.groups({ filter: 'dev', limit: 10 });
+      const [[url]] = fetchMock.mock.calls;
+
+      expect(url).toBe(`${BASE}/groups?filter=dev&limit=10`);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(401, 'Unauthorized');
+      await expect(client.groups()).rejects.toThrow('Bitbucket API error: 401 Unauthorized');
+    });
+  });
+
+  describe('codeSearch()', () => {
+    const mockSearchResult = {
+      scope: { type: 'GLOBAL' },
+      code: {
+        category: 'primary',
+        isLastPage: true,
+        count: 1,
+        start: 0,
+        values: [
+          {
+            repository: mockRepo,
+            file: 'src/index.ts',
+            hitContexts: [[{ line: 1, text: 'const <em>foo</em> = 1;' }]],
+            hitCount: 1,
+          },
+        ],
+      },
+      query: { substituted: false },
+    };
+
+    it('calls POST /rest/search/latest/search with the query wrapped in a code entity', async () => {
+      mockOk(mockSearchResult);
+      await client.codeSearch('foo repo:my-repo');
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/search/latest/search`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ query: 'foo repo:my-repo', entities: { code: {} } }),
+        }),
+      );
+    });
+
+    it('passes start and limit inside the code entity', async () => {
+      mockOk(mockSearchResult);
+      await client.codeSearch('foo', { start: 25, limit: 25 });
+      const [[, init]] = fetchMock.mock.calls;
+
+      expect(init?.body).toBe(
+        JSON.stringify({ query: 'foo', entities: { code: { start: 25, limit: 25 } } }),
+      );
+    });
+
+    it('returns the search result', async () => {
+      mockOk(mockSearchResult);
+      expect(await client.codeSearch('foo')).toEqual(mockSearchResult);
+    });
+
+    it('throws on a non-OK response', async () => {
+      mockError(400, 'Bad Request');
+      await expect(client.codeSearch('')).rejects.toThrow('Bitbucket API error: 400 Bad Request');
     });
   });
 

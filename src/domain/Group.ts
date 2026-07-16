@@ -8,6 +8,16 @@ export interface BitbucketGroup {
 }
 
 /**
+ * Query parameters accepted by `GET /rest/api/latest/groups`.
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-permission-management/#api-api-latest-groups-get}
+ */
+export interface GroupsParams extends PaginationParams {
+  /** Filter results by group name (prefix match) */
+  filter?: string;
+}
+
+/**
  * A group with an explicit permission on a project.
  */
 export interface BitbucketGroupPermission {

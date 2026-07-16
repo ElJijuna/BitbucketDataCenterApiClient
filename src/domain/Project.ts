@@ -14,6 +14,20 @@ export interface BitbucketProject {
 }
 
 /**
+ * Payload for `POST /rest/api/latest/projects`.
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-project/#api-api-latest-projects-post}
+ */
+export interface CreateProjectData {
+  /** The project key (e.g. `'PROJ'`) */
+  key: string;
+  name: string;
+  description?: string;
+  /** Base64-encoded avatar image as a data URI, e.g. `data:image/png;base64,...` */
+  avatar?: string;
+}
+
+/**
  * Payload for `PUT /rest/api/latest/projects/{key}`.
  *
  * @remarks Per the official schema, `name`, `public`, `type`, and `id` are

@@ -1,4 +1,6 @@
 import type { PaginationParams } from './Pagination';
+import type { RefChangeActivityChange, RefChangeActivityRef } from './RefChangeActivity';
+import type { BitbucketRepository } from './Repository';
 
 /**
  * Query parameters accepted by `GET /rest/api/latest/dashboard/pull-requests`.
@@ -33,4 +35,36 @@ export interface InboxPullRequestsParams extends PaginationParams {
  */
 export interface InboxPullRequestsCount {
   count: number;
+}
+
+/**
+ * Query parameters accepted by
+ * `GET /rest/api/latest/dashboard/pull-request-suggestions`.
+ *
+ * Note that this endpoint does not support a `start` offset — only `limit`.
+ */
+export interface PullRequestSuggestionsParams {
+  /**
+   * Restrict suggestions to changes that occurred since this time, in seconds
+   * since the epoch. Defaults to `172800` (the last 48 hours).
+   */
+  changesSince?: number;
+  /** Maximum number of suggestions to return */
+  limit?: number;
+}
+
+/**
+ * A pull request suggestion, based on a recent push by the authenticated user
+ * to a branch without an open pull request.
+ */
+export interface BitbucketPullRequestSuggestion {
+  /** When the change that produced this suggestion happened (ms since the epoch) */
+  changeTime: number;
+  /** The ref change (push) the suggestion is based on */
+  refChange: RefChangeActivityChange;
+  repository: BitbucketRepository;
+  /** Suggested source ref for the pull request */
+  fromRef: RefChangeActivityRef;
+  /** Suggested target ref for the pull request */
+  toRef: RefChangeActivityRef;
 }

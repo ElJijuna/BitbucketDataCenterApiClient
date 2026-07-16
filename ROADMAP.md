@@ -25,6 +25,7 @@ Prerequisites for most pending write operations.
 | Auto-pagination helper | `paginate()` async generator, `for await…of` over `isLastPage`/`nextPageStart` | ✅ |
 | Bearer authentication | `authType: 'bearer'` sends `Authorization: Bearer <token>`; `'basic'` remains the default | ✅ |
 | Binary responses | `requestBinary()` resolves to an `ArrayBuffer` (used by `RepositoryResource.archive()`) | ✅ |
+| Raw text request bodies | `requestPost()` accepts `rawBody: true`, sending the body verbatim instead of JSON-encoding it (used by `markupPreview()`) | ✅ |
 
 ---
 
@@ -91,7 +92,7 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | --- | --- | --- |
 | `projects(params?)` | `GET /projects` | ✅ |
 | `project(key)` | — chainable | ✅ |
-| `createProject(data)` | `POST /projects` | ⬜ |
+| `createProject(data)` | `POST /projects` | ✅ |
 | `repos(params?)` | `GET /repos` — documented params 1:1 (`name`, `projectkey`, `projectname`, `permission`, `visibility`, `state`, `archived`) | ✅ |
 | `search(params?)` | `GET /repos` — legacy variant that prefixes `%` to `name` (contains-match hack) | ✅ |
 | `users(params?)` | `GET /users` | ✅ |
@@ -100,10 +101,10 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `dashboardPullRequests(params?)` | `GET /dashboard/pull-requests` — PRs where the authenticated user participates (author, reviewer, etc.) across all repos | ✅ |
 | `inboxPullRequests(params?)` | `GET /inbox/pull-requests` — PRs requiring the authenticated user's attention | ✅ |
 | `inboxPullRequestsCount(params?)` | `GET /inbox/pull-requests/count` | ✅ |
-| `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` | ⬜ |
-| `markupPreview(markdown)` | `POST /markup/preview` | ⬜ |
-| `groups(params?)` | `GET /groups` | ⬜ |
-| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — global code/file/commit search (new `Search` API group in v10.3 docs; naming avoids clashing with the existing repo-name `search()`) | ⬜ |
+| `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` — `changesSince`/`limit` only (no `start` offset) | ✅ |
+| `markupPreview(markup, params?)` | `POST /markup/preview` — the markup is sent as the raw request body; `urlMode`/`htmlEscape`/`includeHeadingId`/`hardwrap` as query params | ✅ |
+| `groups(params?)` | `GET /groups` — returns a page of group *names* (plain strings) | ✅ |
+| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — global code search (new `Search` API group in v10.3 docs; naming avoids clashing with the existing repo-name `search()`). Response typed defensively (`CodeSearchResult`, `@remarks`) | ✅ |
 
 ---
 

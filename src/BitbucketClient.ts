@@ -1,18 +1,23 @@
 import type { BitbucketClientEvents } from './domain/ClientEvents';
 import type { BitbucketClientOptions } from './domain/ClientOptions';
 import type {
+  BitbucketPullRequestSuggestion,
   DashboardPullRequestsParams,
   InboxPullRequestsCount,
   InboxPullRequestsParams,
+  PullRequestSuggestionsParams,
 } from './domain/Dashboard';
+import type { GroupsParams } from './domain/Group';
+import type { MarkupPreviewParams, MarkupPreviewResult } from './domain/Markup';
 import type { PagedResponse } from './domain/Pagination';
-import type { BitbucketProject, ProjectsParams } from './domain/Project';
+import type { BitbucketProject, CreateProjectData, ProjectsParams } from './domain/Project';
 import type { BitbucketPullRequest } from './domain/PullRequest';
 import type {
   BitbucketRepository,
   GlobalReposParams,
   SearchReposParams,
 } from './domain/Repository';
+import type { CodeSearchParams, CodeSearchResult } from './domain/Search';
 import type { BitbucketUser, UsersParams } from './domain/User';
 import { BitbucketApiError, type BitbucketErrorDetail } from './errors/BitbucketApiError';
 import {
@@ -189,7 +194,12 @@ export class BitbucketClient {
   private async requestPost<T>(
     path: string,
     body?: unknown,
-    options?: { apiPath?: string; method?: 'POST' | 'PUT' | 'DELETE'; form?: boolean },
+    options?: {
+      apiPath?: string;
+      method?: 'POST' | 'PUT' | 'DELETE';
+      form?: boolean;
+      rawBody?: boolean;
+    },
   ): Promise<T> {
     const method = options?.method ?? 'POST';
     const apiPath = options?.apiPath ?? this.apiPath;
@@ -199,16 +209,20 @@ export class BitbucketClient {
     let statusCode: number | undefined;
 
     const { Authorization, Accept } = this.security.getHeaders();
-    const [headers, fetchBody]: [HeadersInit, BodyInit | undefined] = options?.form
-      ? [
-          { Authorization, Accept },
-          new URLSearchParams(
-            Object.entries(body as Record<string, unknown>)
-              .filter(([, v]) => v !== undefined)
-              .map(([k, v]) => [k, String(v)]),
-          ),
-        ]
-      : [this.security.getHeaders(), body === undefined ? undefined : JSON.stringify(body)];
+
+    let headers: HeadersInit = this.security.getHeaders();
+    let fetchBody: BodyInit | undefined;
+
+    if (options?.form) {
+      headers = { Authorization, Accept };
+      fetchBody = new URLSearchParams(
+        Object.entries(body as Record<string, unknown>)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      );
+    } else if (body !== undefined) {
+      fetchBody = options?.rawBody ? String(body) : JSON.stringify(body);
+    }
 
     try {
       const response = await this.fetchWithRetry(url, { method, headers, body: fetchBody });
@@ -403,6 +417,25 @@ export class BitbucketClient {
     const requestBinary: RequestBinaryFn = (path, params) => this.requestBinary(path, params);
 
     return new ProjectResource(request, requestText, requestBody, projectKey, requestBinary);
+  }
+
+  /**
+   * Creates a new project.
+   *
+   * `POST /rest/api/latest/projects`
+   *
+   * Requires global `PROJECT_CREATE` permission.
+   *
+   * @param data - The project to create: `key`, `name`, and optionally `description` and `avatar`
+   * @returns The created project
+   *
+   * @example
+   * ```typescript
+   * const project = await bbClient.createProject({ key: 'PROJ', name: 'My Project' });
+   * ```
+   */
+  async createProject(data: CreateProjectData): Promise<BitbucketProject> {
+    return this.requestPost<BitbucketProject>('/projects', data);
   }
 
   /**
@@ -655,6 +688,105 @@ export class BitbucketClient {
     return this.request<InboxPullRequestsCount>(
       '/inbox/pull-requests/count',
       params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches pull request suggestions for the authenticated user, based on
+   * their recent pushes to branches without an open pull request.
+   *
+   * `GET /rest/api/latest/dashboard/pull-request-suggestions`
+   *
+   * @param params - Optional filters: `changesSince` (seconds since the epoch, defaults to the last 48 hours), `limit`
+   * @returns A paged response of pull request suggestions
+   *
+   * @example
+   * ```typescript
+   * const suggestions = await bbClient.pullRequestSuggestions({ limit: 5 });
+   * ```
+   */
+  async pullRequestSuggestions(
+    params?: PullRequestSuggestionsParams,
+  ): Promise<PagedResponse<BitbucketPullRequestSuggestion>> {
+    return this.request<PagedResponse<BitbucketPullRequestSuggestion>>(
+      '/dashboard/pull-request-suggestions',
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Renders a preview of the given markup (e.g. Markdown) as HTML.
+   *
+   * `POST /rest/api/latest/markup/preview`
+   *
+   * The markup is sent as the raw request body (not JSON-encoded).
+   *
+   * @param markup - The raw markup to render
+   * @param params - Optional rendering options: `urlMode`, `htmlEscape`, `includeHeadingId`, `hardwrap`
+   * @returns The rendered HTML
+   *
+   * @example
+   * ```typescript
+   * const { html } = await bbClient.markupPreview('I am **bold**');
+   * ```
+   */
+  async markupPreview(markup: string, params?: MarkupPreviewParams): Promise<MarkupPreviewResult> {
+    const path = buildUrl(
+      '/markup/preview',
+      params as Record<string, string | number | boolean> | undefined,
+    );
+
+    return this.requestPost<MarkupPreviewResult>(path, markup, { rawBody: true });
+  }
+
+  /**
+   * Fetches the names of all groups visible to the authenticated user.
+   *
+   * `GET /rest/api/latest/groups`
+   *
+   * @param params - Optional filters: `filter` (group name prefix), `limit`, `start`
+   * @returns A paged response of group names (plain strings)
+   *
+   * @example
+   * ```typescript
+   * const groups = await bbClient.groups({ filter: 'dev' });
+   * console.log(groups.values); // ['developers', 'devops']
+   * ```
+   */
+  async groups(params?: GroupsParams): Promise<PagedResponse<string>> {
+    return this.request<PagedResponse<string>>(
+      '/groups',
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Searches for code across all repositories visible to the authenticated
+   * user, using Bitbucket's search query syntax (e.g.
+   * `'jwt project:PROJ ext:ts'`).
+   *
+   * `POST /rest/search/latest/search`
+   *
+   * The response shape is only sparsely documented by Atlassian and is typed
+   * defensively — see {@link CodeSearchResult}.
+   *
+   * @param query - The search query
+   * @param params - Optional paging for the code results: `start`, `limit`
+   * @returns The search result, with code hits under `code.values`
+   *
+   * @example
+   * ```typescript
+   * const result = await bbClient.codeSearch('parseWebhookEvent repo:my-repo');
+   * for (const hit of result.code?.values ?? []) {
+   *   console.log(`${hit.repository.slug}: ${hit.file}`);
+   * }
+   * ```
+   */
+  async codeSearch(query: string, params?: CodeSearchParams): Promise<CodeSearchResult> {
+    return this.requestPost<CodeSearchResult>(
+      '/search',
+      { query, entities: { code: { start: params?.start, limit: params?.limit } } },
+      { apiPath: 'rest/search/latest' },
     );
   }
 }

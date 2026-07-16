@@ -36,9 +36,11 @@ export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './do
 export type { CommitMessageSuggestion } from './domain/CommitMessageSuggestion';
 export type { CompareDiffParams, CompareParams } from './domain/Compare';
 export type {
+  BitbucketPullRequestSuggestion,
   DashboardPullRequestsParams,
   InboxPullRequestsCount,
   InboxPullRequestsParams,
+  PullRequestSuggestionsParams,
 } from './domain/Dashboard';
 export type {
   BitbucketPullRequestCondition,
@@ -65,6 +67,7 @@ export type {
   BitbucketGroup,
   BitbucketGroupPermission,
   BitbucketRepositoryGroupPermission,
+  GroupsParams,
   ProjectGroupsParams,
   RepositoryGroupsParams,
 } from './domain/Group';
@@ -78,10 +81,16 @@ export type {
 export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketLabel } from './domain/Label';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
+export type { MarkupPreviewParams, MarkupPreviewResult } from './domain/Markup';
 export type { BitbucketMarkupFile, MarkupFileParams } from './domain/MarkupFile';
 export type { PagedResponse, PaginationParams } from './domain/Pagination';
 export type { PermissionSearchParams, PermittedEntity } from './domain/PermissionSearch';
-export type { BitbucketProject, ProjectsParams, UpdateProjectData } from './domain/Project';
+export type {
+  BitbucketProject,
+  CreateProjectData,
+  ProjectsParams,
+  UpdateProjectData,
+} from './domain/Project';
 export type {
   AddReviewerData,
   BitbucketParticipant,
@@ -160,6 +169,13 @@ export type {
 } from './domain/RequiredBuild';
 export type { BitbucketReviewerGroup, ReviewerGroupPayload } from './domain/ReviewerGroup';
 export type { BitbucketScope } from './domain/Scope';
+export type {
+  CodeSearchCodeHit,
+  CodeSearchCodePage,
+  CodeSearchHitContextLine,
+  CodeSearchParams,
+  CodeSearchResult,
+} from './domain/Search';
 export type { RefSyncRequest, RefSyncStatus, SetSyncStatusData, SyncRef } from './domain/Sync';
 export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type {
