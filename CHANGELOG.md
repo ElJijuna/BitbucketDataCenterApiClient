@@ -1,3 +1,13 @@
+# [1.18.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.17.0...v1.18.0) (2026-07-15)
+
+
+### Features
+
+* add CRUD operations for repositories, branches, and tags; implement corresponding types and tests ([799a3bb](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/799a3bb2185409c673a032ff9e0bcff62bd099a3))
+* enhance CommitResource with new methods for diff stats, comment updates, and pull request retrieval; add tests for new functionalities ([6e5a419](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/6e5a419be759bc74cf841d01c6ecb0141a7f0bf0))
+* implement modern builds and deployments API in CommitResource; add corresponding types and tests ([93370b8](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/93370b8e3fb1261fd61b14f4839cebd2a6d15381))
+* implement project management API with update, delete, and permission management; add webhook operations and tests ([2a168d9](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/2a168d9d6d563c4fbd1c099b5779c27a7d3d39fe))
+
 # [1.17.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.16.0...v1.17.0) (2026-07-14)
 
 
