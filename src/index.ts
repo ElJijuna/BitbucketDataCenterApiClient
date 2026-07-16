@@ -1,6 +1,20 @@
 export { BitbucketClient } from './BitbucketClient';
-export type { AutoMergeRequest, RequestAutoMergeData } from './domain/AutoMerge';
+export type { AutoDeclineSettings, AutoDeclineSettingsRequest } from './domain/AutoDecline';
+export type {
+  AutoMergeProjectSettingsRequest,
+  AutoMergeRequest,
+  AutoMergeRestrictionState,
+  AutoMergeSettings,
+  RequestAutoMergeData,
+} from './domain/AutoMerge';
 export type { BitbucketBranch, BranchesParams } from './domain/Branch';
+export type {
+  BitbucketRefRestriction,
+  RefRestrictionAccessKey,
+  RefRestrictionRequest,
+  RefRestrictionsParams,
+  RefRestrictionType,
+} from './domain/BranchRestriction';
 export type {
   BitbucketBrowseChild,
   BitbucketBrowsePath,
@@ -25,6 +39,15 @@ export type {
   InboxPullRequestsParams,
 } from './domain/Dashboard';
 export type {
+  BitbucketPullRequestCondition,
+  DefaultReviewersRequest,
+} from './domain/DefaultReviewers';
+export type {
+  BitbucketDefaultTask,
+  DefaultTaskRequest,
+  DefaultTasksParams,
+} from './domain/DefaultTask';
+export type {
   BitbucketDiff,
   BitbucketDiffEntry,
   BitbucketDiffHunk,
@@ -36,10 +59,18 @@ export type {
 } from './domain/Diff';
 export type { BitbucketDiffStatsSummary } from './domain/DiffStatsSummary';
 export type { EditFilePayload } from './domain/EditFile';
+export type {
+  BitbucketRepositoryHook,
+  HookSettings,
+  HooksParams,
+  RepositoryHookDetails,
+  RepositoryHookType,
+} from './domain/Hook';
 export type { BitbucketIssue } from './domain/Issue';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
 export type { PagedResponse, PaginationParams } from './domain/Pagination';
-export type { BitbucketProject, ProjectsParams } from './domain/Project';
+export type { PermissionSearchParams, PermittedEntity } from './domain/PermissionSearch';
+export type { BitbucketProject, ProjectsParams, UpdateProjectData } from './domain/Project';
 export type {
   AddReviewerData,
   BitbucketParticipant,
@@ -77,6 +108,7 @@ export type {
 } from './domain/PullRequestTask';
 export type { RawFileParams } from './domain/RawFile';
 export type { CanRebaseResult, RebaseResult, RebaseVeto } from './domain/Rebase';
+export type { RefMatcher, RefMatcherTypeId } from './domain/RefMatcher';
 export type {
   BitbucketReport,
   BitbucketReportData,
@@ -86,11 +118,16 @@ export type {
 } from './domain/Report';
 export type {
   BitbucketRepository,
+  CreateRepositoryData,
+  ForkRepositoryData,
   GlobalReposParams,
   ReposParams,
   SearchReposParams,
+  UpdateRepositoryData,
 } from './domain/Repository';
 export type { BitbucketRepositorySize } from './domain/RepositorySize';
+export type { BitbucketReviewerGroup, ReviewerGroupPayload } from './domain/ReviewerGroup';
+export type { BitbucketScope } from './domain/Scope';
 export type { BitbucketTag, TagsParams } from './domain/Tag';
 export type {
   BitbucketUser,
@@ -106,9 +143,13 @@ export type {
   BitbucketWebhookRequest,
   BitbucketWebhookResult,
   BitbucketWebhookStatistics,
+  TestWebhookParams,
+  WebhookCredentials,
   WebhookEvent,
+  WebhookPayload,
   WebhookScopeType,
   WebhooksParams,
+  WebhookTestResult,
 } from './domain/Webhook';
 export type {
   BitbucketWebhookEvent,

@@ -1,7 +1,26 @@
+import type { AutoDeclineSettings, AutoDeclineSettingsRequest } from '../domain/AutoDecline';
+import type { AutoMergeProjectSettingsRequest, AutoMergeSettings } from '../domain/AutoMerge';
+import type {
+  BitbucketRefRestriction,
+  RefRestrictionRequest,
+  RefRestrictionsParams,
+} from '../domain/BranchRestriction';
+import type {
+  BitbucketPullRequestCondition,
+  DefaultReviewersRequest,
+} from '../domain/DefaultReviewers';
+import type {
+  BitbucketDefaultTask,
+  DefaultTaskRequest,
+  DefaultTasksParams,
+} from '../domain/DefaultTask';
 import type { BitbucketGroupPermission, ProjectGroupsParams } from '../domain/Group';
-import type { PagedResponse } from '../domain/Pagination';
+import type { BitbucketRepositoryHook, HookSettings, HooksParams } from '../domain/Hook';
+import type { PagedResponse, PaginationParams } from '../domain/Pagination';
+import type { PermissionSearchParams, PermittedEntity } from '../domain/PermissionSearch';
 import type { BitbucketProject, UpdateProjectData } from '../domain/Project';
-import type { BitbucketRepository, ReposParams } from '../domain/Repository';
+import type { BitbucketRepository, CreateRepositoryData, ReposParams } from '../domain/Repository';
+import type { BitbucketReviewerGroup, ReviewerGroupPayload } from '../domain/ReviewerGroup';
 import type { BitbucketUserPermission, ProjectUsersParams } from '../domain/User';
 import type {
   BitbucketWebhook,
@@ -324,5 +343,516 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
     const path = `/projects/${this.key}/webhooks/test${qs ? `?${qs}` : ''}`;
 
     return this.requestBody<WebhookTestResult>(path, { username, password });
+  }
+
+  /**
+   * Creates a repository in this project.
+   *
+   * `POST /rest/api/latest/projects/{key}/repos`
+   *
+   * @param data - `name`, plus optional `scmId`, `slug`, `defaultBranch`, `description`,
+   * `forkable`, and `public`
+   * @returns The created repository
+   */
+  async createRepo(data: CreateRepositoryData): Promise<BitbucketRepository> {
+    return this.requestBody<BitbucketRepository>(`/projects/${this.key}/repos`, data);
+  }
+
+  /**
+   * Searches direct and implied permissions of users and groups on this project.
+   * Returns a superset of the results returned by {@link ProjectResource.users}
+   * and {@link ProjectResource.groups}, as it includes entities with implied
+   * (e.g. global or admin) permissions.
+   *
+   * `GET /rest/api/latest/projects/{key}/permissions/search`
+   *
+   * @remarks Atlassian does not publish a response schema for this endpoint;
+   * the entry shape is typed defensively — see {@link PermittedEntity}.
+   *
+   * @param params - Optional filters: `permission` (one or many), `filterText`, `type`
+   * @returns A paged response of permitted users/groups
+   */
+  async searchPermissions(
+    params?: PermissionSearchParams,
+  ): Promise<PagedResponse<PermittedEntity>> {
+    const query = new URLSearchParams();
+    const permissions =
+      params?.permission === undefined
+        ? []
+        : Array.isArray(params.permission)
+          ? params.permission
+          : [params.permission];
+
+    for (const permission of permissions) {
+      query.append('permission', permission);
+    }
+
+    if (params?.filterText !== undefined) {
+      query.set('filterText', params.filterText);
+    }
+
+    if (params?.type !== undefined) {
+      query.set('type', params.type);
+    }
+
+    const qs = query.toString();
+
+    return this.request<PagedResponse<PermittedEntity>>(
+      `/projects/${this.key}/permissions/search${qs ? `?${qs}` : ''}`,
+    );
+  }
+
+  /**
+   * Fetches the default reviewer conditions configured on this project.
+   *
+   * `GET /rest/default-reviewers/latest/projects/{key}/conditions`
+   *
+   * @returns An array of conditions (not paged)
+   */
+  async defaultReviewerConditions(): Promise<BitbucketPullRequestCondition[]> {
+    return this.request<BitbucketPullRequestCondition[]>(
+      `/projects/${this.key}/conditions`,
+      undefined,
+      { apiPath: 'rest/default-reviewers/latest' },
+    );
+  }
+
+  /**
+   * Creates a default reviewer condition on this project.
+   *
+   * `POST /rest/default-reviewers/latest/projects/{key}/condition`
+   *
+   * @param data - `sourceMatcher`, `targetMatcher`, `reviewers`/`reviewerGroups`, `requiredApprovals`
+   * @returns The created condition
+   */
+  async createDefaultReviewerCondition(
+    data: DefaultReviewersRequest,
+  ): Promise<BitbucketPullRequestCondition> {
+    return this.requestBody<BitbucketPullRequestCondition>(
+      `/projects/${this.key}/condition`,
+      data,
+      {
+        apiPath: 'rest/default-reviewers/latest',
+      },
+    );
+  }
+
+  /**
+   * Updates a default reviewer condition on this project.
+   *
+   * `PUT /rest/default-reviewers/latest/projects/{key}/condition/{id}`
+   *
+   * @param id - The condition's numeric id
+   * @param data - The full replacement condition definition
+   * @returns The updated condition
+   */
+  async updateDefaultReviewerCondition(
+    id: number,
+    data: DefaultReviewersRequest,
+  ): Promise<BitbucketPullRequestCondition> {
+    return this.requestBody<BitbucketPullRequestCondition>(
+      `/projects/${this.key}/condition/${id}`,
+      data,
+      { apiPath: 'rest/default-reviewers/latest', method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes a default reviewer condition from this project.
+   *
+   * `DELETE /rest/default-reviewers/latest/projects/{key}/condition/{id}`
+   *
+   * @param id - The condition's numeric id
+   */
+  async deleteDefaultReviewerCondition(id: number): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/condition/${id}`, undefined, {
+      apiPath: 'rest/default-reviewers/latest',
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches the ref restrictions (branch permissions) configured on this project.
+   *
+   * `GET /rest/branch-permissions/latest/projects/{key}/restrictions`
+   *
+   * @param params - Optional filters: `limit`, `start`, `matcherType`, `matcherId`, `type`
+   * @returns A paged response of restrictions
+   */
+  async branchRestrictions(
+    params?: RefRestrictionsParams,
+  ): Promise<PagedResponse<BitbucketRefRestriction>> {
+    return this.request<PagedResponse<BitbucketRefRestriction>>(
+      `/projects/${this.key}/restrictions`,
+      params as Record<string, string | number | boolean>,
+      { apiPath: 'rest/branch-permissions/latest' },
+    );
+  }
+
+  /**
+   * Fetches a single ref restriction by id.
+   *
+   * `GET /rest/branch-permissions/latest/projects/{key}/restrictions/{id}`
+   *
+   * @param id - The restriction's numeric id
+   * @returns The restriction
+   */
+  async branchRestriction(id: number): Promise<BitbucketRefRestriction> {
+    return this.request<BitbucketRefRestriction>(
+      `/projects/${this.key}/restrictions/${id}`,
+      undefined,
+      { apiPath: 'rest/branch-permissions/latest' },
+    );
+  }
+
+  /**
+   * Creates a ref restriction (branch permission) on this project.
+   *
+   * `POST /rest/branch-permissions/latest/projects/{key}/restrictions`
+   *
+   * @remarks Sends a single restriction as `application/json`. The endpoint
+   * also supports bulk creation of several restrictions in one call with the
+   * `application/vnd.atl.bitbucket.bulk+json` media type, which this client
+   * does not wrap — issue one call per restriction instead.
+   *
+   * @param data - `type`, `matcher`, and optional `userSlugs`/`groupNames`/`accessKeyIds` exemptions
+   * @returns The created restriction
+   */
+  async createBranchRestriction(data: RefRestrictionRequest): Promise<BitbucketRefRestriction> {
+    return this.requestBody<BitbucketRefRestriction>(`/projects/${this.key}/restrictions`, data, {
+      apiPath: 'rest/branch-permissions/latest',
+    });
+  }
+
+  /**
+   * Deletes a ref restriction from this project.
+   *
+   * `DELETE /rest/branch-permissions/latest/projects/{key}/restrictions/{id}`
+   *
+   * @param id - The restriction's numeric id
+   */
+  async deleteBranchRestriction(id: number): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/restrictions/${id}`, undefined, {
+      apiPath: 'rest/branch-permissions/latest',
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches the reviewer groups configured on this project.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/reviewer-groups`
+   *
+   * @param params - Optional `limit` and `start`
+   * @returns A paged response of reviewer groups
+   */
+  async reviewerGroups(params?: PaginationParams): Promise<PagedResponse<BitbucketReviewerGroup>> {
+    return this.request<PagedResponse<BitbucketReviewerGroup>>(
+      `/projects/${this.key}/settings/reviewer-groups`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches a single reviewer group by id.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/reviewer-groups/{id}`
+   *
+   * @param id - The reviewer group's numeric id
+   * @returns The reviewer group
+   */
+  async reviewerGroup(id: number): Promise<BitbucketReviewerGroup> {
+    return this.request<BitbucketReviewerGroup>(
+      `/projects/${this.key}/settings/reviewer-groups/${id}`,
+    );
+  }
+
+  /**
+   * Creates a reviewer group on this project.
+   *
+   * `POST /rest/api/latest/projects/{key}/settings/reviewer-groups`
+   *
+   * @param data - `name`, plus optional `description` and `users`
+   * @returns The created reviewer group
+   */
+  async createReviewerGroup(data: ReviewerGroupPayload): Promise<BitbucketReviewerGroup> {
+    return this.requestBody<BitbucketReviewerGroup>(
+      `/projects/${this.key}/settings/reviewer-groups`,
+      data,
+    );
+  }
+
+  /**
+   * Updates a reviewer group on this project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/settings/reviewer-groups/{id}`
+   *
+   * @param id - The reviewer group's numeric id
+   * @param data - The full replacement group definition
+   * @returns The updated reviewer group
+   */
+  async updateReviewerGroup(
+    id: number,
+    data: ReviewerGroupPayload,
+  ): Promise<BitbucketReviewerGroup> {
+    return this.requestBody<BitbucketReviewerGroup>(
+      `/projects/${this.key}/settings/reviewer-groups/${id}`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes a reviewer group from this project.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/settings/reviewer-groups/{id}`
+   *
+   * @param id - The reviewer group's numeric id
+   */
+  async deleteReviewerGroup(id: number): Promise<void> {
+    return this.requestBody<void>(
+      `/projects/${this.key}/settings/reviewer-groups/${id}`,
+      undefined,
+      {
+        method: 'DELETE',
+      },
+    );
+  }
+
+  /**
+   * Fetches this project's auto-decline settings (automatic declining of
+   * inactive pull requests).
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/auto-decline`
+   *
+   * @returns The effective auto-decline settings
+   */
+  async autoDeclineSettings(): Promise<AutoDeclineSettings> {
+    return this.request<AutoDeclineSettings>(`/projects/${this.key}/settings/auto-decline`);
+  }
+
+  /**
+   * Creates or updates this project's auto-decline settings.
+   *
+   * `PUT /rest/api/latest/projects/{key}/settings/auto-decline`
+   *
+   * @param data - `enabled` and/or `inactivityWeeks` (`1`, `2`, `4`, `8`, or `12`)
+   * @returns The updated settings
+   */
+  async updateAutoDeclineSettings(data: AutoDeclineSettingsRequest): Promise<AutoDeclineSettings> {
+    return this.requestBody<AutoDeclineSettings>(
+      `/projects/${this.key}/settings/auto-decline`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes this project's auto-decline settings, falling back to the
+   * instance-level default.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/settings/auto-decline`
+   */
+  async deleteAutoDeclineSettings(): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/settings/auto-decline`, undefined, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches this project's pull request auto-merge settings.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/auto-merge`
+   *
+   * @returns The effective auto-merge settings
+   */
+  async autoMergeSettings(): Promise<AutoMergeSettings> {
+    return this.request<AutoMergeSettings>(`/projects/${this.key}/settings/auto-merge`);
+  }
+
+  /**
+   * Creates or updates this project's pull request auto-merge settings.
+   *
+   * `PUT /rest/api/latest/projects/{key}/settings/auto-merge`
+   *
+   * @param data - `enabled` and/or `restrictionAction`
+   * @returns The updated settings
+   */
+  async updateAutoMergeSettings(data: AutoMergeProjectSettingsRequest): Promise<AutoMergeSettings> {
+    return this.requestBody<AutoMergeSettings>(`/projects/${this.key}/settings/auto-merge`, data, {
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Deletes this project's pull request auto-merge settings, falling back to
+   * the instance-level default.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/settings/auto-merge`
+   */
+  async deleteAutoMergeSettings(): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/settings/auto-merge`, undefined, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches the repository hooks available on this project and their state.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/hooks`
+   *
+   * @param params - Optional filters: `limit`, `start`, `type`
+   * @returns A paged response of hooks
+   */
+  async hooks(params?: HooksParams): Promise<PagedResponse<BitbucketRepositoryHook>> {
+    return this.request<PagedResponse<BitbucketRepositoryHook>>(
+      `/projects/${this.key}/settings/hooks`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches a single repository hook by its module key.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/hooks/{hookKey}`
+   *
+   * @param hookKey - The hook's module key
+   * @returns The hook and its state at this project's scope
+   */
+  async hook(hookKey: string): Promise<BitbucketRepositoryHook> {
+    return this.request<BitbucketRepositoryHook>(`/projects/${this.key}/settings/hooks/${hookKey}`);
+  }
+
+  /**
+   * Enables a repository hook on this project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/settings/hooks/{hookKey}/enabled`
+   *
+   * @param hookKey - The hook's module key
+   * @returns The updated hook state
+   */
+  async enableHook(hookKey: string): Promise<BitbucketRepositoryHook> {
+    return this.requestBody<BitbucketRepositoryHook>(
+      `/projects/${this.key}/settings/hooks/${hookKey}/enabled`,
+      undefined,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Disables a repository hook on this project.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/settings/hooks/{hookKey}/enabled`
+   *
+   * @param hookKey - The hook's module key
+   * @returns The updated hook state
+   */
+  async disableHook(hookKey: string): Promise<BitbucketRepositoryHook> {
+    return this.requestBody<BitbucketRepositoryHook>(
+      `/projects/${this.key}/settings/hooks/${hookKey}/enabled`,
+      undefined,
+      { method: 'DELETE' },
+    );
+  }
+
+  /**
+   * Fetches the settings stored for a repository hook on this project.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/hooks/{hookKey}/settings`
+   *
+   * @param hookKey - The hook's module key
+   * @returns The hook's settings (shape defined by the hook itself)
+   */
+  async hookSettings(hookKey: string): Promise<HookSettings> {
+    return this.request<HookSettings>(`/projects/${this.key}/settings/hooks/${hookKey}/settings`);
+  }
+
+  /**
+   * Replaces the settings stored for a repository hook on this project.
+   *
+   * `PUT /rest/api/latest/projects/{key}/settings/hooks/{hookKey}/settings`
+   *
+   * @param hookKey - The hook's module key
+   * @param settings - The full replacement settings object
+   * @returns The stored settings
+   */
+  async updateHookSettings(hookKey: string, settings: HookSettings): Promise<HookSettings> {
+    return this.requestBody<HookSettings>(
+      `/projects/${this.key}/settings/hooks/${hookKey}/settings`,
+      settings,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Fetches the default tasks configured on this project.
+   *
+   * `GET /rest/default-tasks/latest/projects/{key}/tasks`
+   *
+   * @param params - Optional `limit`, `start`, and `markup` (`'true'` to render HTML)
+   * @returns A paged response of default tasks
+   */
+  async defaultTasks(params?: DefaultTasksParams): Promise<PagedResponse<BitbucketDefaultTask>> {
+    return this.request<PagedResponse<BitbucketDefaultTask>>(
+      `/projects/${this.key}/tasks`,
+      params as Record<string, string | number | boolean>,
+      { apiPath: 'rest/default-tasks/latest' },
+    );
+  }
+
+  /**
+   * Creates a default task on this project.
+   *
+   * `POST /rest/default-tasks/latest/projects/{key}/tasks`
+   *
+   * @param data - `description`, plus optional `sourceMatcher`/`targetMatcher`
+   * @returns The created task
+   */
+  async createDefaultTask(data: DefaultTaskRequest): Promise<BitbucketDefaultTask> {
+    return this.requestBody<BitbucketDefaultTask>(`/projects/${this.key}/tasks`, data, {
+      apiPath: 'rest/default-tasks/latest',
+    });
+  }
+
+  /**
+   * Updates a default task on this project.
+   *
+   * `PUT /rest/default-tasks/latest/projects/{key}/tasks/{taskId}`
+   *
+   * @param taskId - The task's numeric id
+   * @param data - The full replacement task definition
+   * @returns The updated task
+   */
+  async updateDefaultTask(taskId: number, data: DefaultTaskRequest): Promise<BitbucketDefaultTask> {
+    return this.requestBody<BitbucketDefaultTask>(`/projects/${this.key}/tasks/${taskId}`, data, {
+      apiPath: 'rest/default-tasks/latest',
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Deletes a default task from this project.
+   *
+   * `DELETE /rest/default-tasks/latest/projects/{key}/tasks/{taskId}`
+   *
+   * @param taskId - The task's numeric id
+   */
+  async deleteDefaultTask(taskId: number): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/tasks/${taskId}`, undefined, {
+      apiPath: 'rest/default-tasks/latest',
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Deletes **all** default tasks from this project.
+   *
+   * `DELETE /rest/default-tasks/latest/projects/{key}/tasks`
+   */
+  async deleteAllDefaultTasks(): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/tasks`, undefined, {
+      apiPath: 'rest/default-tasks/latest',
+      method: 'DELETE',
+    });
   }
 }

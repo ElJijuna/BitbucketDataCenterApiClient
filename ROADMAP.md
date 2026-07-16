@@ -115,29 +115,33 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `delete()` | `DELETE /projects/{key}` | ✅ |
 | `repos(params?)` | `GET /projects/{key}/repos` | ✅ |
 | `repo(slug)` | — chainable | ✅ |
-| `createRepo(data)` | `POST /projects/{key}/repos` | ⬜ |
+| `createRepo(data)` | `POST /projects/{key}/repos` | ✅ |
 | `users(params?)` | `GET /projects/{key}/permissions/users` | ✅ |
 | `setUserPermission(name, permission)` | `PUT /projects/{key}/permissions/users?name={name}&permission={permission}` (query params, no body) | ✅ |
 | `removeUserPermission(name)` | `DELETE /projects/{key}/permissions/users?name={name}` | ✅ |
 | `groups(params?)` | `GET /projects/{key}/permissions/groups` | ✅ |
 | `setGroupPermission(name, permission)` | `PUT /projects/{key}/permissions/groups?name={name}&permission={permission}` (query params, no body) | ✅ |
 | `removeGroupPermission(name)` | `DELETE /projects/{key}/permissions/groups?name={name}` | ✅ |
-| `searchPermissions(params?)` | `GET /projects/{key}/permissions/search` | ⬜ |
+| `searchPermissions(params?)` | `GET /projects/{key}/permissions/search` — Atlassian publishes no response schema; entries typed defensively (`PermittedEntity`, `@remarks`) | ✅ |
 | `webhooks(params?)` | `GET /projects/{key}/webhooks` | ✅ |
 | `createWebhook(data)` | `POST /projects/{key}/webhooks` | ✅ |
 | `updateWebhook(webhookId, data)` | `PUT /projects/{key}/webhooks/{webhookId}` | ✅ |
 | `deleteWebhook(webhookId)` | `DELETE /projects/{key}/webhooks/{webhookId}` | ✅ |
 | `testWebhook(params)` | `POST /projects/{key}/webhooks/test` — `webhookId`/`url`/`sslVerificationRequired` as query params, `username`/`password` as body | ✅ |
-| `defaultReviewerConditions()` | `GET /rest/default-reviewers/latest/projects/{key}/conditions` | ⬜ |
-| `createDefaultReviewerCondition(data)` | `POST /rest/default-reviewers/latest/projects/{key}/condition` | ⬜ |
-| `deleteDefaultReviewerCondition(id)` | `DELETE /rest/default-reviewers/latest/projects/{key}/condition/{id}` | ⬜ |
-| `branchRestrictions(params?)` | `GET /rest/branch-permissions/latest/projects/{key}/restrictions` | ⬜ |
-| `createBranchRestrictions(data)` | `POST /rest/branch-permissions/latest/projects/{key}/restrictions` | ⬜ |
-| `reviewerGroups()` / CRUD | `GET/POST/PUT/DELETE /projects/{key}/settings/reviewer-groups[/{id}]` | ⬜ |
-| `autoDeclineSettings()` / CRUD | `GET/PUT/DELETE /projects/{key}/settings/auto-decline` | ⬜ |
-| `autoMergeSettings()` / CRUD | `GET/PUT/DELETE /projects/{key}/settings/auto-merge` | ⬜ |
-| `hooks(params?)` / hook settings | `GET/PUT/DELETE /projects/{key}/settings/hooks[/{hookKey}/…]` | ⬜ |
-| `defaultTasks()` / CRUD | `GET/POST/PUT/DELETE /rest/default-tasks/latest/projects/{key}/tasks[/{taskId}]` | ⬜ |
+| `defaultReviewerConditions()` | `GET /rest/default-reviewers/latest/projects/{key}/conditions` | ✅ |
+| `createDefaultReviewerCondition(data)` | `POST /rest/default-reviewers/latest/projects/{key}/condition` | ✅ |
+| `updateDefaultReviewerCondition(id, data)` | `PUT /rest/default-reviewers/latest/projects/{key}/condition/{id}` | ✅ |
+| `deleteDefaultReviewerCondition(id)` | `DELETE /rest/default-reviewers/latest/projects/{key}/condition/{id}` | ✅ |
+| `branchRestrictions(params?)` / `branchRestriction(id)` | `GET /rest/branch-permissions/latest/projects/{key}/restrictions[/{id}]` | ✅ |
+| `createBranchRestriction(data)` | `POST /rest/branch-permissions/latest/projects/{key}/restrictions` — single restriction as `application/json`; the `application/vnd.atl.bitbucket.bulk+json` bulk variant is not wrapped | ✅ |
+| `deleteBranchRestriction(id)` | `DELETE /rest/branch-permissions/latest/projects/{key}/restrictions/{id}` | ✅ |
+| `reviewerGroups()` / `reviewerGroup(id)` / CRUD | `GET/POST/PUT/DELETE /projects/{key}/settings/reviewer-groups[/{id}]` (`createReviewerGroup`, `updateReviewerGroup`, `deleteReviewerGroup`) | ✅ |
+| `autoDeclineSettings()` / CRUD | `GET/PUT/DELETE /projects/{key}/settings/auto-decline` (`updateAutoDeclineSettings`, `deleteAutoDeclineSettings`) | ✅ |
+| `autoMergeSettings()` / CRUD | `GET/PUT/DELETE /projects/{key}/settings/auto-merge` (`updateAutoMergeSettings`, `deleteAutoMergeSettings`) | ✅ |
+| `hooks(params?)` / `hook(hookKey)` | `GET /projects/{key}/settings/hooks[/{hookKey}]` | ✅ |
+| `enableHook(hookKey)` / `disableHook(hookKey)` | `PUT/DELETE /projects/{key}/settings/hooks/{hookKey}/enabled` | ✅ |
+| `hookSettings(hookKey)` / `updateHookSettings(hookKey, settings)` | `GET/PUT /projects/{key}/settings/hooks/{hookKey}/settings` | ✅ |
+| `defaultTasks()` / CRUD | `GET/POST/PUT/DELETE /rest/default-tasks/latest/projects/{key}/tasks[/{taskId}]` (`createDefaultTask`, `updateDefaultTask`, `deleteDefaultTask`, `deleteAllDefaultTasks`) | ✅ |
 
 ---
 

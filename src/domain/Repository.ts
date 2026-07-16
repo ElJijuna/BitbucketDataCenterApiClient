@@ -35,6 +35,24 @@ export interface ReposParams extends PaginationParams {
 }
 
 /**
+ * Payload for `POST /rest/api/latest/projects/{key}/repos` (create).
+ *
+ * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-repository/#api-api-latest-projects-projectkey-repos-post}
+ */
+export interface CreateRepositoryData {
+  name: string;
+  /** SCM to use; defaults to `'git'` (the only bundled SCM) */
+  scmId?: string;
+  /** Slug for the new repository; derived from `name` when omitted */
+  slug?: string;
+  /** Name of the default branch (e.g. `'main'`) */
+  defaultBranch?: string;
+  description?: string;
+  forkable?: boolean;
+  public?: boolean;
+}
+
+/**
  * Payload for `PUT /rest/api/latest/projects/{key}/repos/{slug}`.
  *
  * Only the fields to change need to be supplied; the server merges them with
