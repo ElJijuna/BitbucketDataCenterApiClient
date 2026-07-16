@@ -110,11 +110,18 @@ export type { RawFileParams } from './domain/RawFile';
 export type { CanRebaseResult, RebaseResult, RebaseVeto } from './domain/Rebase';
 export type { RefMatcher, RefMatcherTypeId } from './domain/RefMatcher';
 export type {
+  AddInsightAnnotationData,
+  BitbucketInsightAnnotation,
   BitbucketReport,
   BitbucketReportData,
+  CommitAnnotationsParams,
+  InsightAnnotationSeverity,
+  InsightAnnotationsResponse,
+  InsightAnnotationType,
   ReportDataType,
   ReportResult,
   ReportsParams,
+  SetInsightReportData,
 } from './domain/Report';
 export type {
   BitbucketRepository,

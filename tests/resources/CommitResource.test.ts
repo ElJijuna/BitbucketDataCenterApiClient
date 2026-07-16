@@ -231,4 +231,111 @@ describe('CommitResource write/read operations', () => {
       expect(init.body).toBeUndefined();
     });
   });
+
+  describe('insight reports', () => {
+    const INSIGHTS_BASE = `${API_URL}/rest/insights/latest/projects/PROJ/repos/my-repo/commits/abc123`;
+    const REPORT_KEY = 'com.example.coverage';
+    const mockReport = { key: REPORT_KEY, title: 'Coverage', result: 'PASS' };
+
+    it('insightReports() sends GET against the insights API with pagination', async () => {
+      mockOk({ values: [mockReport] });
+      await commit().insightReports({ limit: 10 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports?limit=10`);
+    });
+
+    it('insightReport() sends GET to the report key', async () => {
+      mockOk(mockReport);
+      expect(await commit().insightReport(REPORT_KEY)).toEqual(mockReport);
+      const [url] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}`);
+    });
+
+    it('setInsightReport() sends PUT with the payload', async () => {
+      const payload = {
+        title: 'Coverage',
+        data: [{ title: 'Lines', type: 'PERCENTAGE' as const, value: 85 }],
+        result: 'PASS' as const,
+      };
+
+      mockOk(mockReport);
+      await commit().setInsightReport(REPORT_KEY, payload);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}`);
+      expect(init.method).toBe('PUT');
+      expect(init.body).toBe(JSON.stringify(payload));
+    });
+
+    it('deleteInsightReport() sends DELETE with no body', async () => {
+      mockNoContent();
+      await commit().deleteInsightReport(REPORT_KEY);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}`);
+      expect(init.method).toBe('DELETE');
+      expect(init.body).toBeUndefined();
+    });
+
+    it('insightAnnotations() sends GET to the commit-level annotations with filters', async () => {
+      mockOk({ annotations: [] });
+      await commit().insightAnnotations({ severity: 'HIGH', type: 'BUG' });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/annotations?severity=HIGH&type=BUG`);
+    });
+
+    it('insightReportAnnotations() sends GET to the report annotations', async () => {
+      mockOk({ annotations: [] });
+      expect(await commit().insightReportAnnotations(REPORT_KEY)).toEqual({ annotations: [] });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}/annotations`);
+    });
+
+    it('addInsightAnnotations() sends POST wrapping the array in an annotations object', async () => {
+      const annotations = [{ message: 'Bug here', severity: 'HIGH' as const, line: 4 }];
+
+      mockNoContent();
+      await commit().addInsightAnnotations(REPORT_KEY, annotations);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}/annotations`);
+      expect(init.method).toBe('POST');
+      expect(init.body).toBe(JSON.stringify({ annotations }));
+    });
+
+    it('setInsightAnnotation() sends PUT to the external id', async () => {
+      const annotation = { message: 'Bug here', severity: 'MEDIUM' as const };
+
+      mockNoContent();
+      await commit().setInsightAnnotation(REPORT_KEY, 'finding-1', annotation);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}/annotations/finding-1`);
+      expect(init.method).toBe('PUT');
+      expect(init.body).toBe(JSON.stringify(annotation));
+    });
+
+    it('deleteInsightAnnotations() sends DELETE with externalId as a query param', async () => {
+      mockNoContent();
+      await commit().deleteInsightAnnotations(REPORT_KEY, 'finding-1');
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}/annotations?externalId=finding-1`);
+      expect(init.method).toBe('DELETE');
+      expect(init.body).toBeUndefined();
+    });
+
+    it('deleteInsightAnnotations() omits the query string to delete all annotations', async () => {
+      mockNoContent();
+      await commit().deleteInsightAnnotations(REPORT_KEY);
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${INSIGHTS_BASE}/reports/${REPORT_KEY}/annotations`);
+      expect(init.method).toBe('DELETE');
+    });
+  });
 });

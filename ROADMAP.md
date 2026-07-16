@@ -257,8 +257,12 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `addBuildStatus(data)` | `POST /rest/build-status/latest/commits/{id}` | ✅ |
 | `getBuild(key)` / `addBuild(data)` / `deleteBuild(key)` | `GET/POST/DELETE …/commits/{id}/builds?key={key}` (modern replacement for build-status; `GET` returns a single build, not a list) | ✅ |
 | `getDeployment(params)` / `addDeployment(data)` / `deleteDeployment(params)` | `GET/POST/DELETE …/commits/{id}/deployments` — `params: { deploymentSequenceNumber, key, environmentKey }` identify a single deployment | ✅ |
-| `insightReports(params?)` | `GET /rest/insights/latest/…/commits/{id}/reports` | ⬜ |
-| `insightReport(key)` / CRUD + annotations | `GET/PUT/DELETE /rest/insights/latest/…/commits/{id}/reports/{key}[/annotations]` | ⬜ |
+| `insightReports(params?)` / `insightReport(key)` | `GET /rest/insights/latest/…/commits/{id}/reports[/{key}]` | ✅ |
+| `setInsightReport(key, data)` / `deleteInsightReport(key)` | `PUT/DELETE /rest/insights/latest/…/commits/{id}/reports/{key}` | ✅ |
+| `insightAnnotations(params?)` | `GET /rest/insights/latest/…/commits/{id}/annotations` — annotations across all reports, filterable | ✅ |
+| `insightReportAnnotations(key)` / `addInsightAnnotations(key, annotations)` | `GET/POST /rest/insights/latest/…/commits/{id}/reports/{key}/annotations` | ✅ |
+| `setInsightAnnotation(key, externalId, data)` | `PUT /rest/insights/latest/…/commits/{id}/reports/{key}/annotations/{externalId}` | ✅ |
+| `deleteInsightAnnotations(key, externalId?)` | `DELETE /rest/insights/latest/…/commits/{id}/reports/{key}/annotations[?externalId]` — deletes all when `externalId` is omitted | ✅ |
 | `pullRequests(params?)` | `GET …/commits/{id}/pull-requests` | ✅ |
 | `mergeBase(otherCommitId)` | `GET …/commits/{id}/merge-base/{otherCommitId}` | ✅ |
 | `watch()` / `unwatch()` | `POST/DELETE …/commits/{id}/watch` | ✅ |

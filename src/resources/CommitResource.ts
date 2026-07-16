@@ -20,6 +20,13 @@ import type {
   BitbucketPullRequestComment,
   UpdateCommitCommentData,
 } from '../domain/PullRequestActivity';
+import type {
+  AddInsightAnnotationData,
+  BitbucketReport,
+  CommitAnnotationsParams,
+  InsightAnnotationsResponse,
+  SetInsightReportData,
+} from '../domain/Report';
 import type { RequestBodyFn, RequestFn } from './ProjectResource';
 
 /**
@@ -360,5 +367,159 @@ export class CommitResource implements PromiseLike<BitbucketCommit> {
   async unwatch(): Promise<void> {
     // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
     return this.requestBody!<void>(`${this.basePath}/watch`, undefined, { method: 'DELETE' });
+  }
+
+  /**
+   * Fetches the Code Insights reports attached to this commit.
+   *
+   * `GET /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports`
+   *
+   * @param params - Optional pagination: `limit`, `start`
+   * @returns A paged response of reports
+   */
+  async insightReports(params?: PaginationParams): Promise<PagedResponse<BitbucketReport>> {
+    return this.request<PagedResponse<BitbucketReport>>(
+      `${this.basePath}/reports`,
+      params as Record<string, string | number | boolean>,
+      { apiPath: 'rest/insights/latest' },
+    );
+  }
+
+  /**
+   * Fetches a single Code Insights report by key.
+   *
+   * `GET /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}`
+   *
+   * @param key - The report's key
+   * @returns The report
+   */
+  async insightReport(key: string): Promise<BitbucketReport> {
+    return this.request<BitbucketReport>(`${this.basePath}/reports/${key}`, undefined, {
+      apiPath: 'rest/insights/latest',
+    });
+  }
+
+  /**
+   * Creates or replaces a Code Insights report on this commit.
+   *
+   * `PUT /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}`
+   *
+   * @param key - The report's key (assigned by the caller; replaces any existing report with the same key)
+   * @param data - `title` and `data` (at most 6 items), plus optional `details`,
+   * `result`, `reporter`, `link`, `logoUrl`, `createdDate`, `coverageProviderKey`
+   * @returns The stored report
+   */
+  async setInsightReport(key: string, data: SetInsightReportData): Promise<BitbucketReport> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<BitbucketReport>(`${this.basePath}/reports/${key}`, data, {
+      apiPath: 'rest/insights/latest',
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Deletes a Code Insights report (and its annotations) from this commit.
+   *
+   * `DELETE /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}`
+   *
+   * @param key - The report's key
+   */
+  async deleteInsightReport(key: string): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/reports/${key}`, undefined, {
+      apiPath: 'rest/insights/latest',
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches Code Insights annotations across all of this commit's reports.
+   *
+   * `GET /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/annotations`
+   *
+   * @param params - Optional filters: `key`, `externalId`, `path`, `severity`, `type`
+   * @returns The matching annotations (not paged)
+   */
+  async insightAnnotations(params?: CommitAnnotationsParams): Promise<InsightAnnotationsResponse> {
+    return this.request<InsightAnnotationsResponse>(
+      `${this.basePath}/annotations`,
+      params as Record<string, string | number | boolean>,
+      { apiPath: 'rest/insights/latest' },
+    );
+  }
+
+  /**
+   * Fetches the annotations belonging to one Code Insights report.
+   *
+   * `GET /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}/annotations`
+   *
+   * @param key - The report's key
+   * @returns The report's annotations (not paged)
+   */
+  async insightReportAnnotations(key: string): Promise<InsightAnnotationsResponse> {
+    return this.request<InsightAnnotationsResponse>(
+      `${this.basePath}/reports/${key}/annotations`,
+      undefined,
+      { apiPath: 'rest/insights/latest' },
+    );
+  }
+
+  /**
+   * Adds annotations to a Code Insights report in bulk.
+   *
+   * `POST /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}/annotations`
+   *
+   * @param key - The report's key
+   * @param annotations - The annotations to add (at least one)
+   */
+  async addInsightAnnotations(key: string, annotations: AddInsightAnnotationData[]): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(
+      `${this.basePath}/reports/${key}/annotations`,
+      { annotations },
+      { apiPath: 'rest/insights/latest' },
+    );
+  }
+
+  /**
+   * Creates or replaces a single Code Insights annotation, identified by its
+   * external id.
+   *
+   * `PUT /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}/annotations/{externalId}`
+   *
+   * @param key - The report's key
+   * @param externalId - The annotation's external id (assigned by the caller)
+   * @param data - The annotation's `message`, `severity`, and optional fields
+   */
+  async setInsightAnnotation(
+    key: string,
+    externalId: string,
+    data: AddInsightAnnotationData,
+  ): Promise<void> {
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(
+      `${this.basePath}/reports/${key}/annotations/${externalId}`,
+      data,
+      { apiPath: 'rest/insights/latest', method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes annotations from a Code Insights report: a single one when
+   * `externalId` is given, or **all** of the report's annotations when omitted.
+   *
+   * `DELETE /rest/insights/latest/projects/{key}/repos/{slug}/commits/{id}/reports/{key}/annotations[?externalId={externalId}]`
+   *
+   * @param key - The report's key
+   * @param externalId - External id of the annotation to delete; omit to delete all
+   */
+  async deleteInsightAnnotations(key: string, externalId?: string): Promise<void> {
+    const qs = externalId === undefined ? '' : `?${new URLSearchParams({ externalId })}`;
+
+    // biome-ignore lint/style/noNonNullAssertion: requestBody is always set when this method is called
+    return this.requestBody!<void>(`${this.basePath}/reports/${key}/annotations${qs}`, undefined, {
+      apiPath: 'rest/insights/latest',
+      method: 'DELETE',
+    });
   }
 }
