@@ -52,9 +52,10 @@ export interface CodeSearchCodePage {
 /**
  * Response for `POST /rest/search/latest/search`.
  *
- * @remarks Atlassian publishes only a sparse schema for the Search API; this
- * shape is typed defensively and most fields are optional. Inspect real
- * responses from your Bitbucket version before relying on a specific field.
+ * @remarks This is an internal Bitbucket UI endpoint and is not present in
+ * Atlassian's public REST API specification. It may change or disappear
+ * between Bitbucket versions. The response is therefore typed defensively;
+ * inspect responses from your exact Bitbucket version before relying on it.
  */
 export interface CodeSearchResult {
   scope?: { type?: string };

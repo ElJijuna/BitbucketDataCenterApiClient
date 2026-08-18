@@ -15,7 +15,13 @@ export type {
   AutoMergeSettingsRequest,
   RequestAutoMergeData,
 } from './domain/AutoMerge';
-export type { BitbucketBranch, BranchesParams } from './domain/Branch';
+export type {
+  BitbucketBranch,
+  BranchesParams,
+  CreateBranchData,
+  DeleteBranchData,
+  SetDefaultBranchData,
+} from './domain/Branch';
 export type {
   BitbucketRefRestriction,
   RefRestrictionAccessKey,
@@ -46,7 +52,12 @@ export type {
 } from './domain/Change';
 export type { BitbucketClientEvents, RequestEvent } from './domain/ClientEvents';
 export type { BitbucketClientOptions, RetryOptions } from './domain/ClientOptions';
-export type { BitbucketCommit, BitbucketCommitAuthor, CommitsParams } from './domain/Commit';
+export type {
+  BitbucketCommit,
+  BitbucketCommitAuthor,
+  CommitPullRequestsParams,
+  CommitsParams,
+} from './domain/Commit';
 export type { CommitMessageSuggestion } from './domain/CommitMessageSuggestion';
 export type { CompareDiffParams, CompareParams } from './domain/Compare';
 export type {
@@ -135,6 +146,7 @@ export type {
 } from './domain/PullRequest';
 export type {
   ActivitiesParams,
+  AddCommitCommentData,
   AddPullRequestCommentData,
   ApplySuggestionData,
   ApplySuggestionResult,
@@ -142,6 +154,7 @@ export type {
   BitbucketPullRequestActivity,
   BitbucketPullRequestComment,
   PullRequestActivityAction,
+  UpdateCommitCommentData,
   UpdatePullRequestCommentData,
 } from './domain/PullRequestActivity';
 export type { CompleteReviewData, PullRequestReview } from './domain/PullRequestReview';
@@ -209,7 +222,7 @@ export type {
 } from './domain/Search';
 export type { AddSshKeyData, BitbucketSshKey, SshKeysParams } from './domain/SshKey';
 export type { RefSyncRequest, RefSyncStatus, SetSyncStatusData, SyncRef } from './domain/Sync';
-export type { BitbucketTag, TagsParams } from './domain/Tag';
+export type { BitbucketTag, CreateTagData, TagsParams } from './domain/Tag';
 export type {
   BitbucketRepositoryUserPermission,
   BitbucketUser,
@@ -270,7 +283,7 @@ export type { BitbucketErrorDetail } from './errors/BitbucketApiError';
 export { BitbucketApiError } from './errors/BitbucketApiError';
 export { paginate } from './pagination';
 export { CommitResource } from './resources/CommitResource';
-export { ProjectResource } from './resources/ProjectResource';
+export { type ProjectPermission, ProjectResource } from './resources/ProjectResource';
 export { PullRequestResource } from './resources/PullRequestResource';
 export { RepositoryResource } from './resources/RepositoryResource';
 export { UserResource } from './resources/UserResource';

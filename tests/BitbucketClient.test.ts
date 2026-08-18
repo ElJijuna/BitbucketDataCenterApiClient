@@ -1,4 +1,5 @@
 import { BitbucketClient } from '../src/BitbucketClient';
+import type { BitbucketAccessToken, BitbucketCreatedAccessToken } from '../src/domain/AccessToken';
 import type { BitbucketBranch } from '../src/domain/Branch';
 import type { BitbucketBuildSummaries } from '../src/domain/BuildSummary';
 import type { BitbucketChange } from '../src/domain/Change';
@@ -1396,13 +1397,13 @@ describe('BitbucketClient', () => {
   });
 
   describe('user(slug).updateSettings()', () => {
-    it('calls PUT /users/{slug}/settings with the settings as body', async () => {
+    it('calls POST /users/{slug}/settings with the settings as body', async () => {
       mockOk(undefined);
       await client.user('pilmee').updateSettings({ 'my-plugin.setting': true });
       expect(fetchMock).toHaveBeenCalledWith(
         `${BASE}/users/pilmee/settings`,
         expect.objectContaining({
-          method: 'PUT',
+          method: 'POST',
           body: JSON.stringify({ 'my-plugin.setting': true }),
         }),
       );
@@ -1420,9 +1421,8 @@ describe('BitbucketClient', () => {
     const mockToken = {
       id: 'abc123',
       name: 'ci-read',
-      permissions: ['REPO_READ'],
-      createdDate: 1700000000000,
-    };
+      createdDate: '2026-07-16T12:00:00.000Z',
+    } satisfies BitbucketAccessToken;
 
     it('accessTokens() calls GET /rest/access-tokens/latest/users/{slug}', async () => {
       mockOk(pagedOf(mockToken));
@@ -1447,7 +1447,7 @@ describe('BitbucketClient', () => {
     });
 
     it('createAccessToken() creates via PUT and returns the raw token secret', async () => {
-      const created = { ...mockToken, token: 'raw-secret' };
+      const created = { ...mockToken, token: 'raw-secret' } satisfies BitbucketCreatedAccessToken;
       const createData = { name: 'ci-read', permissions: ['REPO_READ'], expiryDays: 90 };
 
       mockOk(created);
@@ -1530,6 +1530,15 @@ describe('BitbucketClient', () => {
       await client.user('pilmee').deleteGpgKey('A1B2C3D4');
       expect(fetchMock).toHaveBeenCalledWith(
         `${API_URL}/rest/gpg/latest/keys/A1B2C3D4`,
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
+    it('deleteAllGpgKeys() calls DELETE /rest/gpg/latest/keys?user={slug}', async () => {
+      mockOk(undefined);
+      await client.user('pilmee').deleteAllGpgKeys();
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/gpg/latest/keys?user=pilmee`,
         expect.objectContaining({ method: 'DELETE' }),
       );
     });

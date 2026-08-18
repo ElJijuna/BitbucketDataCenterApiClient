@@ -10,11 +10,8 @@ import type { PaginationParams } from './Pagination';
 export interface BitbucketAccessToken {
   id: string;
   name: string;
-  /** Permissions granted to the token (e.g. `['REPO_READ', 'PROJECT_READ']`) */
-  permissions: string[];
-  createdDate?: number;
-  lastAuthenticated?: number;
-  expiryDate?: number;
+  /** ISO-8601 timestamp indicating when the token was created. */
+  createdDate?: string;
 }
 
 /**

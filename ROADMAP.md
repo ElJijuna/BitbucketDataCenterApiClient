@@ -33,7 +33,7 @@ Prerequisites for most pending write operations.
 
 | Task | Notes | Status |
 | --- | --- | --- |
-| Mark unofficial endpoints with `@remarks` in TSDoc | Done for `size()`; keep the policy for any future unofficial endpoint | ✅ |
+| Mark unofficial endpoints with `@remarks` in TSDoc | Done for `size()` and `codeSearch()`; keep the policy for any future unofficial endpoint | ✅ |
 | Document methods that issue more than one request | `currentUser()`, `pullRequest().reports()`, `pullRequest().buildSummaries()` document it in TSDoc | ✅ |
 | README: API version coverage | States the client targets Bitbucket Data Center REST API v10.3 (`/rest/api/latest`), links to `ROADMAP.md` | ✅ |
 | README: supported authentication | Basic (default) and Bearer (`authType: 'bearer'`), documented with examples | ✅ |
@@ -50,8 +50,9 @@ Endpoints kept deliberately even though they are not part of the official REST d
 | Method | Endpoint | Reason |
 | --- | --- | --- |
 | `RepositoryResource.size()` | `GET /projects/{key}/repos/{slug}/sizes` | Well-known UI endpoint; no official equivalent exists |
+| `BitbucketClient.codeSearch()` | `POST /rest/search/latest/search` | Internal Bitbucket UI endpoint; absent from the public REST API specification |
 
-All other previously unofficial endpoints were migrated to documented ones in v1.14 (see `tasks()`, `issues()`, `reports()`, `buildSummaries()`, `sshKeys()`, `repos()` on users, and `currentUser()`).
+Other previously unofficial endpoints were migrated to documented ones in v1.14 (see `tasks()`, `issues()`, `reports()`, `buildSummaries()`, `sshKeys()`, `repos()` on users, and `currentUser()`).
 
 ---
 
@@ -104,7 +105,7 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` — `changesSince`/`limit` only (no `start` offset) | ✅ |
 | `markupPreview(markup, params?)` | `POST /markup/preview` — the markup is sent as the raw request body; `urlMode`/`htmlEscape`/`includeHeadingId`/`hardwrap` as query params | ✅ |
 | `groups(params?)` | `GET /groups` — returns a page of group *names* (plain strings) | ✅ |
-| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — global code search (new `Search` API group in v10.3 docs; naming avoids clashing with the existing repo-name `search()`). Response typed defensively (`CodeSearchResult`, `@remarks`) | ✅ |
+| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — internal global code-search endpoint; absent from the public REST specification. Response typed defensively (`CodeSearchResult`, `@remarks`) | ⚠️ |
 
 ---
 
@@ -287,9 +288,9 @@ Payload shapes are typed against Atlassian's documented webhook event payloads, 
 | `addSshKey(data)` | `POST /rest/ssh/latest/keys?user={slug}` | ✅ |
 | `deleteSshKey(keyId)` | `DELETE /rest/ssh/latest/keys/{keyId}` | ✅ |
 | `settings()` | `GET /users/{slug}/settings` | ✅ |
-| `updateSettings(data)` | `PUT /users/{slug}/settings` — updates only the entries present in the body | ✅ |
+| `updateSettings(data)` | `POST /users/{slug}/settings` — updates only the entries present in the body | ✅ |
 | `accessTokens(params?)` / `accessToken(id)` / CRUD | `GET/PUT/POST/DELETE /rest/access-tokens/latest/users/{slug}[/{tokenId}]` (`createAccessToken` creates with `PUT`, `updateAccessToken` updates with `POST` — Atlassian's verbs; `deleteAccessToken`). The raw token secret is only returned on create (`BitbucketCreatedAccessToken`) | ✅ |
-| `gpgKeys(params?)` / CRUD | `GET/POST/DELETE /rest/gpg/latest/keys[/{fingerprintOrId}]` (`addGpgKey`, `deleteGpgKey`; list/create scoped to the user via `?user={slug}`) | ✅ |
+| `gpgKeys(params?)` / CRUD | `GET/POST/DELETE /rest/gpg/latest/keys[/{fingerprintOrId}]` (`addGpgKey`, `deleteGpgKey`, `deleteAllGpgKeys`; collection operations scoped via `?user={slug}`) | ✅ |
 
 ---
 

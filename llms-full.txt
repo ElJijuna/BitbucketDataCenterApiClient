@@ -75,9 +75,9 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `dashboardPullRequests(params?)` | `GET /dashboard/pull-requests` — PRs where the authenticated user participates (author, reviewer, etc.) across all repos |
 | `inboxPullRequests(params?)` | `GET /inbox/pull-requests` — PRs requiring the authenticated user's attention |
 | `inboxPullRequestsCount(params?)` | `GET /inbox/pull-requests/count` |
-| `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` — suggestions from the user's recent pushes; params are `changesSince?` (seconds since epoch, default last 48h) and `limit?` only (no `start` offset) |
+| `pullRequestSuggestions(params?)` | `GET /dashboard/pull-request-suggestions` — suggestions from the user's recent pushes; params are `changesSince?` (elapsed seconds before now) and `limit?` only (no `start` offset) |
 | `markupPreview(markup, params?)` | `POST /markup/preview` — renders markup (e.g. Markdown) to `{ html }`; the markup goes as the raw request body; `urlMode?`/`htmlEscape?`/`includeHeadingId?`/`hardwrap?` as query params |
-| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — global code search with Bitbucket's query syntax (e.g. `'jwt project:PROJ ext:ts'`); hits under `result.code.values`; response typed defensively (`CodeSearchResult`) |
+| `codeSearch(query, params?)` | `POST /rest/search/latest/search` — unofficial internal UI endpoint for global code search; may change between Bitbucket versions; hits under `result.code.values`; response typed defensively (`CodeSearchResult`) |
 
 ### ProjectResource — `bb.project(key)`
 
@@ -259,7 +259,7 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `addSshKey(data)` | `POST /rest/ssh/latest/keys?user={slug}` — `data: { text, label?, expiryDays? }`; adding to another user's account requires admin |
 | `deleteSshKey(keyId)` | `DELETE /rest/ssh/latest/keys/{keyId}` |
 | `settings()` | `GET /users/{slug}/settings` |
-| `updateSettings(settings)` | `PUT /users/{slug}/settings` — updates only the entries present in the body |
+| `updateSettings(settings)` | `POST /users/{slug}/settings` — updates only the entries present in the body |
 | `accessTokens(params?)` / `accessToken(tokenId)` | `GET /rest/access-tokens/latest/users/{slug}[/{tokenId}]` — HTTP access tokens (never include the raw secret) |
 | `createAccessToken(data)` | `PUT /rest/access-tokens/latest/users/{slug}` — **creates with `PUT`** (Atlassian's verbs); `data: { name, permissions, expiryDays? }`; the response is the only place the raw `token` secret is returned |
 | `updateAccessToken(tokenId, data)` | `POST /rest/access-tokens/latest/users/{slug}/{tokenId}` — **updates with `POST`** |
@@ -267,6 +267,7 @@ All endpoints below are relative to `/rest/api/latest` unless a full path is sho
 | `gpgKeys(params?)` | `GET /rest/gpg/latest/keys?user={slug}` |
 | `addGpgKey(data)` | `POST /rest/gpg/latest/keys?user={slug}` — `data: { text }` (ASCII-armored public key) |
 | `deleteGpgKey(fingerprintOrId)` | `DELETE /rest/gpg/latest/keys/{fingerprintOrId}` |
+| `deleteAllGpgKeys()` | `DELETE /rest/gpg/latest/keys?user={slug}` |
 
 ## Webhook event parsing
 

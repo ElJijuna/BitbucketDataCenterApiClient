@@ -697,7 +697,7 @@ export class BitbucketClient {
    *
    * `GET /rest/api/latest/dashboard/pull-request-suggestions`
    *
-   * @param params - Optional filters: `changesSince` (seconds since the epoch, defaults to the last 48 hours), `limit`
+   * @param params - Optional filters: `changesSince` (elapsed seconds before now), `limit`
    * @returns A paged response of pull request suggestions
    *
    * @example
@@ -767,8 +767,10 @@ export class BitbucketClient {
    *
    * `POST /rest/search/latest/search`
    *
-   * The response shape is only sparsely documented by Atlassian and is typed
-   * defensively — see {@link CodeSearchResult}.
+   * @remarks This is an internal Bitbucket UI endpoint, not part of Atlassian's
+   * public REST API specification. It may change or disappear between
+   * Bitbucket versions. The response is typed defensively — see
+   * {@link CodeSearchResult}.
    *
    * @param query - The search query
    * @param params - Optional paging for the code results: `start`, `limit`

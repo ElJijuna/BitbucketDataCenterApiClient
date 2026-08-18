@@ -45,8 +45,8 @@ export interface InboxPullRequestsCount {
  */
 export interface PullRequestSuggestionsParams {
   /**
-   * Restrict suggestions to changes that occurred since this time, in seconds
-   * since the epoch. Defaults to `172800` (the last 48 hours).
+   * Restrict suggestions to changes that occurred within this many seconds
+   * before now. For example, `172800` limits results to the last 48 hours.
    */
   changesSince?: number;
   /** Maximum number of suggestions to return */

@@ -354,7 +354,9 @@ const repos = await bb.search({ state: 'AVAILABLE', permission: 'REPO_WRITE' });
 
 ### Code search
 
-Global code search with Bitbucket's query syntax (`POST /rest/search/latest/search`):
+Global code search with Bitbucket's query syntax (`POST /rest/search/latest/search`).
+This is an internal Bitbucket UI endpoint, not part of Atlassian's public REST API,
+so verify compatibility with your Bitbucket version before relying on it:
 
 ```typescript
 const result = await bb.codeSearch('parseWebhookEvent repo:my-repo ext:ts');
@@ -405,6 +407,7 @@ await bb.user('pilmee').deleteSshKey(key.id);
 const gpgKeys = await bb.user('pilmee').gpgKeys();
 await bb.user('pilmee').addGpgKey({ text: '-----BEGIN PGP PUBLIC KEY BLOCK-----...' });
 await bb.user('pilmee').deleteGpgKey('A1B2C3D4...'); // fingerprint or id
+await bb.user('pilmee').deleteAllGpgKeys();
 
 // HTTP access tokens — note Atlassian's verbs: create is PUT, update is POST.
 // The raw `token` secret is ONLY returned at creation time; store it immediately.
@@ -412,6 +415,7 @@ const { token, id } = await bb.user('pilmee').createAccessToken({
   name: 'ci-read', permissions: ['REPO_READ'], expiryDays: 90,
 });
 const tokens = await bb.user('pilmee').accessTokens();
+const tokenDetails = await bb.user('pilmee').accessToken(id);
 await bb.user('pilmee').updateAccessToken(id, { name: 'ci-read-renamed' });
 await bb.user('pilmee').deleteAccessToken(id);
 

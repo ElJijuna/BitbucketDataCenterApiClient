@@ -148,12 +148,12 @@ export class UserResource implements PromiseLike<BitbucketUser> {
    * Updates entries of this user's settings map. Only the keys present in
    * `settings` are touched; other entries are left as they are.
    *
-   * `PUT /rest/api/latest/users/{slug}/settings`
+   * `POST /rest/api/latest/users/{slug}/settings`
    *
    * @param settings - The setting key/value pairs to update
    */
   async updateSettings(settings: BitbucketUserSettings): Promise<void> {
-    return this.requestBody<void>(`${this.basePath}/settings`, settings, { method: 'PUT' });
+    return this.requestBody<void>(`${this.basePath}/settings`, settings);
   }
 
   /**
@@ -288,6 +288,20 @@ export class UserResource implements PromiseLike<BitbucketUser> {
    */
   async deleteGpgKey(fingerprintOrId: string): Promise<void> {
     return this.requestBody<void>(`/keys/${encodeURIComponent(fingerprintOrId)}`, undefined, {
+      apiPath: 'rest/gpg/latest',
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Deletes all GPG keys associated with this user.
+   *
+   * `DELETE /rest/gpg/latest/keys?user={slug}`
+   *
+   * Deleting another user's keys requires admin permission.
+   */
+  async deleteAllGpgKeys(): Promise<void> {
+    return this.requestBody<void>(`/keys?user=${encodeURIComponent(this.slug)}`, undefined, {
       apiPath: 'rest/gpg/latest',
       method: 'DELETE',
     });
