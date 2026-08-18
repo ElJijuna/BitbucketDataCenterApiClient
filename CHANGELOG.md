@@ -1,3 +1,11 @@
+# [1.21.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.20.0...v1.21.0) (2026-08-18)
+
+
+### Features
+
+* update CI and release workflows to verify source and documentation; enhance README and ROADMAP with endpoint details; improve typings and tests for access tokens and user settings ([e333197](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/e3331978cb4a68bc4ca3d70a6ac260926be74b27))
+* update to support Bitbucket Data Center REST API v10.4; add change-author settings for pull requests, related repositories functionality, and email notification preferences; enhance documentation and tests ([1c592b9](https://github.com/ElJijuna/BitbucketDataCenterApiClient/commit/1c592b9db459a77a7656589ebddd4f566fd651a6))
+
 # [1.20.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.19.0...v1.20.0) (2026-07-16)
 
 
