@@ -1,12 +1,3 @@
-# [1.21.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.20.0...v1.21.0) (2026-08-18)
-
-
-### Features
-
-* update the client contract for Bitbucket Data Center 10.4
-* support changing pull request authors and project/repository change-author settings
-* add related-repository permission filtering and pull request email subscriptions
-
 # [1.20.0](https://github.com/ElJijuna/BitbucketDataCenterApiClient/compare/v1.19.0...v1.20.0) (2026-07-16)
 
 
