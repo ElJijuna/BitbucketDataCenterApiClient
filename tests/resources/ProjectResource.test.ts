@@ -485,6 +485,39 @@ describe('ProjectResource write operations', () => {
     });
   });
 
+  describe('change-author settings', () => {
+    it('changeAuthorSettings() sends GET', async () => {
+      mockOk({ enabled: true, restrictionState: 'NONE' });
+      await project().changeAuthorSettings();
+      const [url] = lastCall();
+
+      expect(url).toBe(`${PROJECT_BASE}/settings/change-author`);
+    });
+
+    it('updateChangeAuthorSettings() sends PUT with the payload', async () => {
+      mockOk({ enabled: true, restrictionState: 'RESTRICTED_MODIFIABLE' });
+      await project().updateChangeAuthorSettings({
+        enabled: true,
+        restrictionAction: 'CREATE',
+      });
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${PROJECT_BASE}/settings/change-author`);
+      expect(init.method).toBe('PUT');
+      expect(init.body).toBe(JSON.stringify({ enabled: true, restrictionAction: 'CREATE' }));
+    });
+
+    it('deleteChangeAuthorSettings() sends DELETE with no body', async () => {
+      mockNoContent();
+      await project().deleteChangeAuthorSettings();
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${PROJECT_BASE}/settings/change-author`);
+      expect(init.method).toBe('DELETE');
+      expect(init.body).toBeUndefined();
+    });
+  });
+
   describe('hooks', () => {
     const HOOK_KEY = 'com.example.hooks:my-hook';
     const mockHook = {

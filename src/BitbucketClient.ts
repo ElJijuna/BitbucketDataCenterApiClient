@@ -9,6 +9,10 @@ import type {
 } from './domain/Dashboard';
 import type { GroupsParams } from './domain/Group';
 import type { MarkupPreviewParams, MarkupPreviewResult } from './domain/Markup';
+import type {
+  NotificationSettings,
+  UpdateNotificationSettingsData,
+} from './domain/NotificationSettings';
 import type { PagedResponse } from './domain/Pagination';
 import type { BitbucketProject, CreateProjectData, ProjectsParams } from './domain/Project';
 import type { BitbucketPullRequest } from './domain/PullRequest';
@@ -513,6 +517,36 @@ export class BitbucketClient {
     }
 
     return user;
+  }
+
+  /**
+   * Fetches email notification preferences for the authenticated user.
+   *
+   * `GET /rest/notification/1.0/settings`
+   *
+   * @returns Pull request author and watcher subscription groups
+   */
+  async notificationSettings(): Promise<NotificationSettings> {
+    return this.request<NotificationSettings>('/settings', undefined, {
+      apiPath: 'rest/notification/1.0',
+    });
+  }
+
+  /**
+   * Updates email notification preferences for the authenticated user.
+   *
+   * `PUT /rest/notification/1.0/settings`
+   *
+   * @param data - Author and/or watcher subscription groups
+   * @returns The updated notification settings
+   */
+  async updateNotificationSettings(
+    data: UpdateNotificationSettingsData,
+  ): Promise<NotificationSettings> {
+    return this.requestPost<NotificationSettings>('/settings', data, {
+      apiPath: 'rest/notification/1.0',
+      method: 'PUT',
+    });
   }
 
   /**

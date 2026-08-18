@@ -4,7 +4,10 @@
 [![npm version](https://img.shields.io/npm/v/bitbucket-datacenter-api-client)](https://www.npmjs.com/package/bitbucket-datacenter-api-client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-TypeScript client for the [Bitbucket Data Center REST API v10.3](https://developer.atlassian.com/server/bitbucket/rest/v1003/) (`/rest/api/latest`).
+TypeScript client for the [Bitbucket Data Center REST API v10.4](https://developer.atlassian.com/server/bitbucket/rest/v1004/) (`/rest/api/latest`).
+
+The [Bitbucket 10.4 comparison](BITBUCKET_10_4_COMPARISON.md) records the upstream contract changes implemented in v1.21.
+
 Works in **Node.js** and the **browser** (isomorphic). Fully typed, zero runtime dependencies.
 
 See [ROADMAP.md](ROADMAP.md) for the full list of implemented and pending endpoints.
@@ -282,8 +285,12 @@ const pr = await bb.project('PROJ').repo('my-repo').createPullRequest({
   reviewers: [{ user: { name: 'jdoe' } }],
 });
 
-// Lifecycle: update, approve, merge, decline, reopen, delete
+// Lifecycle: update metadata or author, approve, merge, decline, reopen, delete
 await bb.project('PROJ').repo('my-repo').pullRequest(42).update({ version: 3, title: 'New title' });
+await bb.project('PROJ').repo('my-repo').pullRequest(42).update({
+  version: 4,
+  author: { user: { name: 'new-author' } },
+});
 await bb.project('PROJ').repo('my-repo').pullRequest(42).approve('jdoe');
 const check = await bb.project('PROJ').repo('my-repo').pullRequest(42).canMerge();
 await bb.project('PROJ').repo('my-repo').pullRequest(42).merge({ version: 4, strategyId: 'squash' });
@@ -318,6 +325,31 @@ const reports    = await bb.project('PROJ').repo('my-repo').pullRequest(42).repo
 const summaries  = await bb.project('PROJ').repo('my-repo').pullRequest(42).buildSummaries();
 const issues     = await bb.project('PROJ').repo('my-repo').pullRequest(42).issues();
 const suggestion = await bb.project('PROJ').repo('my-repo').pullRequest(42).commitMessageSuggestion();
+```
+
+### Bitbucket 10.4 settings
+
+```typescript
+// Configure whether pull request authors can be changed
+const projectSettings = await bb.project('PROJ').changeAuthorSettings();
+await bb.project('PROJ').updateChangeAuthorSettings({
+  enabled: true,
+  restrictionAction: 'CREATE',
+});
+await bb.project('PROJ').repo('my-repo').updateChangeAuthorSettings({ enabled: true });
+
+// Find repositories in the same fork hierarchy
+const related = await bb.project('PROJ').repo('my-repo').related({
+  permission: 'REPO_WRITE',
+  limit: 50,
+});
+
+// Configure pull request email categories for the authenticated user
+const notifications = await bb.notificationSettings();
+await bb.updateNotificationSettings({
+  authorNotificationSubscriptions: ['STATE_CHANGES', 'COMMENTS', 'MENTIONS'],
+  watcherNotificationSubscriptions: ['STATE_CHANGES', 'MENTIONS', 'CODE_CHANGES'],
+});
 ```
 
 ### Dashboard & inbox
@@ -685,7 +717,7 @@ import type {
   BitbucketProject, ProjectsParams, CreateProjectData, UpdateProjectData,
   BitbucketGroup, GroupsParams, PermittedEntity, PermissionSearchParams,
   // Repositories
-  BitbucketRepository, ReposParams, GlobalReposParams, SearchReposParams,
+  BitbucketRepository, ReposParams, RelatedRepositoriesParams, GlobalReposParams, SearchReposParams,
   CreateRepositoryData, UpdateRepositoryData, ForkRepositoryData,
   BitbucketRepositorySize,
   BitbucketLastModifiedEntry, LastModifiedParams,
@@ -695,6 +727,7 @@ import type {
   BitbucketRepositorySettings, BitbucketRefChangeActivity,
   BitbucketRefRestriction, BitbucketPullRequestCondition, BitbucketRequiredBuildCondition,
   BitbucketReviewerGroup, AutoDeclineSettings, AutoMergeSettings,
+  ChangePullRequestAuthorSettings, ChangePullRequestAuthorRestrictionState,
   BitbucketRepositoryHook, HookSettings, BitbucketDefaultTask, RefSyncStatus,
   // Branches & Tags
   BitbucketBranch, BranchesParams,
@@ -705,8 +738,8 @@ import type {
   BitbucketBuildStatus, BitbucketBuild, BitbucketDeployment,
   BitbucketReport, SetInsightReportData, BitbucketInsightAnnotation, AddInsightAnnotationData,
   // Pull Requests
-  BitbucketPullRequest, PullRequestsParams, CreatePullRequestData,
-  MergePullRequestData, CanMergeResult, AddReviewerData,
+  BitbucketPullRequest, BitbucketParticipant, PullRequestsParams, CreatePullRequestData,
+  UpdatePullRequestData, MergePullRequestData, CanMergeResult, AddReviewerData,
   BitbucketPullRequestActivity, ActivitiesParams,
   BitbucketPullRequestComment, AddPullRequestCommentData,
   BitbucketPullRequestTask, TasksParams,
@@ -718,6 +751,7 @@ import type {
   BitbucketUser, UsersParams,
   BitbucketUserPermission, ProjectUsersParams,
   BitbucketUserSettings,
+  NotificationSettings, PullRequestNotificationSubscription,
   BitbucketSshKey, AddSshKeyData,
   BitbucketGpgKey, AddGpgKeyData,
   BitbucketAccessToken, BitbucketCreatedAccessToken, CreateAccessTokenData,

@@ -50,6 +50,12 @@ export type {
   ChangesParams,
   ChangeType,
 } from './domain/Change';
+export type {
+  ChangePullRequestAuthorProjectSettingsRequest,
+  ChangePullRequestAuthorRestrictionState,
+  ChangePullRequestAuthorSettings,
+  ChangePullRequestAuthorSettingsRequest,
+} from './domain/ChangePullRequestAuthor';
 export type { BitbucketClientEvents, RequestEvent } from './domain/ClientEvents';
 export type { BitbucketClientOptions, RetryOptions } from './domain/ClientOptions';
 export type {
@@ -120,6 +126,11 @@ export type { BitbucketLabel } from './domain/Label';
 export type { BitbucketLastModifiedEntry, LastModifiedParams } from './domain/LastModified';
 export type { MarkupPreviewParams, MarkupPreviewResult } from './domain/Markup';
 export type { BitbucketMarkupFile, MarkupFileParams } from './domain/MarkupFile';
+export type {
+  NotificationSettings,
+  PullRequestNotificationSubscription,
+  UpdateNotificationSettingsData,
+} from './domain/NotificationSettings';
 export type { PagedResponse, PaginationParams } from './domain/Pagination';
 export type { PermissionSearchParams, PermittedEntity } from './domain/PermissionSearch';
 export type {
@@ -197,6 +208,7 @@ export type {
   FilesParams,
   ForkRepositoryData,
   GlobalReposParams,
+  RelatedRepositoriesParams,
   ReposParams,
   SearchReposParams,
   UpdateRepositoryData,

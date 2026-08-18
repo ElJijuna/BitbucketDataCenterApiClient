@@ -6,6 +6,7 @@ import type { BitbucketChange } from '../src/domain/Change';
 import type { BitbucketCommit } from '../src/domain/Commit';
 import type { BitbucketIssue } from '../src/domain/Issue';
 import type { BitbucketLastModifiedEntry } from '../src/domain/LastModified';
+import type { UpdateNotificationSettingsData } from '../src/domain/NotificationSettings';
 import type { BitbucketProject } from '../src/domain/Project';
 import type { BitbucketParticipant, BitbucketPullRequest } from '../src/domain/PullRequest';
 import type { BitbucketPullRequestActivity } from '../src/domain/PullRequestActivity';
@@ -1313,6 +1314,36 @@ describe('BitbucketClient', () => {
     it('throws on a non-OK response', async () => {
       mockError(401, 'Unauthorized');
       await expect(client.currentUser()).rejects.toThrow('Bitbucket API error: 401 Unauthorized');
+    });
+  });
+
+  describe('notification settings', () => {
+    const settings = {
+      authorNotificationSubscriptions: ['STATE_CHANGES', 'COMMENTS'],
+      watcherNotificationSubscriptions: ['MENTIONS', 'CODE_CHANGES'],
+    };
+
+    it('notificationSettings() calls GET /rest/notification/1.0/settings', async () => {
+      mockOk(settings);
+      expect(await client.notificationSettings()).toEqual(settings);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/notification/1.0/settings`,
+        expect.any(Object),
+      );
+    });
+
+    it('updateNotificationSettings() sends PUT with the subscription groups', async () => {
+      mockOk(settings);
+      const data: UpdateNotificationSettingsData = {
+        authorNotificationSubscriptions: ['STATE_CHANGES', 'COMMENTS'],
+        watcherNotificationSubscriptions: ['MENTIONS', 'CODE_CHANGES'],
+      };
+
+      await client.updateNotificationSettings(data);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_URL}/rest/notification/1.0/settings`,
+        expect.objectContaining({ method: 'PUT', body: JSON.stringify(data) }),
+      );
     });
   });
 

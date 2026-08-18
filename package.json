@@ -1,6 +1,6 @@
 {
   "name": "bitbucket-datacenter-api-client",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "description": "TypeScript client for Bitbucket Data Center REST API",
   "type": "module",
   "main": "dist/index.cjs",
@@ -34,6 +34,7 @@
     "lint:fix": "eslint . --fix",
     "format": "biome check --write .",
     "format:check": "biome check .",
+    "openapi:compare": "node scripts/compare-bitbucket-openapi.mjs",
     "check": "npm run lint && npm run format:check",
     "verify": "npm run check && npm test -- --runInBand && npm run test:package && npm run docs:check"
   },

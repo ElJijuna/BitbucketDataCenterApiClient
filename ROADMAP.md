@@ -1,6 +1,7 @@
 # Roadmap
 
-Coverage target: [Bitbucket Data Center REST API v10.3](https://developer.atlassian.com/server/bitbucket/rest/v1003/) (366 paths, 566 operations).
+Coverage target: [Bitbucket Data Center REST API v10.4](https://developer.atlassian.com/server/bitbucket/rest/v1004/) (368 paths, 572 operations).
+
 Unless stated otherwise, endpoint paths below are relative to `/rest/api/latest`. Endpoints from other API modules (`/rest/git`, `/rest/insights`, `/rest/ssh`, …) are written in full.
 
 ## Legend
@@ -9,6 +10,22 @@ Unless stated otherwise, endpoint paths below are relative to `/rest/api/latest`
 - ⬜ Pending
 - ⚠️ Implemented against an **unofficial** endpoint (not present in the official REST documentation; may break between Bitbucket versions)
 - 🚫 Out of scope (see [Out of scope](#out-of-scope))
+
+---
+
+## Bitbucket Data Center 10.4 (v1.21)
+
+The official 10.3 and 10.4 OpenAPI documents were compared mechanically and reviewed against Atlassian's API changelog. See [BITBUCKET_10_4_COMPARISON.md](BITBUCKET_10_4_COMPARISON.md) for the evidence and compatibility analysis.
+
+| Task | Upstream change | Status |
+| --- | --- | --- |
+| Pull request creator typing | Add `creator` to pull requests and `CREATOR` to participant roles | ✅ |
+| Change a pull request author | Accept `author` when updating a pull request | ✅ |
+| Project change-author settings | `GET`/`PUT`/`DELETE /projects/{key}/settings/change-author` | ✅ |
+| Repository change-author settings | `GET`/`PUT`/`DELETE /projects/{key}/repos/{slug}/settings/change-author` | ✅ |
+| Related-repository permission filter | Wrap the existing related-repositories operation and its new `permission=REPO_READ\|REPO_WRITE\|REPO_ADMIN` filter | ✅ |
+| Pull request email subscriptions | Wrap `GET`/`PUT /rest/notification/1.0/settings`, including author/watcher subscription groups; this module is documented in the API changelog but omitted from the main OpenAPI document | ✅ |
+| Revert a merged pull request | No new public REST operation in 10.4; the release adds product UI and a Java SPI capability, so no direct client method is planned without a documented REST contract | 🚫 |
 
 ---
 
@@ -35,7 +52,7 @@ Prerequisites for most pending write operations.
 | --- | --- | --- |
 | Mark unofficial endpoints with `@remarks` in TSDoc | Done for `size()` and `codeSearch()`; keep the policy for any future unofficial endpoint | ✅ |
 | Document methods that issue more than one request | `currentUser()`, `pullRequest().reports()`, `pullRequest().buildSummaries()` document it in TSDoc | ✅ |
-| README: API version coverage | States the client targets Bitbucket Data Center REST API v10.3 (`/rest/api/latest`), links to `ROADMAP.md` | ✅ |
+| README: API version coverage | States the client targets Bitbucket Data Center REST API v10.4 (`/rest/api/latest`), links to `ROADMAP.md` | ✅ |
 | README: supported authentication | Basic (default) and Bearer (`authType: 'bearer'`), documented with examples | ✅ |
 | README: error handling behaviour | `BitbucketApiError` semantics, `errors` array from error-body parsing, and rate-limit `retry` option | ✅ |
 | README: pagination guide | `PagedResponse` fields, manual paging example, and the `paginate()` auto-pagination helper | ✅ |

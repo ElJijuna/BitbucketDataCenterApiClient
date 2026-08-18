@@ -14,7 +14,7 @@ export interface BitbucketRef {
   };
 }
 
-/** A user participating in a pull request (author, reviewer, or participant). */
+/** A user participating in a pull request (creator, author, reviewer, or participant). */
 export interface BitbucketParticipant {
   user: {
     name: string;
@@ -25,7 +25,7 @@ export interface BitbucketParticipant {
     slug: string;
     type: string;
   };
-  role: 'AUTHOR' | 'REVIEWER' | 'PARTICIPANT';
+  role: 'AUTHOR' | 'REVIEWER' | 'PARTICIPANT' | 'CREATOR';
   approved: boolean;
   status: 'APPROVED' | 'UNAPPROVED' | 'NEEDS_WORK';
 }
@@ -47,6 +47,8 @@ export interface BitbucketPullRequest {
   toRef: BitbucketRef;
   locked: boolean;
   author: BitbucketParticipant;
+  /** The original creator (returned by 10.4; optional for compatibility with 10.3 responses). */
+  creator?: BitbucketParticipant;
   reviewers: BitbucketParticipant[];
   participants: BitbucketParticipant[];
   links: Record<string, unknown>;
@@ -79,6 +81,8 @@ export interface UpdatePullRequestData {
   version: number;
   title?: string;
   description?: string;
+  /** Assigns a new pull request author (Bitbucket Data Center 10.4+). */
+  author?: { user: { name: string } };
   toRef?: { id: string };
   reviewers?: { user: { name: string } }[];
 }

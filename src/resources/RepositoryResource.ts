@@ -14,6 +14,10 @@ import type {
 } from '../domain/BranchRestriction';
 import type { BitbucketBrowseResponse, BrowseParams } from '../domain/Browse';
 import type { BitbucketChange } from '../domain/Change';
+import type {
+  ChangePullRequestAuthorSettings,
+  ChangePullRequestAuthorSettingsRequest,
+} from '../domain/ChangePullRequestAuthor';
 import type { BitbucketCommit, CommitsParams } from '../domain/Commit';
 import type { CompareDiffParams, CompareParams } from '../domain/Compare';
 import type {
@@ -49,6 +53,7 @@ import type {
   BitbucketRepository,
   FilesParams,
   ForkRepositoryData,
+  RelatedRepositoriesParams,
   UpdateRepositoryData,
 } from '../domain/Repository';
 import type {
@@ -309,6 +314,21 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
   async forks(params?: PaginationParams): Promise<PagedResponse<BitbucketRepository>> {
     return this.request<PagedResponse<BitbucketRepository>>(
       `${this.basePath}/forks`,
+      params as Record<string, string | number | boolean>,
+    );
+  }
+
+  /**
+   * Fetches repositories in the same hierarchy as this repository.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/related`
+   *
+   * @param params - Optional pagination and permission filter
+   * @returns A paged response of related repositories
+   */
+  async related(params?: RelatedRepositoriesParams): Promise<PagedResponse<BitbucketRepository>> {
+    return this.request<PagedResponse<BitbucketRepository>>(
+      `${this.basePath}/related`,
       params as Record<string, string | number | boolean>,
     );
   }
@@ -1311,6 +1331,46 @@ export class RepositoryResource implements PromiseLike<BitbucketRepository> {
    */
   async deleteAutoMergeSettings(): Promise<void> {
     return this.requestBody<void>(`${this.basePath}/settings/auto-merge`, undefined, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches this repository's pull request change-author settings.
+   *
+   * `GET /rest/api/latest/projects/{key}/repos/{slug}/settings/change-author`
+   *
+   * @returns The effective change-author settings
+   */
+  async changeAuthorSettings(): Promise<ChangePullRequestAuthorSettings> {
+    return this.request<ChangePullRequestAuthorSettings>(`${this.basePath}/settings/change-author`);
+  }
+
+  /**
+   * Creates or updates this repository's pull request change-author settings.
+   *
+   * `PUT /rest/api/latest/projects/{key}/repos/{slug}/settings/change-author`
+   *
+   * @param data - `enabled`
+   * @returns The updated settings
+   */
+  async updateChangeAuthorSettings(
+    data: ChangePullRequestAuthorSettingsRequest,
+  ): Promise<ChangePullRequestAuthorSettings> {
+    return this.requestBody<ChangePullRequestAuthorSettings>(
+      `${this.basePath}/settings/change-author`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes this repository's pull request change-author settings.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/repos/{slug}/settings/change-author`
+   */
+  async deleteChangeAuthorSettings(): Promise<void> {
+    return this.requestBody<void>(`${this.basePath}/settings/change-author`, undefined, {
       method: 'DELETE',
     });
   }

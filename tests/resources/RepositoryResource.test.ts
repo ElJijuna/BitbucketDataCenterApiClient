@@ -121,6 +121,23 @@ describe('RepositoryResource write operations', () => {
     });
   });
 
+  describe('related()', () => {
+    it('sends GET with pagination and the permission filter', async () => {
+      mockOk({ values: [mockRepository], isLastPage: true });
+      await repo().related({ permission: 'REPO_WRITE', start: 25, limit: 25 });
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/related?permission=REPO_WRITE&start=25&limit=25`);
+    });
+
+    it('returns the paged response', async () => {
+      const page = { values: [mockRepository], isLastPage: true };
+
+      mockOk(page);
+      expect(await repo().related()).toEqual(page);
+    });
+  });
+
   describe('setDefaultBranch()', () => {
     it('sends PUT to default-branch', async () => {
       mockNoContent();
@@ -893,6 +910,36 @@ describe('RepositoryResource write operations', () => {
 
       expect(url).toBe(`${REPO_BASE}/settings/auto-merge`);
       expect(init.method).toBe('DELETE');
+    });
+  });
+
+  describe('change-author settings', () => {
+    it('changeAuthorSettings() sends GET', async () => {
+      mockOk({ enabled: false, restrictionState: 'NONE' });
+      await repo().changeAuthorSettings();
+      const [url] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/settings/change-author`);
+    });
+
+    it('updateChangeAuthorSettings() sends PUT with the payload', async () => {
+      mockOk({ enabled: true, restrictionState: 'NONE' });
+      await repo().updateChangeAuthorSettings({ enabled: true });
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/settings/change-author`);
+      expect(init.method).toBe('PUT');
+      expect(init.body).toBe(JSON.stringify({ enabled: true }));
+    });
+
+    it('deleteChangeAuthorSettings() sends DELETE with no body', async () => {
+      mockNoContent();
+      await repo().deleteChangeAuthorSettings();
+      const [url, init] = lastCall();
+
+      expect(url).toBe(`${REPO_BASE}/settings/change-author`);
+      expect(init.method).toBe('DELETE');
+      expect(init.body).toBeUndefined();
     });
   });
 

@@ -6,6 +6,10 @@ import type {
   RefRestrictionsParams,
 } from '../domain/BranchRestriction';
 import type {
+  ChangePullRequestAuthorProjectSettingsRequest,
+  ChangePullRequestAuthorSettings,
+} from '../domain/ChangePullRequestAuthor';
+import type {
   BitbucketPullRequestCondition,
   DefaultReviewersRequest,
 } from '../domain/DefaultReviewers';
@@ -700,6 +704,48 @@ export class ProjectResource implements PromiseLike<BitbucketProject> {
    */
   async deleteAutoMergeSettings(): Promise<void> {
     return this.requestBody<void>(`/projects/${this.key}/settings/auto-merge`, undefined, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Fetches this project's pull request change-author settings.
+   *
+   * `GET /rest/api/latest/projects/{key}/settings/change-author`
+   *
+   * @returns The effective change-author settings
+   */
+  async changeAuthorSettings(): Promise<ChangePullRequestAuthorSettings> {
+    return this.request<ChangePullRequestAuthorSettings>(
+      `/projects/${this.key}/settings/change-author`,
+    );
+  }
+
+  /**
+   * Creates or updates this project's pull request change-author settings.
+   *
+   * `PUT /rest/api/latest/projects/{key}/settings/change-author`
+   *
+   * @param data - `enabled` and/or `restrictionAction`
+   * @returns The updated settings
+   */
+  async updateChangeAuthorSettings(
+    data: ChangePullRequestAuthorProjectSettingsRequest,
+  ): Promise<ChangePullRequestAuthorSettings> {
+    return this.requestBody<ChangePullRequestAuthorSettings>(
+      `/projects/${this.key}/settings/change-author`,
+      data,
+      { method: 'PUT' },
+    );
+  }
+
+  /**
+   * Deletes this project's pull request change-author settings.
+   *
+   * `DELETE /rest/api/latest/projects/{key}/settings/change-author`
+   */
+  async deleteChangeAuthorSettings(): Promise<void> {
+    return this.requestBody<void>(`/projects/${this.key}/settings/change-author`, undefined, {
       method: 'DELETE',
     });
   }

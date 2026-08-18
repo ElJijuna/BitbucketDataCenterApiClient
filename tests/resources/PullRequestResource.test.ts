@@ -39,6 +39,7 @@ const mockPullRequest: BitbucketPullRequest = {
   toRef: { ...mockRef, id: 'refs/heads/main', displayId: 'main' },
   locked: false,
   author: mockAuthorParticipant,
+  creator: { ...mockAuthorParticipant, role: 'CREATOR' },
   reviewers: [],
   participants: [],
   links: {},
@@ -104,6 +105,16 @@ describe('PullRequestResource write operations', () => {
     it('returns the updated pull request', async () => {
       mockOk(mockPullRequest);
       expect(await pr().update({ version: 3, title: 'New title' })).toEqual(mockPullRequest);
+    });
+
+    it('can assign a new author', async () => {
+      mockOk(mockPullRequest);
+      await pr().update({ version: 3, author: { user: { name: 'new-author' } } });
+      const [, init] = lastCall();
+
+      expect(init.body).toBe(
+        JSON.stringify({ version: 3, author: { user: { name: 'new-author' } } }),
+      );
     });
   });
 

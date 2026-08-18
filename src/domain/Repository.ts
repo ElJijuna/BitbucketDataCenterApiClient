@@ -35,6 +35,15 @@ export interface ReposParams extends PaginationParams {
 }
 
 /**
+ * Query parameters accepted by
+ * `GET /rest/api/latest/projects/{key}/repos/{slug}/related`.
+ */
+export interface RelatedRepositoriesParams extends PaginationParams {
+  /** Only include related repositories for which the user has this permission. */
+  permission?: 'REPO_READ' | 'REPO_WRITE' | 'REPO_ADMIN';
+}
+
+/**
  * Payload for `POST /rest/api/latest/projects/{key}/repos` (create).
  *
  * @see {@link https://developer.atlassian.com/server/bitbucket/rest/v1003/api-group-repository/#api-api-latest-projects-projectkey-repos-post}
